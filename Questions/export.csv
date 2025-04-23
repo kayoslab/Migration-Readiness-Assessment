@@ -1,0 +1,271 @@
+ID,Question,Category,Critical,Engineering,Product,Business,Leadership,Type,Question Type,Theme,Weight
+1,Our current architecture is modular and well-structured for future scaling.,Architecture & Technology,TRUE,TRUE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,,1
+2,We have clear domain ownership across our systems.,Architecture & Technology,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Clear Ownership,1
+3,Systems are loosely coupled and do not require synchronous coordination.,Architecture & Technology,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+4,Our platform supports composable integrations via well-defined APIs.,Architecture & Technology,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
+5,Technical debt is actively managed.,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Legacy Constraints,1
+6,Legacy system dependencies are documented.,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Legacy Constraints,1
+7,"Architecture decisions are guided by principles, not ad-hoc solutions.",Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+8,The monolith’s responsibilities have been mapped for decomposition.,Architecture & Technology,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Legacy Constraints,1
+9,We use standardised approaches for authentication and authorisation.,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+10,Our systems support scalability without deep refactoring.,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+11,"Architecture evolution is tracked over time (e.g. ADRs, docs).",Architecture & Technology,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+12,We have sandbox/staging environments aligned to prod.,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+13,Platform uptime and resilience are built into the design.,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Testing & Quality,1
+14,Most systems could be containerised or deployed independently.,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Autonomy & Empowerment,1
+15,Service-to-service communication follows standard patterns.,Architecture & Technology,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
+16,"We actively evaluate modern architectural practices (e.g. event-driven, headless).",Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Technical Confidence,1
+17,We use API gateways or similar for routing & abstraction.,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
+18,"We have architectural observability (e.g. service maps, flows).",Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
+19,We conduct architectural reviews or spikes before large changes.,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Testing & Quality,1
+20,Our documentation is sufficient for new joiners to understand the system.,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+21,Teams can introduce new technology with low friction.,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Delivery Friction,1
+22,Architecture changes are tested for business impact.,Architecture & Technology,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Readiness for Change,1
+23,We support horizontal and vertical scaling strategies.,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+24,We can decouple major workflows with minimal risk.,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
+25,Architecture decisions are regularly reviewed with business input.,Architecture & Technology,TRUE,TRUE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,Cross-Functional Alignment,1
+26,Delivery teams operate with autonomy.,Team Capability,TRUE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Autonomy & Empowerment,1
+27,Engineers understand distributed systems principles.,Team Capability,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Technical Confidence,1
+28,"Teams have experience working with APIs, microservices, events.",Team Capability,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
+29,DevOps and SRE support is available and skilled.,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+30,Engineers can deploy without depending on other teams.,Team Capability,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Autonomy & Empowerment,1
+31,There is a strong culture of knowledge sharing.,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Readiness for Change,1
+32,Teams can troubleshoot independently.,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Autonomy & Empowerment,1
+33,Backlogs are managed with technical debt visibility.,Team Capability,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Legacy Constraints,1
+34,We can scale teams without scaling coordination overhead.,Team Capability,TRUE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Delivery Friction,1
+35,Engineers are confident working with infrastructure-as-code.,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Technical Confidence,1
+36,Teams are exposed to business context regularly.,Team Capability,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,,1
+37,There is a habit of experimentation and fast iteration.,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Platform vs. Feature Tension,1
+38,The team structure supports cross-functional delivery.,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Cross-Functional Alignment,1
+39,New engineers can ship code within their first weeks.,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+40,There is a mentorship or peer review culture.,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Readiness for Change,1
+41,Engineers are involved in architectural decisions.,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+42,Knowledge is not concentrated in a few individuals.,Team Capability,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+43,Engineers understand service boundaries.,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
+44,People are encouraged to speak up about system limitations.,Team Capability,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Delivery Friction,1
+45,"Engineering leads encourage clean, testable code.",Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Technical Confidence,1
+46,Feature work includes time for technical improvements.,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Platform vs. Feature Tension,1
+47,Teams can say “no” to unreasonable deadlines.,Team Capability,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Platform vs. Feature Tension,1
+48,There’s comfort with breaking down complex systems.,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Clear Ownership,1
+49,The org supports skill development time.,Team Capability,FALSE,TRUE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,Platform vs. Feature Tension,1
+50,The team can own systems long-term.,Team Capability,TRUE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Clear Ownership,1
+51,Ownership boundaries between teams and systems are clearly defined.,Governance & Delivery,TRUE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Clear Ownership,1
+52,"Teams follow a “you build it, you run it” model.",Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Delivery Friction,1
+53,Services can be deployed independently.,Governance & Delivery,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
+54,We have CI/CD pipelines for all major systems.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Testing & Quality,1
+55,Release processes are documented and automated.,Governance & Delivery,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+56,Business leaders are aware of key technical bottlenecks that limit growth or innovation.,Governance & Delivery,TRUE,FALSE,FALSE,TRUE,TRUE,Quantitative,Multiple choice,,1
+57,Non-functional requirements are part of definition of done.,Governance & Delivery,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,,1
+58,Governance policies are flexible and enable delivery.,Governance & Delivery,FALSE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,,1
+59,System owners are known and contactable.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Clear Ownership,1
+60,Decision-making is decentralised when it makes sense.,Governance & Delivery,FALSE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,,1
+61,Releases are not delayed due to cross-team dependencies.,Governance & Delivery,TRUE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Cross-Functional Alignment,1
+62,Critical incidents are reviewed and fed back into delivery.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Testing & Quality,1
+63,Teams can make decisions without long approval cycles.,Governance & Delivery,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+64,There is versioning and backward compatibility for APIs.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
+65,Technical changes can be traced to business goals.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,Readiness for Change,1
+66,There’s an active feedback loop between tech and governance.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,,1
+67,Metrics for deployment frequency and lead time are tracked.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Autonomy & Empowerment,1
+68,There is clarity on the governance of shared components.,Governance & Delivery,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+69,Cross-functional initiatives don’t stall due to unclear ownership.,Governance & Delivery,FALSE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,Clear Ownership,1
+70,Risk is identified and mitigated early in delivery.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,,1
+71,Testing strategies are part of the delivery lifecycle.,Governance & Delivery,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Testing & Quality,1
+72,"Observability is a shared responsibility, not an afterthought.",Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+73,There are champions for best practices in delivery.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+74,Compliance and audit needs are not a blocker.,Governance & Delivery,FALSE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,Delivery Friction,1
+75,Service quality is monitored and prioritised.,Governance & Delivery,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
+76,Our systems use consistent API patterns.,Integration & Data Readiness,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
+77,Integration points are documented and versioned.,Integration & Data Readiness,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+78,We use modern authentication and authorisation standards.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Technical Confidence,1
+79,New services can be onboarded with minimal effort.,Integration & Data Readiness,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+80,There is a central catalogue of APIs or integrations.,Integration & Data Readiness,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,,1
+81,Data schemas are governed and not duplicated across services.,Integration & Data Readiness,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Cross-Functional Alignment,1
+82,We use an event streaming system.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+83,We can integrate SaaS tools without major workarounds.,Integration & Data Readiness,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,,1
+84,Data pipelines are reliable and observable.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Data Trust & Stewardship,1
+85,Master data is clearly defined across domains.,Integration & Data Readiness,TRUE,TRUE,FALSE,TRUE,FALSE,Quantitative,Multiple choice,Cross-Functional Alignment,1
+86,Data contracts are enforced across services.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Cross-Functional Alignment,1
+87,Integrations are designed with resilience and retries in mind.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+88,Legacy system data is well understood and mapped.,Integration & Data Readiness,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Legacy Constraints,1
+89,There are SLAs/SLOs for key integrations.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+90,Data is accessible to analytics without engineering bottlenecks.,Integration & Data Readiness,TRUE,TRUE,FALSE,TRUE,FALSE,Quantitative,Multiple choice,Data Trust & Stewardship,1
+91,We support real-time or near-real-time data flows.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Data Trust & Stewardship,1
+92,Data ownership is defined per domain.,Integration & Data Readiness,FALSE,TRUE,FALSE,TRUE,FALSE,Quantitative,Multiple choice,Clear Ownership,1
+93,We track lineage of critical data flows.,Integration & Data Readiness,FALSE,TRUE,FALSE,TRUE,FALSE,Quantitative,Multiple choice,Data Trust & Stewardship,1
+94,We have a shared understanding across departments of what success looks like for this migration.,Integration & Data Readiness,TRUE,FALSE,FALSE,TRUE,TRUE,Quantitative,Multiple choice,Cross-Functional Alignment,1
+95,Integration errors can be detected and resolved quickly.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+96,Event-driven design is encouraged where appropriate.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+97,Data silos are actively being addressed.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,Data Trust & Stewardship,1
+98,We use service meshes or gateways for managing integrations.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
+99,Our integration strategy is documented and understood.,Integration & Data Readiness,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,,1
+100,Data duplication is minimised through federation or shared services.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Data Trust & Stewardship,1
+101,Composable architecture is aligned with company strategy.,Business Alignment & Strategy,TRUE,FALSE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,,1
+102,There is a strong executive sponsor for platform modernisation.,Business Alignment & Strategy,TRUE,FALSE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,Strategic Sponsorship,1
+103,The business has a clear understanding of the benefits and trade-offs.,Business Alignment & Strategy,TRUE,FALSE,FALSE,TRUE,FALSE,Quantitative,Multiple choice,,1
+104,Product and tech share a roadmap and vision.,Business Alignment & Strategy,TRUE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,,1
+105,Funding exists for foundational infrastructure work.,Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,Strategic Sponsorship,1
+106,Stakeholders understand how modular platforms enable faster delivery.,Business Alignment & Strategy,FALSE,FALSE,FALSE,TRUE,FALSE,Quantitative,Multiple choice,,1
+107,Migration efforts are prioritised in the roadmap.,Business Alignment & Strategy,TRUE,FALSE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,,1
+108,The business is willing to defer features for platform readiness.,Business Alignment & Strategy,TRUE,FALSE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,Platform vs. Feature Tension,1
+109,Business goals are translated into tech requirements effectively.,Business Alignment & Strategy,FALSE,FALSE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,,1
+110,Teams have the autonomy to pursue strategic tech work.,Business Alignment & Strategy,FALSE,TRUE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,Autonomy & Empowerment,1
+111,There is a realistic expectation for migration timelines.,Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,,1
+112,Migration success metrics are defined.,Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,,1
+113,Stakeholders are aware of the current architectural bottlenecks.,Business Alignment & Strategy,FALSE,FALSE,FALSE,TRUE,TRUE,Quantitative,Multiple choice,,1
+114,Risks of not migrating are understood by senior leaders.,Business Alignment & Strategy,TRUE,FALSE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,,1
+115,There is clarity on how to evaluate ROI of platform investment.,Business Alignment & Strategy,FALSE,FALSE,FALSE,TRUE,TRUE,Quantitative,Multiple choice,,1
+116,The business doesn’t over-index on vendor lock-in.,Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,,1
+117,Composable architecture has been validated through prototypes or PoCs.,Business Alignment & Strategy,FALSE,TRUE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,,1
+118,Business owns part of the migration success criteria.,Business Alignment & Strategy,FALSE,FALSE,FALSE,TRUE,FALSE,Quantitative,Multiple choice,Clear Ownership,1
+119,Dependencies between teams are mapped to business outcomes.,Business Alignment & Strategy,FALSE,FALSE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,,1
+120,The leadership team reviews technical progress regularly.,Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,Strategic Sponsorship,1
+121,The platform roadmap is communicated transparently.,Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,,1
+122,Business leaders are open to rethinking operating models.,Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,,1
+123,There is a cross-functional steering group for the migration.,Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,Cross-Functional Alignment,1
+124,Business understands the concept of capabilities vs. features.,Business Alignment & Strategy,FALSE,FALSE,FALSE,TRUE,FALSE,Quantitative,Multiple choice,,1
+125,Leadership encourages reuse of capabilities over duplication.,Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,Strategic Sponsorship,1
+126,There is openness to change across the organisation.,Cultural Readiness,TRUE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,Cross-Functional Alignment,1
+127,People are comfortable working in ambiguity.,Cultural Readiness,TRUE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+128,Teams have a growth mindset and seek continuous improvement.,Cultural Readiness,FALSE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+129,Failure is seen as a learning opportunity.,Cultural Readiness,FALSE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+130,Cross-team communication is strong.,Cultural Readiness,FALSE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,Cross-Functional Alignment,1
+131,Legacy systems are not emotionally defended.,Cultural Readiness,TRUE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,Legacy Constraints,1
+132,People understand the rationale for the migration.,Cultural Readiness,TRUE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+133,There are internal champions for change.,Cultural Readiness,TRUE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,Readiness for Change,1
+134,"Resistance is surfaced and discussed, not hidden.",Cultural Readiness,TRUE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,Readiness for Change,1
+135,Celebrating wins is part of the change process.,Cultural Readiness,FALSE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,Readiness for Change,1
+136,There is shared language around tech and product vision.,Cultural Readiness,FALSE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+137,The organisation has navigated change well in the past.,Cultural Readiness,FALSE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,Readiness for Change,1
+138,People have opportunities to shape the future state.,Cultural Readiness,FALSE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+139,Product and engineering respect each other’s domain.,Cultural Readiness,FALSE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+140,Conflicts are resolved constructively.,Cultural Readiness,FALSE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+141,There are mechanisms for feedback beyond surveys.,Cultural Readiness,FALSE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+142,People feel psychologically safe to speak up.,Cultural Readiness,TRUE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+143,Teams are proud of what they build.,Cultural Readiness,FALSE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+144,Leadership models the behaviour they ask for.,Cultural Readiness,FALSE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,Strategic Sponsorship,1
+145,People have time to learn and adapt.,Cultural Readiness,TRUE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+146,Change is communicated with empathy and clarity.,Cultural Readiness,FALSE,TRUE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,Readiness for Change,1
+147,There is organisational energy behind the migration.,Cultural Readiness,TRUE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+148,Innovation is encouraged even in core platforms.,Cultural Readiness,FALSE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+149,There’s transparency about trade-offs and priorities.,Cultural Readiness,FALSE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,,1
+150,There is enthusiasm about the future architecture.,Cultural Readiness,FALSE,TRUE,TRUE,TRUE,TRUE,Quantitative,Multiple choice,,1
+151,"Which parts of the current architecture are hardest to change, and why?",Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+152,Are there any areas of the system that are already modular or well-isolated?,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+153,"How confident are you in the current state of documentation for services, APIs, or integration points?",Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+154,What technical constraints or debt would most likely block a migration to composable architecture?,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+155,What architectural changes do you believe would deliver the biggest impact with the least disruption?,Architecture & Technology,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+156,How well do you understand the boundaries of the current system — where features live and who owns them?,Architecture & Technology,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+157,Are there areas where product delivery is slowed by technical complexity or dependencies?,Architecture & Technology,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+158,How often are technical limitations shaping or restricting your roadmap?,Architecture & Technology,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+159,What trade-offs have you had to make recently due to architectural bottlenecks?,Architecture & Technology,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+160,"If you could “break off” one part of the monolith to move faster, what would it be?",Architecture & Technology,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+161,Which parts of the current platform are most important to your team’s work?,Architecture & Technology,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+162,Have you encountered situations where the platform limited your ability to serve customers or innovate?,Architecture & Technology,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+163,"How visible is platform stability, performance, or capability to your team or department?",Architecture & Technology,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+164,"If we modernised the platform, what business outcomes would you expect to see improve?",Architecture & Technology,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+165,Are there legacy systems or dependencies that your team relies on heavily?,Architecture & Technology,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+166,What’s your view on the current platform’s ability to scale with business growth?,Architecture & Technology,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+167,Where do you see the biggest architectural risks to delivering on our long-term strategy?,Architecture & Technology,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+168,How confident are you that we can decouple key business capabilities from the existing monolith?,Architecture & Technology,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+169,What’s your appetite for investing in foundational platform work versus feature delivery?,Architecture & Technology,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+170,"Are there areas where you feel we’re “stuck” in the current stack, and what’s holding us back?",Architecture & Technology,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+171,What skills or experience do you think the team is currently missing to work effectively in a composable architecture?,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+172,Are there specific areas of the current system where your team lacks confidence in making changes? Why?,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+173,What would you change in our team setup or tooling to improve autonomy and speed of delivery?,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+174,How well do you think we collaborate with other teams when delivering cross-cutting features?,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+175,Are there any examples where engineering process or culture helped (or hindered) your ability to ship quality software?,Team Capability,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+176,How does the current team setup impact your ability to deliver quickly and iteratively?,Team Capability,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+177,Are there recurring coordination issues between teams that slow down delivery?,Team Capability,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+178,Where do you see opportunities to increase delivery team autonomy?,Team Capability,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+179,Do you feel teams have the right context and visibility to make decisions independently?,Team Capability,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+180,How often do you need to compromise roadmap goals because of technical or organisational limitations?,Team Capability,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+181,"From your perspective, how well do delivery teams understand the business context behind their work?",Team Capability,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+182,Are there any delivery-related blockers or delays that impact your team or customers directly?,Team Capability,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+183,What level of confidence do you have in our teams’ ability to respond quickly to change?,Team Capability,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+184,Where would increased team autonomy create the most value for the business?,Team Capability,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+185,Do you feel there are communication or handover issues between technical and non-technical teams?,Team Capability,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+186,How well do you think our current delivery structure supports agility and accountability?,Team Capability,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+187,"Are you confident that our teams have the right mix of skills for a more distributed, service-based architecture?",Team Capability,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+188,"Where do you see the biggest gaps in capability, and how are we addressing them?",Team Capability,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+189,How empowered do teams feel to make architectural or technical decisions?,Team Capability,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+190,"Are there systemic factors (e.g. incentive structures, reporting lines) that limit team autonomy or effectiveness?",Team Capability,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+191,"What delivery or governance processes do you find most restrictive, and why?",Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+192,How confident are you in your team's ability to release changes independently?,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+193,Are there clear owners for all the systems your team depends on?,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+194,"When incidents occur, do the root causes typically trace back to technical gaps or governance issues?",Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+195,"What delivery-related practices (e.g. testing, CI/CD, service ownership) work well today — and what doesn’t?",Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+196,How clearly defined are ownership boundaries between teams you work with?,Governance & Delivery,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+197,What challenges do you face in delivering features across multiple systems or teams?,Governance & Delivery,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+198,Are platform or architectural changes easy to plan around in your roadmap?,Governance & Delivery,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+199,"When delivery slows down, what are the usual friction points?",Governance & Delivery,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+200,What’s your level of confidence in the observability of the systems your teams rely on?,Governance & Delivery,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+201,Do you feel platform or release processes help or hinder your ability to meet business goals?,Governance & Delivery,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+202,"How visible is technical risk (e.g. stability, scalability) to you in your day-to-day work?",Governance & Delivery,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+203,Are roles and responsibilities clear when something goes wrong in the platform?,Governance & Delivery,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+204,How often do changes to the platform or systems disrupt business operations?,Governance & Delivery,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+205,"If you could change one thing about how tech and business coordinate releases, what would it be?",Governance & Delivery,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+206,Are our governance structures supporting or slowing down delivery?,Governance & Delivery,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+207,How well do you think we balance innovation and risk management?,Governance & Delivery,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+208,Do teams have the right guardrails (not handcuffs) to deliver independently?,Governance & Delivery,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+209,How visible and actionable are technical delivery metrics at the leadership level?,Governance & Delivery,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+210,Where do you see the biggest risks in delivery or service ownership — and how are they currently managed?,Governance & Delivery,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+211,Which integrations (internal or external) cause the most friction in development or maintenance?,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+212,How well documented and discoverable are the APIs and data flows your team depends on?,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+213,"Where do you see the biggest risks related to data consistency, duplication, or ownership?",Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+214,Are there integration patterns or tooling you feel are outdated or limiting?,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+215,What’s one improvement that would make integrating new services or capabilities significantly easier?,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+216,How confident are you in the reliability and speed of data integrations that support your product area?,Integration & Data Readiness,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+217,Do API or data constraints ever force you to compromise product scope or timelines?,Integration & Data Readiness,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+218,Are you aware of any key dependencies between your product area and upstream or downstream systems?,Integration & Data Readiness,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+219,What would help you better understand the data and integration landscape you work within?,Integration & Data Readiness,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+220,,Integration & Data Readiness,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+221,"Are there any data or integration gaps that regularly affect reporting, operations, or customer experience?",Integration & Data Readiness,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+222,How dependent is your team on technical support for accessing or interpreting data?,Integration & Data Readiness,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+223,Do you trust the consistency and quality of the data available to your area of the business?,Integration & Data Readiness,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+224,Are there third-party tools or partners that are difficult to integrate with due to our current systems?,Integration & Data Readiness,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+225,Where would real-time data or automation make the biggest impact in your workflow?,Integration & Data Readiness,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+226,How well do you think we manage integration complexity as the business grows?,Integration & Data Readiness,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+227,Are there clear lines of accountability when integration issues affect business operations?,Integration & Data Readiness,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+228,How mature is our organisation’s thinking around data ownership and stewardship?,Integration & Data Readiness,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+229,Where do you see the biggest gaps in observability or trust in our data pipelines?,Integration & Data Readiness,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+230,Are our current systems ready to scale in terms of integration volume and velocity?,Integration & Data Readiness,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+231,How clearly do you understand the business rationale behind moving to a composable architecture?,Business Alignment & Strategy,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+232,Do you feel technical debt and architectural improvements are prioritised appropriately in planning cycles?,Business Alignment & Strategy,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+233,Are you involved early enough in strategic planning to influence technical feasibility?,Business Alignment & Strategy,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+234,Have you seen examples where technical goals and business outcomes were well aligned — or badly misaligned?,Business Alignment & Strategy,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+235,What would help you better connect day-to-day technical work with long-term business value?,Business Alignment & Strategy,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+236,How aligned are product roadmaps with the company’s longer-term platform goals?,Business Alignment & Strategy,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+237,Do you feel supported in prioritising foundational or non-feature work when needed?,Business Alignment & Strategy,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+238,Are you able to clearly explain to stakeholders why composable architecture matters?,Business Alignment & Strategy,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+239,Have you had to push back on business expectations due to architectural or platform limitations?,Business Alignment & Strategy,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+240,What signals would you look for to know this migration is succeeding?,Business Alignment & Strategy,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+241,How clearly do you understand the goals and expected benefits of moving to a composable platform?,Business Alignment & Strategy,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+242,Are there business goals that are currently slowed down or limited by the existing technology stack?,Business Alignment & Strategy,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+243,Do you feel platform investment is a cost centre or a growth enabler?,Business Alignment & Strategy,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+244,Where do you see potential for innovation or differentiation if the platform were more flexible?,Business Alignment & Strategy,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+245,How would you know this migration was a success from a business point of view?,Business Alignment & Strategy,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+246,"Do we have clear, shared outcomes defined for the platform transformation?",Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+247,How confident are you in the business case and ROI behind the migration effort?,Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+248,Are business priorities and platform strategy reviewed together — or in isolation?,Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+249,"Do you feel your peers across business and tech are aligned on why, when, and how to modernise?",Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+250,What trade-offs are you willing to make to ensure the platform evolves in the right direction?,Business Alignment & Strategy,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+251,"How open do you think the engineering culture is to changing how we build, ship, and run software?",Cultural Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+252,Are there any legacy assumptions or habits that you think are holding us back?,Cultural Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+253,How psychologically safe do you feel raising concerns or challenging long-held technical opinions?,Cultural Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+254,How well do we share learnings or failures across engineering teams?,Cultural Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+255,"What changes in mindset or behaviours would help us succeed in a more modular, decentralised setup?",Cultural Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Qualitative,Paragraph,,0
+256,How comfortable is your team working in uncertainty or with evolving technical foundations?,Cultural Readiness,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+257,"Have you observed resistance to change — and if so, where is it most visible?",Cultural Readiness,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+258,"Are product and engineering aligned in how they approach risk, experimentation, and iteration?",Cultural Readiness,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+259,How well do teams balance delivery pressure with long-term platform thinking?,Cultural Readiness,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+260,What cultural traits (positive or negative) stand out when we work across teams?,Cultural Readiness,FALSE,FALSE,TRUE,FALSE,FALSE,Qualitative,Paragraph,,0
+261,How comfortable is your part of the organisation with adopting new ways of working?,Cultural Readiness,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+262,Do you see openness or resistance to change in how people respond to platform or process shifts?,Cultural Readiness,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+263,Are people incentivised to prioritise short-term outcomes over long-term improvements?,Cultural Readiness,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+264,How easy is it for business teams to challenge legacy ways of doing things?,Cultural Readiness,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+265,Where do you see opportunities to improve collaboration between business and technology?,Cultural Readiness,FALSE,FALSE,FALSE,TRUE,FALSE,Qualitative,Paragraph,,0
+266,How are you preparing the organisation — not just the tech — for this migration?,Cultural Readiness,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+267,Do you feel leaders are modelling the behaviours they expect from others during change?,Cultural Readiness,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+268,Where are we strongest culturally — and where are we most vulnerable?,Cultural Readiness,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+269,How do you handle resistance to change when it comes from respected or senior individuals?,Cultural Readiness,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0
+270,Are incentives and KPIs aligned with the outcomes this transformation needs?,Cultural Readiness,FALSE,FALSE,FALSE,FALSE,TRUE,Qualitative,Paragraph,,0

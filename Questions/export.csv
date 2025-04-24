@@ -1,5 +1,5 @@
 ID,Question,Category,Critical,Engineering,Product,Business,Leadership,Type,Question Type,Theme,Weight
-1,Our current architecture is modular and well-structured for future scaling.,Architecture & Technology,TRUE,TRUE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,,1
+1,Our current architecture is modular and well-structured for future scaling.,Architecture & Technology,TRUE,TRUE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,Technical Confidence,1
 2,We have clear domain ownership across our systems.,Architecture & Technology,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Clear Ownership,1
 3,Systems are loosely coupled and do not require synchronous coordination.,Architecture & Technology,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
 4,Our platform supports composable integrations via well-defined APIs.,Architecture & Technology,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
@@ -54,11 +54,11 @@ ID,Question,Category,Critical,Engineering,Product,Business,Leadership,Type,Quest
 53,Services can be deployed independently.,Governance & Delivery,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
 54,We have CI/CD pipelines for all major systems.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Testing & Quality,1
 55,Release processes are documented and automated.,Governance & Delivery,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
-56,Business leaders are aware of key technical bottlenecks that limit growth or innovation.,Governance & Delivery,TRUE,FALSE,FALSE,TRUE,TRUE,Quantitative,Multiple choice,,1
-57,Non-functional requirements are part of definition of done.,Governance & Delivery,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,,1
-58,Governance policies are flexible and enable delivery.,Governance & Delivery,FALSE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,,1
+56,Business leaders are aware of key technical bottlenecks that limit growth or innovation.,Governance & Delivery,TRUE,FALSE,FALSE,TRUE,TRUE,Quantitative,Multiple choice,Technical Confidence,1
+57,Non-functional requirements are part of definition of done.,Governance & Delivery,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Testing & Quality,1
+58,Governance policies are flexible and enable delivery.,Governance & Delivery,FALSE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,Testing & Quality,1
 59,System owners are known and contactable.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Clear Ownership,1
-60,Decision-making is decentralised when it makes sense.,Governance & Delivery,FALSE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,,1
+60,Decision-making is decentralised when it makes sense.,Governance & Delivery,FALSE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,Strategic Sponsorship,1
 61,Releases are not delayed due to cross-team dependencies.,Governance & Delivery,TRUE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Cross-Functional Alignment,1
 62,Critical incidents are reviewed and fed back into delivery.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Testing & Quality,1
 63,Teams can make decisions without long approval cycles.,Governance & Delivery,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
@@ -68,7 +68,7 @@ ID,Question,Category,Critical,Engineering,Product,Business,Leadership,Type,Quest
 67,Metrics for deployment frequency and lead time are tracked.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Autonomy & Empowerment,1
 68,There is clarity on the governance of shared components.,Governance & Delivery,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
 69,Cross-functional initiatives don’t stall due to unclear ownership.,Governance & Delivery,FALSE,FALSE,TRUE,FALSE,TRUE,Quantitative,Multiple choice,Clear Ownership,1
-70,Risk is identified and mitigated early in delivery.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,,1
+70,Risk is identified and mitigated early in delivery.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,TRUE,Quantitative,Multiple choice,Strategic Sponsorship,1
 71,Testing strategies are part of the delivery lifecycle.,Governance & Delivery,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Testing & Quality,1
 72,"Observability is a shared responsibility, not an afterthought.",Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
 73,There are champions for best practices in delivery.,Governance & Delivery,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
@@ -78,7 +78,7 @@ ID,Question,Category,Critical,Engineering,Product,Business,Leadership,Type,Quest
 77,Integration points are documented and versioned.,Integration & Data Readiness,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
 78,We use modern authentication and authorisation standards.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Technical Confidence,1
 79,New services can be onboarded with minimal effort.,Integration & Data Readiness,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
-80,There is a central catalogue of APIs or integrations.,Integration & Data Readiness,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,,1
+80,There is a central catalogue of APIs or integrations.,Integration & Data Readiness,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,Composable Integration,1
 81,Data schemas are governed and not duplicated across services.,Integration & Data Readiness,TRUE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,Cross-Functional Alignment,1
 82,We use an event streaming system.,Integration & Data Readiness,FALSE,TRUE,FALSE,FALSE,FALSE,Quantitative,Multiple choice,,1
 83,We can integrate SaaS tools without major workarounds.,Integration & Data Readiness,FALSE,TRUE,TRUE,FALSE,FALSE,Quantitative,Multiple choice,,1

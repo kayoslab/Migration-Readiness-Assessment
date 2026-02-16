@@ -1,10 +1,14 @@
 # Migration Readiness Assessment
 
-A data-driven diagnostic tool for evaluating an organisation's readiness to migrate from legacy systems (typically monolithic architectures) to modern, composable platforms. This tool combines quantitative scoring with qualitative sentiment analysis to provide actionable insights for decision-makers considering technology modernisation investments.
+A diagnostic framework for engineering leaders and CTOs evaluating whether their organisation is ready for platform modernisation—and whether modernisation is even the right call.
 
 ## Overview
 
-Technology platform migrations are complex, expensive undertakings that frequently fail due to organisational factors rather than technical ones. This assessment framework helps identify readiness gaps across technical, cultural, and strategic dimensions before committing resources.
+**Microservices are not a silver bullet.** A well-designed monolith can outperform a poorly executed distributed system any day. But when your monolith becomes the reason features take months instead of weeks, when deployments require all-hands-on-deck ceremonies, when your best engineers spend more time fighting the system than building value—that's when the conversation needs to happen.
+
+This tool exists because migration failures are rarely technical. They're organisational. Teams misaligned on priorities. Leadership unaware of technical debt. Business stakeholders and engineers living in different realities. These gaps don't surface in architecture diagrams—they surface six months into a failed transformation when it's too late to course-correct.
+
+**Run this assessment before you commit.** Surface the misalignments, quantify the risks, and make the investment decision with data instead of gut feel. Sometimes the answer is "not yet." Sometimes it's "never." That's valuable information too.
 
 The tool:
 - Collects structured feedback from multiple stakeholder groups (Engineering, Product, Business, Leadership)

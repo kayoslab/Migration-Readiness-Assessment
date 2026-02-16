@@ -1,4 +1,4 @@
-# Migration Readiness Assessment
+![Migration Readiness Assessment](assets/header.svg)
 
 A diagnostic framework for engineering leaders and CTOs evaluating whether their organisation is ready for platform modernisation—and whether modernisation is even the right call.
 

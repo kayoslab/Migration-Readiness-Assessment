@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <defs>
+    <linearGradient id="bgGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16213e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="greenBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00d9a5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00f5a0;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="amberBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f39c12;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f1c40f;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="redBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#e94560;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" fill="url(#bgGradient2)"/>
+
+  <!-- Title -->
+  <text x="400" y="40" text-anchor="middle" fill="#ffffff" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="24" font-weight="bold">RAG Status by Domain</text>
+  <text x="400" y="65" text-anchor="middle" fill="#718096" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14">Weighted average scores with risk classification</text>
+
+  <!-- Chart area -->
+  <g transform="translate(220, 100)">
+    <!-- Domain labels on left, bars on right -->
+
+    <!-- Architecture &amp; Technology: 3.2 (AMBER) -->
+    <text x="-10" y="25" text-anchor="end" fill="#cbd5e0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="13">Architecture &amp; Technology</text>
+    <rect x="0" y="10" width="320" height="28" rx="4" fill="url(#amberBar)" opacity="0.9"/>
+    <text x="330" y="30" fill="#f39c12" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" font-weight="bold">3.2</text>
+    <rect x="360" y="12" width="70" height="24" rx="4" fill="#f39c12" opacity="0.2" stroke="#f39c12" stroke-width="1"/>
+    <text x="395" y="30" text-anchor="middle" fill="#f39c12" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" font-weight="600">AMBER</text>
+
+    <!-- Team Capability: 3.6 (AMBER, close to GREEN) -->
+    <text x="-10" y="75" text-anchor="end" fill="#cbd5e0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="13">Team Capability</text>
+    <rect x="0" y="60" width="360" height="28" rx="4" fill="url(#amberBar)" opacity="0.9"/>
+    <text x="370" y="80" fill="#f39c12" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" font-weight="bold">3.6</text>
+    <rect x="400" y="62" width="70" height="24" rx="4" fill="#f39c12" opacity="0.2" stroke="#f39c12" stroke-width="1"/>
+    <text x="435" y="80" text-anchor="middle" fill="#f39c12" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" font-weight="600">AMBER</text>
+
+    <!-- Governance &amp; Delivery: 2.9 (RED) -->
+    <text x="-10" y="125" text-anchor="end" fill="#cbd5e0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="13">Governance &amp; Delivery</text>
+    <rect x="0" y="110" width="290" height="28" rx="4" fill="url(#redBar)" opacity="0.9"/>
+    <text x="300" y="130" fill="#e94560" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" font-weight="bold">2.9</text>
+    <rect x="330" y="112" width="55" height="24" rx="4" fill="#e94560" opacity="0.2" stroke="#e94560" stroke-width="1"/>
+    <text x="358" y="130" text-anchor="middle" fill="#e94560" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" font-weight="600">RED</text>
+
+    <!-- Integration &amp; Data Readiness: 2.8 (RED) -->
+    <text x="-10" y="175" text-anchor="end" fill="#cbd5e0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="13">Integration &amp; Data Readiness</text>
+    <rect x="0" y="160" width="280" height="28" rx="4" fill="url(#redBar)" opacity="0.9"/>
+    <text x="290" y="180" fill="#e94560" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" font-weight="bold">2.8</text>
+    <rect x="320" y="162" width="55" height="24" rx="4" fill="#e94560" opacity="0.2" stroke="#e94560" stroke-width="1"/>
+    <text x="348" y="180" text-anchor="middle" fill="#e94560" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" font-weight="600">RED</text>
+
+    <!-- Business Alignment &amp; Strategy: 3.4 (AMBER) -->
+    <text x="-10" y="225" text-anchor="end" fill="#cbd5e0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="13">Business Alignment &amp; Strategy</text>
+    <rect x="0" y="210" width="340" height="28" rx="4" fill="url(#amberBar)" opacity="0.9"/>
+    <text x="350" y="230" fill="#f39c12" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" font-weight="bold">3.4</text>
+    <rect x="380" y="212" width="70" height="24" rx="4" fill="#f39c12" opacity="0.2" stroke="#f39c12" stroke-width="1"/>
+    <text x="415" y="230" text-anchor="middle" fill="#f39c12" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" font-weight="600">AMBER</text>
+
+    <!-- Cultural Readiness: 3.4 (AMBER) -->
+    <text x="-10" y="275" text-anchor="end" fill="#cbd5e0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="13">Cultural Readiness</text>
+    <rect x="0" y="260" width="340" height="28" rx="4" fill="url(#amberBar)" opacity="0.9"/>
+    <text x="350" y="280" fill="#f39c12" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" font-weight="bold">3.4</text>
+    <rect x="380" y="262" width="70" height="24" rx="4" fill="#f39c12" opacity="0.2" stroke="#f39c12" stroke-width="1"/>
+    <text x="415" y="280" text-anchor="middle" fill="#f39c12" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" font-weight="600">AMBER</text>
+
+    <!-- Threshold lines -->
+    <line x1="300" y1="0" x2="300" y2="300" stroke="#e94560" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+    <line x1="400" y1="0" x2="400" y2="300" stroke="#00d9a5" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+  </g>
+
+  <!-- Scale at bottom -->
+  <g transform="translate(220, 420)">
+    <line x1="0" y1="0" x2="500" y2="0" stroke="#4a5568" stroke-width="1"/>
+
+    <line x1="0" y1="0" x2="0" y2="8" stroke="#4a5568" stroke-width="1"/>
+    <text x="0" y="22" text-anchor="middle" fill="#718096" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11">1.0</text>
+
+    <line x1="100" y1="0" x2="100" y2="8" stroke="#4a5568" stroke-width="1"/>
+    <text x="100" y="22" text-anchor="middle" fill="#718096" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11">2.0</text>
+
+    <line x1="200" y1="0" x2="200" y2="8" stroke="#4a5568" stroke-width="1"/>
+    <text x="200" y="22" text-anchor="middle" fill="#718096" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11">3.0</text>
+
+    <line x1="300" y1="0" x2="300" y2="8" stroke="#e94560" stroke-width="2"/>
+    <text x="300" y="22" text-anchor="middle" fill="#e94560" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11">RED</text>
+
+    <line x1="400" y1="0" x2="400" y2="8" stroke="#00d9a5" stroke-width="2"/>
+    <text x="400" y="22" text-anchor="middle" fill="#00d9a5" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11">GREEN</text>
+
+    <line x1="500" y1="0" x2="500" y2="8" stroke="#4a5568" stroke-width="1"/>
+    <text x="500" y="22" text-anchor="middle" fill="#718096" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11">5.0</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(50, 420)">
+    <text x="0" y="10" fill="#718096" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12">Thresholds:</text>
+    <text x="0" y="28" fill="#e94560" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11">RED: &lt;3.0</text>
+    <text x="70" y="28" fill="#f39c12" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11">AMBER: 3.0-3.9</text>
+    <text x="0" y="44" fill="#00d9a5" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11">GREEN: &gt;=4.0</text>
+  </g>
+
+  <!-- Summary box -->
+  <g transform="translate(540, 420)">
+    <rect x="0" y="-5" width="250" height="70" rx="6" fill="#2d3748" opacity="0.9"/>
+    <text x="125" y="15" text-anchor="middle" fill="#ffffff" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12" font-weight="600">Overall Assessment</text>
+    <text x="125" y="35" text-anchor="middle" fill="#f39c12" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" font-weight="bold">AMBER</text>
+    <text x="125" y="50" text-anchor="middle" fill="#f39c12" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11">Proceed with Caution</text>
+    <text x="125" y="62" text-anchor="middle" fill="#718096" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10">2 RED | 4 AMBER | 0 GREEN</text>
+  </g>
+</svg>

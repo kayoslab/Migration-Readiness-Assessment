@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#16213e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f3460;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#e94560;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="greenGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00d9a5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00f5a0;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="amberGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f39c12;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f1c40f;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+
+  <!-- Grid pattern -->
+  <g opacity="0.08">
+    <line x1="0" y1="80" x2="1200" y2="80" stroke="#fff" stroke-width="1"/>
+    <line x1="0" y1="160" x2="1200" y2="160" stroke="#fff" stroke-width="1"/>
+    <line x1="0" y1="240" x2="1200" y2="240" stroke="#fff" stroke-width="1"/>
+    <line x1="0" y1="320" x2="1200" y2="320" stroke="#fff" stroke-width="1"/>
+    <line x1="0" y1="400" x2="1200" y2="400" stroke="#fff" stroke-width="1"/>
+    <line x1="0" y1="480" x2="1200" y2="480" stroke="#fff" stroke-width="1"/>
+    <line x1="0" y1="560" x2="1200" y2="560" stroke="#fff" stroke-width="1"/>
+    <line x1="150" y1="0" x2="150" y2="630" stroke="#fff" stroke-width="1"/>
+    <line x1="300" y1="0" x2="300" y2="630" stroke="#fff" stroke-width="1"/>
+    <line x1="450" y1="0" x2="450" y2="630" stroke="#fff" stroke-width="1"/>
+    <line x1="600" y1="0" x2="600" y2="630" stroke="#fff" stroke-width="1"/>
+    <line x1="750" y1="0" x2="750" y2="630" stroke="#fff" stroke-width="1"/>
+    <line x1="900" y1="0" x2="900" y2="630" stroke="#fff" stroke-width="1"/>
+    <line x1="1050" y1="0" x2="1050" y2="630" stroke="#fff" stroke-width="1"/>
+  </g>
+
+  <!-- Left side: Monolith to Microservices visual -->
+  <g transform="translate(80, 140)">
+    <!-- Monolith -->
+    <rect x="0" y="0" width="100" height="160" rx="6" fill="#2d3748" stroke="#4a5568" stroke-width="2"/>
+    <rect x="10" y="12" width="80" height="22" rx="3" fill="#4a5568"/>
+    <rect x="10" y="42" width="80" height="22" rx="3" fill="#4a5568"/>
+    <rect x="10" y="72" width="80" height="22" rx="3" fill="#4a5568"/>
+    <rect x="10" y="102" width="80" height="22" rx="3" fill="#4a5568"/>
+    <rect x="10" y="132" width="80" height="18" rx="3" fill="#4a5568"/>
+    <text x="50" y="190" text-anchor="middle" fill="#718096" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="13">Monolith</text>
+  </g>
+
+  <!-- Arrow with question mark -->
+  <g transform="translate(200, 200)">
+    <line x1="0" y1="20" x2="70" y2="20" stroke="url(#amberGradient)" stroke-width="4" stroke-dasharray="8,4"/>
+    <polygon points="70,10 90,20 70,30" fill="url(#amberGradient)"/>
+    <text x="45" y="0" text-anchor="middle" fill="#f39c12" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="32" font-weight="bold">?</text>
+  </g>
+
+  <!-- Microservices -->
+  <g transform="translate(310, 130)">
+    <rect x="0" y="0" width="45" height="45" rx="6" fill="#00d9a5" opacity="0.9"/>
+    <rect x="55" y="0" width="45" height="45" rx="6" fill="#00d9a5" opacity="0.9"/>
+    <rect x="0" y="55" width="45" height="45" rx="6" fill="#00d9a5" opacity="0.9"/>
+    <rect x="55" y="55" width="45" height="45" rx="6" fill="#00d9a5" opacity="0.9"/>
+    <rect x="27" y="110" width="45" height="45" rx="6" fill="#00d9a5" opacity="0.9"/>
+    <rect x="0" y="110" width="20" height="20" rx="4" fill="#00d9a5" opacity="0.7"/>
+    <rect x="80" y="110" width="20" height="20" rx="4" fill="#00d9a5" opacity="0.7"/>
+    <!-- Connection lines -->
+    <line x1="22" y1="45" x2="22" y2="55" stroke="#00f5a0" stroke-width="2"/>
+    <line x1="77" y1="45" x2="77" y2="55" stroke="#00f5a0" stroke-width="2"/>
+    <line x1="45" y1="22" x2="55" y2="22" stroke="#00f5a0" stroke-width="2"/>
+    <line x1="45" y1="77" x2="55" y2="77" stroke="#00f5a0" stroke-width="2"/>
+    <line x1="22" y1="100" x2="35" y2="110" stroke="#00f5a0" stroke-width="2"/>
+    <line x1="77" y1="100" x2="64" y2="110" stroke="#00f5a0" stroke-width="2"/>
+    <text x="50" y="180" text-anchor="middle" fill="#718096" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="13">Composable</text>
+  </g>
+
+  <!-- Main content area -->
+  <g transform="translate(480, 0)">
+    <!-- Main title -->
+    <text x="300" y="180" text-anchor="middle" fill="#ffffff" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="52" font-weight="bold">Migration Readiness</text>
+    <text x="300" y="250" text-anchor="middle" fill="#ffffff" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="52" font-weight="bold">Assessment</text>
+
+    <!-- Subtitle -->
+    <text x="300" y="310" text-anchor="middle" fill="#a0aec0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="20">Data-driven diagnostics for platform modernisation decisions</text>
+
+    <!-- Key benefits -->
+    <g transform="translate(50, 360)">
+      <circle cx="12" cy="10" r="6" fill="#00d9a5"/>
+      <text x="30" y="15" fill="#cbd5e0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="16">Surface misalignments before you commit</text>
+
+      <circle cx="12" cy="50" r="6" fill="#f39c12"/>
+      <text x="30" y="55" fill="#cbd5e0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="16">Quantify risks with statistical validation</text>
+
+      <circle cx="12" cy="90" r="6" fill="#e94560"/>
+      <text x="30" y="95" fill="#cbd5e0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="16">Make investment decisions with data, not gut feel</text>
+    </g>
+  </g>
+
+  <!-- RAG indicators at bottom -->
+  <g transform="translate(450, 520)">
+    <rect x="0" y="0" width="90" height="40" rx="6" fill="#e94560" opacity="0.2" stroke="#e94560" stroke-width="1"/>
+    <circle cx="25" cy="20" r="10" fill="#e94560"/>
+    <text x="55" y="25" fill="#e94560" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" font-weight="600">Risk</text>
+
+    <rect x="110" y="0" width="110" height="40" rx="6" fill="#f39c12" opacity="0.2" stroke="#f39c12" stroke-width="1"/>
+    <circle cx="135" cy="20" r="10" fill="#f39c12"/>
+    <text x="165" y="25" fill="#f39c12" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" font-weight="600">Caution</text>
+
+    <rect x="240" y="0" width="100" height="40" rx="6" fill="#00d9a5" opacity="0.2" stroke="#00d9a5" stroke-width="1"/>
+    <circle cx="265" cy="20" r="10" fill="#00d9a5"/>
+    <text x="295" y="25" fill="#00d9a5" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" font-weight="600">Ready</text>
+  </g>
+
+  <!-- Decorative elements -->
+  <g opacity="0.3">
+    <circle cx="1100" cy="100" r="40" fill="none" stroke="#e94560" stroke-width="2"/>
+    <circle cx="1130" cy="130" r="25" fill="none" stroke="#f39c12" stroke-width="2"/>
+    <circle cx="1070" cy="150" r="18" fill="none" stroke="#00d9a5" stroke-width="2"/>
+
+    <circle cx="100" cy="500" r="30" fill="none" stroke="#00d9a5" stroke-width="2"/>
+    <circle cx="70" cy="530" r="20" fill="none" stroke="#f39c12" stroke-width="2"/>
+    <circle cx="130" cy="540" r="15" fill="none" stroke="#e94560" stroke-width="2"/>
+  </g>
+
+  <!-- Top accent line -->
+  <rect x="0" y="0" width="1200" height="4" fill="url(#greenGradient)"/>
+
+  <!-- Bottom accent line -->
+  <rect x="0" y="626" width="1200" height="4" fill="url(#accentGradient)"/>
+</svg>

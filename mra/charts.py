@@ -501,3 +501,32 @@ def benchmark_chart(rows: list[dict], path: Path) -> Path:
                matplotlib.patches.Patch(color=RULE, label="± one standard deviation")]
     ax.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=3, frameon=False, fontsize=7.5)
     return _save(fig, path)
+
+
+LEAD_TIME_BUCKETS = ["Coordination between teams", "Waiting on process", "Review, build and tests", "No single main cause"]
+
+
+def lead_time_chart(by_group: dict, path: Path) -> Path:
+    """Where lead time goes, as each group sees it: 100% stacked bars in fixed bucket order and colours."""
+    apply_style()
+    groups = list(by_group)[::-1]
+    colours = dict(zip(LEAD_TIME_BUCKETS, [CATEGORICAL[0], CATEGORICAL[1], CATEGORICAL[2], NEUTRAL]))
+    fig, ax = plt.subplots(figsize=(WIDTH, 0.42 * len(groups) + 1.2))
+    left = np.zeros(len(groups))
+    y = np.arange(len(groups))
+    for b in LEAD_TIME_BUCKETS:
+        values = np.array([by_group[g].get(b, 0.0) for g in groups])
+        if not values.any():
+            continue
+        ax.barh(y, values, left=left, height=0.6, color=colours[b], edgecolor=SURFACE, lw=1, label=b)
+        for yi, (x0, v) in enumerate(zip(left, values)):
+            if v >= 0.12:
+                ax.text(x0 + v / 2, yi, f"{v:.0%}", ha="center", va="center", fontsize=7.5, color=SURFACE)
+        left += values
+    ax.set_yticks(y, groups)
+    ax.set_xlim(0, 1)
+    ax.set_xticks([0, 0.5, 1], ["0%", "50%", "100%"])
+    ax.tick_params(axis="y", length=0)
+    ax.spines["left"].set_visible(False)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=4, fontsize=7, handlelength=1)
+    return _save(fig, path)

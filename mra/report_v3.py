@@ -42,7 +42,7 @@ def _met_leaves(cond, ctx: Context) -> list[dict]:
     return [cond] if evaluate(cond, ctx) is True else []
 
 
-def _why(decision: str, outcome: str | None, assessment, limit: int = 4) -> list[str]:
+def _why(decision: str, outcome: str | None, assessment, limit: int = 8) -> list[str]:
     if not outcome or outcome == "insufficient_evidence":
         return []
     ins, ev = assessment.engagement.instrument, assessment.evidence
@@ -51,12 +51,17 @@ def _why(decision: str, outcome: str | None, assessment, limit: int = 4) -> list
         return []
     ctx = Context(ev.at(0), ins.rules, ev.current_state, decision)
     out = []
+    from .appraisal import _shown
     for c in _met_leaves(spec.get("when"), ctx)[:limit]:
         value = ctx.get(c["signal"])
         threshold = ctx.get(c["ref"]) if "ref" in c else c.get("value")
-        if value is None or isinstance(value, bool):
+        if value is None:
             continue
-        out.append(f"{signal_label(c['signal'], ins)}: {fmt(value)} (threshold: {OPS[c['op']] or 'equal to'} {fmt(threshold)}).")
+        if isinstance(value, bool):                    # derived yes/no conditions, e.g. a distinct component
+            out.append(f"{signal_label(c['signal'], ins)}: {'yes' if value else 'no'}.")
+            continue
+        out.append(f"{signal_label(c['signal'], ins)}: {_shown(c['signal'], value, ins)} "
+                   f"(threshold: {OPS[c['op']] or 'equal to'} {_shown(c['signal'], threshold, ins)}).")
     return out
 
 
@@ -76,6 +81,33 @@ def _evidence_strength(assessment) -> str:
     if len(scored) < 3:
         return "limited"
     return "strong" if scored.min() >= ev.get("strong_evidence_role_n", 15) else "indicative"
+
+
+def _lead_time_split(eng, ins) -> dict:
+    """Shares of the lead-time answers per bucket, by group, using the answer groupings of the decision rules."""
+    from .charts import LEAD_TIME_BUCKETS
+    sig = ins.rules.get("signals", {})
+    if "coordination_share" not in sig or "wait_state_share" not in sig:
+        return {}
+    coord, wait = set(sig["coordination_share"]["share_of"]), set(sig["wait_state_share"]["share_of"])
+    ans = eng.answers[(eng.answers["item_id"] == sig["coordination_share"]["item"]) & eng.answers["row"].isna()
+                      & (eng.answers["label"].fillna("") != "") & ~eng.answers["dont_know"].fillna(False).astype(bool)]
+    if ans.empty:
+        return {}
+
+    def bucket(label):
+        return (LEAD_TIME_BUCKETS[0] if label in coord else LEAD_TIME_BUCKETS[1] if label in wait else
+                LEAD_TIME_BUCKETS[3] if label == "No single main cause" else LEAD_TIME_BUCKETS[2])
+    ans = ans.assign(bucket=ans["label"].map(bucket))
+    min_n = ins.rules.get("evidence", {}).get("min_role_n", 5)
+    sizes = ans["role"].value_counts()
+    small = sizes[sizes < min_n].index
+    ans = ans.assign(group=ans["role"].where(~ans["role"].isin(small), "Other groups"))
+    if (ans["group"] == "Other groups").sum() and (ans["group"] == "Other groups").sum() < min_n:
+        ans = ans[ans["group"] != "Other groups"]                    # too few to show even when pooled
+    out = {g: (sub["bucket"].value_counts(normalize=True)).round(3).to_dict() for g, sub in ans.groupby("group")}
+    out["All respondents asked"] = ans["bucket"].value_counts(normalize=True).round(3).to_dict()
+    return out
 
 
 def _evidence_note(assessment) -> str:
@@ -105,6 +137,9 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     cfg = eng.config.get("report", {}) or {}
     cdir = out / "charts"
     point = ev.at(0)
+    from .integrity import run as run_integrity
+    issues = run_integrity(assessment)                 # contradictions between the sources, applied throughout
+    unverified = any(i.id == "baseline_unverified" for i in issues)
     decisions = []
     exhibits = []                       # every exhibit's insight, with the data behind it (used by the narrative)
 
@@ -158,6 +193,13 @@ def build_context(assessment, out: Path, root: Path) -> dict:
             block["insights"]["map"] = register("architecture.map", interpret.need_capability(need, floor), {
                 "need_point": round(float(need[0]), 2), "need_90pct": [round(float(x), 2) for x in np.nanpercentile(need, [5, 95])],
                 "weakest_capability_point": round(float(floor[0]), 2), "thresholds": {"need": [2.5, 3.5], "capability": 3.5}})
+            split = _lead_time_split(eng, ins)
+            if split:
+                cross = eng.facts.get("cross_team_change_pct")
+                cross = None if cross is None or cross.point is None else float(cross.point)
+                block["charts"]["leadtime"] = _rel(charts.lead_time_chart(split, cdir / "lead_time.svg"), root)
+                block["insights"]["leadtime"] = register("architecture.leadtime", interpret.lead_time(split, cross),
+                                                         {"by_group": split, "cross_team_change_pct": cross})
             block["fit"] = [{"outcome": labels.get(k.split(".", 1)[1]), "requirement": signal_label(c["signal"], ins),
                              "threshold": c["threshold"], "current": c["current"], "met": c["met"]}
                             for k, conds in (assessment.stakes.fit if assessment.stakes else {}).items()
@@ -304,6 +346,21 @@ def build_context(assessment, out: Path, root: Path) -> dict:
                 if b["interim_label"]:
                     sentence += f"; meanwhile, “{b['interim_label']}”"
             key.append(sentence + ".")
+    arch_block = next((b for b in decisions if b["id"] == "architecture"), {})
+    lead = (arch_block.get("insights", {}).get("leadtime") or {})
+    lead_split = next((e["data"]["by_group"] for e in exhibits if e["insight"]["id"] == "architecture.leadtime"), None)
+    bm_rows = (readiness.get("benchmark") or {}).get("rows", [])
+    speed = [r for r in bm_rows if r["metric"] in ("leadtime", "deployfreq") and r["score"] is not None]
+    if lead and lead_split and speed and not any(r["position"] == "below" for r in speed):
+        coord = lead_split["All respondents asked"].get("Coordination between teams", 0)
+        cross = eng.facts.get("cross_team_change_pct")
+        if coord >= 0.5:
+            key.append("Pipeline speed is around or above the industry average"
+                       + (" on measures still to be verified" if unverified else "")
+                       + f"; the delay the business experiences lies in coordination between teams: {coord:.0%} of "
+                         "the answers on lead time name it"
+                       + (f", and {float(cross.point):g}% of changes need more than one team" if cross and
+                          cross.point is not None else "") + ".")
     if not rd.matrix.empty:
         counted = rd.matrix.where(rd.counts >= min_n)
         area_scores = counted.mean(axis=1).dropna().sort_values()
@@ -328,8 +385,6 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         role = s["owner"].lower().split(" with ")[0].replace(" ", "_")
         if people.get(role) and people[role].lower() != s["owner"].lower():
             s["owner"] = f"{s['owner']} ({people[role]})"
-    from .integrity import run as run_integrity
-    issues = run_integrity(assessment)
     for issue in issues:                                # a step that rests on a contradicted input is rewritten
         if issue.step_rewrite:
             for s in steps:

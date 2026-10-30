@@ -242,6 +242,10 @@
     #exhibit(dec.charts.map, dec.insights.map,
       source: "Need for change against the weakest capability. Each dot is one bootstrap draw; the large dot is the point estimate.")
   ]
+  #if "leadtime" in dec.charts [
+    #exhibit(dec.charts.leadtime, dec.insights.leadtime,
+      source: "Answers to “where does most of the time go between code complete and running in production?”, grouped as in the decision rules; asked of the groups that work on releases.")
+  ]
   #if "fit" in dec and dec.fit.len() > 0 [
     == Operating-model fit
     Fit describes how current ways of working match what each path requires — not maturity.
@@ -459,6 +463,7 @@ plan how a decision is communicated and supported.
   ]
 ]
 #if data.text != none [
+  #anchor("free-text")
   == In respondents' own words
   #block(breakable: false, callout(title: "What respondents say")[
     #for (n, m) in data.text.key_messages.enumerate() [

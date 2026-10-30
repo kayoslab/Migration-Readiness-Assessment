@@ -16,6 +16,24 @@ TCO_OPTION = {"stay_as_is": "stay", "improve_current": "improve_current", "hybri
               "repatriate": "repatriate"}
 
 
+def _shown(signal: str, value, ins) -> str:
+    if "share_of" in ins.rules.get("signals", {}).get(signal, {}) and isinstance(value, (int, float)):
+        return f"{value:.0%}"                                 # survey shares are fractions; print them as percentages
+    if signal.startswith("payback") and isinstance(value, (int, float)):
+        return "never" if value == float("inf") else f"{value:.0f} months"
+    if signal.startswith("tco_saving_fte") and isinstance(value, (int, float)):
+        return f"{value:.1f} FTE"
+    return with_unit(signal, value, ins)
+
+
+def _routes(cond, ctx: Context) -> list[list[dict]]:
+    """Every way a failed condition could still come to hold: one route per branch of a top-level `any`."""
+    if isinstance(cond, dict) and "any" in cond and evaluate(cond, ctx) is False:
+        return [r for c in cond["any"] if (r := _failing_leaves(c, ctx))]
+    leaves = _failing_leaves(cond, ctx)
+    return [leaves] if leaves else []
+
+
 def _belief(cond: dict, ctx: Context, ins) -> str | None:
     if "signal" not in cond or cond["signal"] == "<unresolved>":
         return None
@@ -27,8 +45,8 @@ def _belief(cond: dict, ctx: Context, ins) -> str | None:
     elif isinstance(threshold, bool):
         target = "true" if threshold else "false"
     else:
-        target = f"{OPS.get(cond['op'], cond['op'])} {with_unit(cond['signal'], threshold, ins)}".strip()
-    current = "unknown" if value is None else with_unit(cond["signal"], value, ins)
+        target = f"{OPS.get(cond['op'], cond['op'])} {_shown(cond['signal'], threshold, ins)}".strip()
+    current = "unknown" if value is None else _shown(cond["signal"], value, ins)
     return f"{label} would have to be {target} (currently {current})."
 
 
@@ -65,7 +83,13 @@ def appraise(assessment, decision: str) -> list[dict]:
             beliefs = [f"Not possible: {rules['hard_stops'][stops[0]]['label'].lower()}."]
         elif not applies:
             state = "capability gap too large" if status == "fallthrough" else "conditions not met"
-            beliefs = [b for leaf in _failing_leaves(spec.get("when"), ctx) if (b := _belief(leaf, ctx, ins))]
+            beliefs = []
+            for n, route in enumerate(_routes(spec.get("when"), ctx)):
+                lines = [b for leaf in route if (b := _belief(leaf, ctx, ins))]
+                if n and lines:                                # a second way in: say so, and keep it together
+                    lines = ["Or" + (", all of: " if len(lines) > 1 else ": ") + "; ".join(
+                        x[0].lower() + x[1:].rstrip(".") for x in lines) + "."]
+                beliefs += lines
             beliefs += _cap_beliefs(spec, ctx, ins)          # what it would also take, not only the first hurdle
             beliefs += [f"Hard stop to remove: {rules['hard_stops'][h]['label'].lower()}." for h in spec.get("blocked_by", [])
                         if evaluate(rules["hard_stops"][h]["when"], ctx) is True]

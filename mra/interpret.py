@@ -263,3 +263,19 @@ def benchmark(bm: dict, architecture_verdict: str | None) -> dict:
 
 def _join(words: list[str]) -> str:
     return words[0] if len(words) == 1 else ", ".join(words[:-1]) + " and " + words[-1]
+
+
+def lead_time(by_group: dict, cross_team_pct: float | None) -> dict:
+    overall = by_group.get("All respondents asked") or next(iter(by_group.values()))
+    top = max(overall, key=overall.get)
+    title = f"Lead time goes mainly to {top[0].lower() + top[1:]} ({_pct(overall[top])} of answers)"
+    if top != "Waiting on process":
+        title += f"; {_pct(overall.get('Waiting on process', 0))} name waiting on approvals, testing or environments"
+    groups = [g for g in by_group if g != "All respondents asked"]
+    same = [g for g in groups if max(by_group[g], key=by_group[g].get) == top]
+    points = []
+    if len(same) == len(groups) > 1:
+        points.append(f"Every group asked gives the same answer ({', '.join(groups)}).")
+    if cross_team_pct is not None:
+        points.append(f"{cross_team_pct:g}% of merged changes touch code owned by more than one team.")
+    return {"title": title, "points": points}

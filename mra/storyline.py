@@ -22,7 +22,8 @@ from .instrument import _conditions
 from .readiness import _label as area_label, _sub_area_name
 
 ROLE = {
-    "probabilities": "Why this path", "map": "Why this path", "tco": "Why this path", "tornado": "How robust the case is",
+    "probabilities": "Why this path", "map": "Why this path", "leadtime": "Why this path", "tco": "Why this path",
+    "tornado": "How robust the case is",
     "preferences": "Who needs bringing along", "stakes": "Who needs bringing along",
     "people.map": "Who needs bringing along", "people.divergence": "What must be clarified",
     "readiness.matrix": "What must be built", "readiness.weakest": "What must be built",
@@ -260,6 +261,40 @@ def _arch_map(f: Findings) -> list[dict]:
     if m:
         out += [T(f"Progress shows in {m['measure'][0].lower() + m['measure'][1:].split(' (')[0]}: {m['baseline']} today, "
                   f"target {m['target']} ("), SEC("measures"), T(").")]
+    return out
+
+
+STRUCTURAL = ("modular_monolith", "broad_decomposition", "targeted_extraction", "realign_services", "consolidate")
+
+
+def _leadtime(f: Findings) -> list[dict]:
+    split = f.data["architecture.leadtime"]["by_group"]
+    overall = split.get("All respondents asked", {})
+    coord, wait = overall.get("Coordination between teams", 0), overall.get("Waiting on process", 0)
+    v = f.target("architecture")
+    if coord >= 0.5 and v in STRUCTURAL:
+        out = [T("Changes wait on other teams' changes; restructuring around clearly owned parts addresses that, "
+                 "whereas faster approvals alone would not shorten lead time. ")]
+    elif wait >= 0.5:
+        out = [T("The delay is in the process — approvals, manual testing or environments — which better practices "
+                 "address" + (" before any structural change. " if v in STRUCTURAL else ". "))]
+    else:
+        out = [T("No single cause dominates lead time, so neither restructuring nor process change alone will "
+                 "shorten it. ")]
+    keep = [g for g in split if g not in ("All respondents asked", "Other groups")
+            and (f.preferred("architecture", g) or (None,))[0] == "stay_and_improve"
+            and max(split[g], key=split[g].get) == "Coordination between teams"]
+    if keep and coord >= 0.5:
+        out += [T(f"{_join(keep)}, which {'prefers' if len(keep) == 1 else 'prefer'} keeping the current architecture, "
+                  f"{'gives' if len(keep) == 1 else 'give'} the same answer. ")]
+    if any(c["id"] == "disputed_claims.process_not_coupling" for c in f.caveats):
+        out += [T("This also answers the view that release approval is the bottleneck ("),
+                SEC("free-text", "in respondents' own words"), T("). ")]
+    no = f.step(lambda s: "cross-team" in s["action"])
+    if no:
+        out += [T("Whether restructuring works shows in the share of cross-team changes ("), S(no), T(").")]
+    else:
+        out += [T("Progress shows in "), SEC("measures"), T(".")]
     return out
 
 
@@ -571,7 +606,8 @@ def compose(assessment, ctx: dict) -> None:
             elif tail in ("preferences", "stakes"):
                 seg = (_preferences if tail == "preferences" else _stakes)(f, head)
             else:
-                seg = {"architecture.map": lambda: _arch_map(f), "hosting.tco": lambda: _tco(f),
+                seg = {"architecture.map": lambda: _arch_map(f), "architecture.leadtime": lambda: _leadtime(f),
+                       "hosting.tco": lambda: _tco(f),
                        "hosting.tornado": lambda: _tornado(f), "people.map": lambda: _people_map(f),
                        "people.divergence": lambda: _divergence(f), "readiness.matrix": lambda: _readiness_matrix(f),
                        "readiness.weakest": lambda: _readiness_weakest(f), "readiness.benchmark": lambda: _benchmark(f),
@@ -581,6 +617,7 @@ def compose(assessment, ctx: dict) -> None:
             failed.append(f"{eid}: so-what could not be composed ({type(exc).__name__}: {exc})")
         ins["so_what"] = _tidy(seg) if seg else [T(" ".join(ins["points"]))]
     ctx["so_what_issues"] = failed + check(ctx)
+    ctx["coverage_issues"] = coverage(assessment, ctx)
 
 
 def _tidy(segments: list[dict]) -> list[dict]:
@@ -594,6 +631,50 @@ def _tidy(segments: list[dict]) -> list[dict]:
     if out and "t" in out[-1]:
         out[-1] = T(out[-1]["t"].rstrip())
     return out
+
+
+def drivers(assessment) -> dict[str, list[str]]:
+    """Signals that decided each verdict: the satisfied conditions of the verdict, and every condition that keeps an
+    alternative from applying (all of its routes)."""
+    from .appraisal import _routes
+    from .decision import Context, evaluate
+    from .report_v3 import _met_leaves
+    ins, ev = assessment.engagement.instrument, assessment.evidence
+    out: dict[str, list[str]] = {}
+    for d, r in assessment.results.items():
+        ctx = Context(ev.at(0), ins.rules, ev.current_state, d)
+        found: list[str] = []
+        for o in ins.rules["decisions"][d]["outcomes"]:
+            allowed = o.get("only_if_current")
+            if allowed and ev.current_state[d] not in (allowed if isinstance(allowed, list) else [allowed]):
+                continue
+            if o["id"] == r.verdict:                     # the route that decided, as "why this path" shows it
+                found += [c["signal"] for c in _met_leaves(o.get("when"), ctx)]
+            elif any(evaluate(ins.rules["hard_stops"][h]["when"], ctx) is True for h in o.get("excluded_by", [])):
+                continue                                   # ruled out by a hard stop, which is the stated reason
+            else:
+                found += [c["signal"] for route in _routes(o.get("when"), ctx) for c in route if "signal" in c]
+        out[d] = [s for s in dict.fromkeys(found) if s != "<unresolved>"]
+    return out
+
+
+def coverage(assessment, ctx: dict) -> list[str]:
+    """Every driver must be visible in the body of the report (not only in the appendix)."""
+    import json
+
+    from .explain import signal_label
+    ins = assessment.engagement.instrument
+    body = json.dumps([{k: d.get(k) for k in ("why", "flips", "summary", "options")} for d in ctx["decisions"]],
+                      ensure_ascii=False) + json.dumps(ctx["key_messages"], ensure_ascii=False)
+    body += " ".join(e["insight"]["title"] + " " + plain(e["insight"].get("so_what") or []) for e in ctx["exhibits"])
+    body = body.lower()
+    missing = []
+    for d, signals in drivers(assessment).items():
+        for s in signals:
+            label = signal_label(s, ins)
+            if label.lower()[:40] not in body:
+                missing.append(f"{d}: “{label}” decides the verdict but is not shown in the report")
+    return missing
 
 
 def check(ctx: dict) -> list[str]:

@@ -65,6 +65,7 @@ def test_expert_cases_have_no_so_what_issues(name, tmp_path):
     a = assess(build(CASES[name], tmp_path / "eng", ROOT / "instrument", seed=3), draws=120)
     ctx = build_context(a, tmp_path / "out", ROOT)
     assert ctx["so_what_issues"] == []
+    assert ctx["coverage_issues"] == []                     # every driver of the verdict is visible
 
 
 def test_replace_means_keeps_references():
@@ -79,3 +80,17 @@ def test_polish_must_not_repeat_the_next_sentence():
     assert not polish_ok(seg, "The direction is clear, so what remains open is readiness: baseline measures and targets.")
     assert polish_ok(seg, "The evidence leaves no real alternative to restructuring within the current system.")
     assert not polish_ok(seg, " ".join(["word"] * 41) + ".")
+
+
+def test_lead_time_exhibit_answers_the_process_question(techco_ctx):
+    lead = _so_what(techco_ctx, "architecture.leadtime")
+    assert lead["title"].startswith("Lead time goes mainly to coordination between teams (100%")
+    text = plain(lead["so_what"])
+    assert "faster approvals alone would not shorten lead time" in text and "OPS" in text
+    assert any("delay the business experiences lies in coordination" in m for m in techco_ctx["key_messages"])
+    assert techco_ctx["coverage_issues"] == []
+
+
+def test_alternatives_show_every_route(techco_ctx):
+    keep = next(o for d in techco_ctx["decisions"] for o in d["options"] if o["id"] == "stay_and_improve")
+    assert any(b.startswith("Or, all of: share saying lead time is mostly waiting on process") for b in keep["beliefs"])

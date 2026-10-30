@@ -52,7 +52,7 @@ def test_pdf_builds(techco, tmp_path):
 def test_one_document_includes_readiness_by_group(techco, tmp_path):
     ctx = build_context(techco, ROOT / "Output" / "build-test-ctx", ROOT)
     assert ctx["readiness"]["differences"] and ctx["readiness"]["weakest"]
-    assert any(m.startswith("The weakest areas of readiness are") for m in ctx["key_messages"])
+    assert any(m.startswith("In the survey, the weakest areas of readiness are") for m in ctx["key_messages"])
     big = [d for d in ctx["readiness"]["differences"] if d["significant"]]
     assert big and big[0]["sub_area"] == "Alignment: reasons explained"
     import shutil

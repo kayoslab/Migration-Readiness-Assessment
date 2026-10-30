@@ -97,10 +97,8 @@
     #v(1pt)
     #text(size: 10.5pt, weight: "semibold", fill: theme.primary, insight.title)
     #v(4pt)
-    #if path != none [
-      #image(path, width: 100%)
-      #if source != none [#v(-2pt) #text(size: 7pt, fill: theme.muted, source)]
-    ]
+    #if path != none [#image(path, width: 100%)]
+    #if source != none [#v(-2pt) #text(size: 7pt, fill: theme.muted, source)]
     #block(width: 100%, inset: (left: 10pt, y: 5pt), stroke: (left: 2pt + theme.accent), above: 3mm, below: 5mm)[
       #text(size: 8pt, weight: "semibold", fill: theme.accent, tracking: 0.06em)[SO WHAT]
       #v(1pt)
@@ -303,7 +301,7 @@
 
   #v(3mm)
   #exhibit(dec.charts.probabilities, dec.insights.probabilities,
-    source: "Share of bootstrap draws in which each path applies. Respondents resampled within group; fact-sheet ranges sampled. The verdict requires " + pct(data.rules.confidence) + ".")
+    source: "Share of " + str(data.rules.draws) + " draws in which each path applies; each draw resamples the respondents within their group and every estimate within its range. The verdict requires " + pct(data.rules.confidence) + ".")
   #if "map" in dec.charts [
     #v(3mm)
     #exhibit(dec.charts.map, dec.insights.map,
@@ -418,7 +416,7 @@
   ]
   #v(3mm)
   #exhibit(dec.charts.probabilities, dec.insights.probabilities,
-    source: "Share of bootstrap draws in which each hosting path applies.")
+    source: "Share of " + str(data.rules.draws) + " draws in which each hosting path applies; each draw resamples the respondents and every estimate within its range.")
 ]
 
 = Organisational readiness
@@ -741,6 +739,9 @@ before results were seen.
 
 = Evidence
 
+Each score combines the fact sheet (counted twice) with the survey, across all groups equally; the readiness chapter
+shows survey answers alone, by group, which is why the same area can score differently there.
+#v(2mm)
 #data-table(
   columns: (3.4fr, 1fr, 0.8fr, 1.2fr),
   align: (left, left, right, center),

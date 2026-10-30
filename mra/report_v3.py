@@ -408,12 +408,14 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         area_scores = counted.mean(axis=1).dropna().sort_values()
         weak = [f"{name.split(': ', 1)[-1]} ({v:.1f})" for name, v in area_scores.head(2).items()]
         if weak:
-            key.append(f"The weakest areas of readiness are {' and '.join(weak)}.")
+            key.append(f"In the survey, the weakest areas of readiness are {' and '.join(weak)}.")
     strong_diff = [d for d in rd.differences if d["significant"] and d["effect"] == "large"]
     if strong_diff:
         d = strong_diff[0]
-        key.append(f"Groups see \u201c{d['sub_area'].split(': ', 1)[-1]}\u201d very differently "
-                   f"({d['high'][0]} {d['high'][1]:.1f} vs {d['low'][0]} {d['low'][1]:.1f}).")
+        from .integrity import GROUP_NAMES as _names
+        key.append(f"Groups see \u201c{d['sub_area'].split(': ', 1)[-1]}\u201d very differently: the most positive "
+                   f"group, {_names.get(d['high'][0], d['high'][0])}, rates it {d['high'][1]:.1f}, the most negative, "
+                   f"{_names.get(d['low'][0], d['low'][0])}, {d['low'][1]:.1f}.")
     if st and st.findings:
         key.append(f"{len(st.findings)} findings on stakeholder perspectives should inform how the decision is communicated.")
 

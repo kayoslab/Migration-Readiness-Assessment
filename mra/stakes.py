@@ -311,8 +311,9 @@ def _findings(rep: StakesReport, ins) -> list[str]:
                        f"on respondents' own roles and skills (the preferred option is rated {a['stake_gap']:+.2f} better for "
                        f"them than the alternatives). Plans should address how each option affects this group.")
     for w in rep.watermelon:
-        out.append(f"Leadership rates “{w['text']}” at {w['leadership']:.1f}, engineering and operations at "
-                   f"{w['delivery']:.1f}: a gap worth discussing before any commitment.")
+        out.append(f"Leadership (technology leadership and executives together) rates “{w['text']}” at "
+                   f"{w['leadership']:.1f}, engineering and operations together at {w['delivery']:.1f}: a gap worth "
+                   "discussing before any commitment.")
     for d in rep.leadership_disagreement:
         out.append(f"Technology and business leadership differ markedly in their preferred {d['decision']} direction; "
                    f"align the leadership team before communicating a decision.")

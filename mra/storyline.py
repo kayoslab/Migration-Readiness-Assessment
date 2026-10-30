@@ -192,6 +192,18 @@ def _probabilities(f: Findings, d: str) -> list[dict]:
     others = sorted(((p, o) for o, p in r.distribution.items() if o != r.verdict), reverse=True)
     out = [T("The direction is settled: no alternative comes close. ") if not others or others[0][0] < 0.1 else
            T(f"The direction holds, with “{f.label(d, others[0][1])}” the nearest alternative ({_pct(others[0][0])}). ")]
+    # each draw varies respondents AND every estimate within its range; say whether unverified inputs decided it
+    from .explain import inputs_of
+    decided_by = {fid for s in drivers(f.a).get(d, []) for fid in inputs_of(s, f.ins)["facts"]}
+    unverified = {fid for c in f.caveats for fid in (c.get("facts") or [])}
+    relied = sorted(decided_by & unverified)
+    if relied:
+        names = [f.ins.facts.at[x, "label"].split(" (")[0].lower() for x in relied if x in f.ins.facts.index][:2]
+        out += [T(f"The draws vary every estimate within its range, but the verdict rests partly on inputs still to be "
+                  f"confirmed ({_join(names)}). ")]
+    elif unverified:
+        out += [T("The draws vary every estimate within its range, and none of the inputs still to be confirmed enters "
+                  "the conditions that decided it. ")]
     open_gates = [g["label"].lower() for g in dec.get("gates", []) if g["status"] != "pass"]
     open_items = open_gates + [h.lower() for h in dec.get("hard_stops", [])] + \
         [c[0].lower() + c[1:] for c in dec.get("capabilities", [])]

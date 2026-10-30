@@ -149,9 +149,10 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         if d == "hosting" and r.economics:
             words = {"stay": "Keep as is", "improve_current": "Improve / right-size", "cloud": "Move to cloud",
                      "hybrid": "Hybrid", "repatriate": "Move back from cloud"}
-            ranges = {}
+            ranges = {}                                  # every option relative to today's setup as it is
+            stay = ev.signals["tco.stay"]
             for o in r.economics["ratio"]:
-                v = ev.signals[f"tco_ratio.{o}"]
+                v = ev.signals[f"tco.{o}"] / stay
                 ranges[o] = (float(np.nanpercentile(v, 5)), float(v[0]), float(np.nanpercentile(v, 95)))
             block["charts"]["tco"] = _rel(charts.tco_chart(ranges, words, cdir / "hosting_tco.svg"), root)
             paybacks = {o: point.get(f"payback_after_cutover.{o}") for o in ranges
@@ -266,6 +267,37 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     if st and st.findings:
         key.append(f"{len(st.findings)} findings on stakeholder perspectives should inform how the decision is communicated.")
 
+    # ---------------------------------------------------------------- options, risks, basis of preparation
+    from .appraisal import appraise
+    from .risks import register as risk_register
+    for block in decisions:
+        block["options"] = appraise(assessment, block["id"])
+    reg = risk_register(assessment)
+    invited = eng.config.get("invited") or {}
+    participation = [{"group": g, "n": int(n), "invited": invited.get(g),
+                      "rate": (round(n / invited[g], 2) if invited.get(g) else None)} for g, n in sizes.items()]
+    import yaml as _yaml
+    glossary_path = ins.root / "glossary.yaml"
+    glossary = [{"term": k, "definition": v} for k, v in (_yaml.safe_load(glossary_path.read_text()) or {}).items()] \
+        if glossary_path.exists() else []
+    report_cfg = eng.config.get("report", {}) or {}
+    org = report_cfg.get("organisation") or eng.system
+    prepared_by = report_cfg.get("prepared_by") or "the assessment team"
+    notice = report_cfg.get("notice") or [
+        f"This report was prepared by {prepared_by} for {report_cfg.get('prepared_for') or 'the management of ' + org} "
+        f"to support decisions about the future of {eng.system}. It should not be relied upon by any other party or "
+        "for any other purpose.",
+        "The findings are based on a survey of the stakeholder groups listed in the appendix and on a fact sheet "
+        "completed and attested by named owners within the organisation. Survey answers reflect respondents' "
+        "perceptions. Facts were taken as provided and were not audited; checks of the fact sheet's independence "
+        "and completeness are reported in the appendix.",
+        "The recommendations follow decision rules agreed before results were seen. They indicate the path the "
+        "evidence supports and the conditions attached to it; they are not a guarantee of outcomes. Cost figures are "
+        "estimates with stated ranges and should be confirmed before budgets are committed.",
+    ]
+    if eng.config.get("report", {}).get("sample_data"):
+        notice.append("This report was produced from synthetic data for illustration only.")
+
     rules = ins.rules
     return {
         "engagement": {
@@ -283,7 +315,10 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         "exhibits": exhibits,
         "steps": next_steps(assessment),
         "evidence": rows,
-        "participation": [{"group": g, "n": int(n)} for g, n in sizes.items()],
+        "participation": participation,
+        "risks": reg,
+        "notice": notice,
+        "glossary": glossary,
         "evidence_strength": _evidence_strength(assessment),
         "problems": assessment.problems,
         "fact_checks": [{"severity": f.severity, "message": f.message} for f in assessment.fact_checks],

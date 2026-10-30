@@ -1,0 +1,14 @@
+# Terms used in the report. Reword freely; the report prints them in this order.
+Bootstrap draw: One of the resampled versions of the evidence. Respondents are resampled within their group and estimates are drawn from their ranges; the share of draws in which a path applies is its probability.
+Confidence level: The share of draws a path must apply in before it is recommended (by default 80%). Below it, the report states that the evidence is insufficient.
+Precondition: Something that must be in place before committing to a path, such as an accountable sponsor or committed funding. Attested with evidence after the verdict.
+Hard stop: A technical condition that rules out a path until it is removed, such as releases that cannot be rolled back within an hour.
+Modular monolith: One deployable system organised internally into clearly separated parts, each owned by one team, with enforced boundaries.
+Targeted extraction: Separating one or two specific parts from the main system because they have a distinct load, availability or compliance profile.
+Hybrid: Running some workloads in a public cloud and the rest on own or leased infrastructure.
+Total cost of ownership (TCO): All costs of running an option over the horizon — infrastructure, people, licences, migration and running both setups in parallel — discounted to today's value.
+Payback after cut-over: The months after the last workload has moved until the option's cumulative cost falls below that of the alternative.
+FTE: Full-time equivalent; savings are expressed as fully loaded annual salaries.
+DORA metrics: Lead time, deployment frequency, change failure rate and time to restore — the delivery measures used by the DORA research programme.
+Operating-model fit: How current ways of working match what a path requires, such as domain ownership or team-owned operations. It describes fit, not maturity.
+Stake: How a respondent expects an option to affect their own role and skills. Reported for groups only and never used to weight answers.

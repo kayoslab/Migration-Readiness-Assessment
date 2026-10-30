@@ -126,6 +126,7 @@ if __name__ == "__main__":
     path = build(TECHCO, target, ROOT / "instrument", seed=11)
     cfg = yaml.safe_load(path.read_text())
     cfg["instrument"] = "../../instrument"
+    cfg["invited"] = {"ENG": 22, "PRD": 11, "BUS": 9, "TEC": 6, "EXE": 6, "OPS": 8, "SEC": 6, "FIN": 4}
     cfg["report"] = {"organisation": "TechCo", "title": "Architecture and Hosting Assessment",
                      "subtitle": "Recommended direction for the Order Platform", "prepared_for": "Executive Leadership Team",
                      "prepared_by": "Platform Advisory", "sample_data": True}

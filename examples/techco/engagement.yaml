@@ -16,6 +16,15 @@ responses:
   FIN: Responses/FIN.csv
 facts: facts.yaml
 governance: governance.yaml
+invited:
+  ENG: 22
+  PRD: 11
+  BUS: 9
+  TEC: 6
+  EXE: 6
+  OPS: 8
+  SEC: 6
+  FIN: 4
 report:
   organisation: TechCo
   title: Architecture and Hosting Assessment

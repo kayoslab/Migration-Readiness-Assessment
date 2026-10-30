@@ -19,6 +19,43 @@
   text(weight: "semibold", size: 8.5pt, upper(s))
 }
 
+#let state-text(s) = {
+  let c = if s == "applies" { theme.status.GREEN } else if s == "applies after preparation" { theme.status.AMBER } else { theme.muted }
+  text(fill: c, s)
+}
+
+#let options(dec) = [
+  == Options considered
+  Every path open from the current state, assessed on the same evidence. Programme size, reversibility and time to
+  value are stated judgements; all other columns come from the assessment.
+  #data-table(
+    columns: if dec.id == "hosting" { (2.6fr, 0.8fr, 1.5fr, 0.8fr, 2fr, 0.7fr) } else { (2.8fr, 0.8fr, 1.6fr, 2.2fr, 0.7fr) },
+    align: if dec.id == "hosting" { (left, right, left, right, left, right) } else { (left, right, left, left, right) },
+    header: if dec.id == "hosting" { ("Option", "Applies", "Status", "Cost", "Programme · reversibility · time", "Gates") }
+            else { ("Option", "Applies", "Status", "Programme · reversibility · time", "Gates") },
+    ..dec.options.map(o => {
+      let name = if o.is_verdict { strong(o.label) } else { o.label }
+      let judgement = text(size: 8pt, o.programme + " · " + o.reversibility + " · " + o.time_to_value)
+      if dec.id == "hosting" {
+        (name, pct(o.probability), state-text(o.state), if o.cost_vs_today == none [–] else [#fmt(o.cost_vs_today)×], judgement, str(o.preconditions))
+      } else {
+        (name, pct(o.probability), state-text(o.state), judgement, str(o.preconditions))
+      }
+    }).flatten(),
+  )
+  #v(2pt)
+  #text(size: 7.5pt, fill: theme.muted)[Applies: share of draws. #if dec.id == "hosting" [Cost: five-year cost relative to today's setup as it is. ]Gates: preconditions to attest before committing.]
+
+  == What you would need to believe
+  For each alternative, the conditions under which it — rather than the recommended path — would apply.
+  #for o in dec.options.filter(o => not o.is_verdict and o.beliefs.len() > 0) [
+    #v(1mm)
+    #block(sticky: true)[#text(weight: "semibold", fill: theme.primary, o.label)]
+    #set text(size: 9pt)
+    #for b in o.beliefs [- #b \ ]
+  ]
+]
+
 // An exhibit in advisory style: number, action title (the insight), chart, source, and "so what".
 #let exhibit-counter = counter("exhibit")
 #let exhibit(path, insight, source: none) = {
@@ -47,6 +84,14 @@
 ]
 
 #show: mra-report.with(engagement: e)
+
+#page(header: none)[
+  #v(12mm)
+  #text(size: 20pt, weight: "regular", fill: theme.primary)[Important notice]
+  #v(6mm)
+  #set text(size: 9pt)
+  #for p in data.notice [#p #v(2mm)]
+]
 
 #page(header: none)[
   #v(12mm)
@@ -120,6 +165,7 @@
     #for f in dec.flips [- #f \ ]
   ]
   #uncertainty(dec)
+  #options(dec)
 
   #v(3mm)
   #exhibit(dec.charts.probabilities, dec.insights.probabilities,
@@ -167,6 +213,7 @@
     #for f in dec.flips [- #f \ ]
   ]
   #uncertainty(dec)
+  #options(dec)
 
   #if "economics" in dec [
     == Cost case
@@ -178,8 +225,9 @@
         if r.payback == none [–] else [#r.payback months], fmt(r.saving_fte, d: 1) + " FTE")).flatten(),
     )
     #v(2pt)
-    #text(size: 7.5pt, fill: theme.muted)[Five-year net present value relative to the current setup; "saving / year"
-      in fully loaded salaries. All inputs from the fact sheet with their ranges.]
+    #text(size: 7.5pt, fill: theme.muted)[Five-year net present value of each option relative to today's setup as it is;
+      "saving / year" in fully loaded salaries. The decision rules compare a move with an improved current setup, so
+      moving must also beat what improving would achieve. All inputs from the fact sheet with their ranges.]
     #v(3mm)
     #exhibit(dec.charts.tco, dec.insights.tco,
       source: "Five-year net present value relative to the current setup; dot = likely value, line = 90% range.")
@@ -293,6 +341,36 @@ plan how a decision is communicated and supported.
   ]
 ]
 
+= Risks, assumptions and dependencies
+
+Each entry follows from a finding in this report; likelihood and impact are rated by rule (high · medium · low),
+owners and mitigations come from the action library.
+
+#data-table(
+  columns: (3.2fr, 0.45fr, 0.45fr, 1.4fr, 3fr),
+  align: (left, center, center, left, left),
+  header: ("Risk", "L", "I", "Owner", "Mitigation"),
+  ..data.risks.risks.map(r => ([#r.title #linebreak() #text(size: 7.5pt, fill: theme.muted, r.cause)],
+    upper(r.likelihood.slice(0, 1)), upper(r.impact.slice(0, 1)), text(size: 8pt, r.owner), text(size: 8pt, r.mitigation))).flatten(),
+)
+
+== Key assumptions
+#data-table(
+  columns: (3.4fr, 1.6fr, 1.8fr),
+  header: ("Assumption", "Basis", "Sensitivity"),
+  ..data.risks.assumptions.map(a => (text(size: 8.5pt, a.assumption), text(size: 8pt, fill: theme.muted, a.basis),
+    text(size: 8pt, a.sensitivity))).flatten(),
+)
+
+#if data.risks.dependencies.len() > 0 [
+  == Dependencies
+  #data-table(
+    columns: (1fr, 3fr, 1.6fr, 1fr),
+    header: ("Decision", "Depends on", "Owner", "Status"),
+    ..data.risks.dependencies.map(x => (x.decision, x.dependency, x.owner, x.status)).flatten(),
+  )
+]
+
 = Recommended next steps
 
 #let phases = data.steps.map(s => s.phase_label).dedup()
@@ -333,8 +411,10 @@ before results were seen.
 ]
 
 == Participation
-#data-table(columns: (2fr, 1fr), align: (left, right), header: ("Group", "Respondents"),
-  ..data.participation.map(p => (p.group, str(p.n))).flatten())
+#data-table(columns: (2fr, 1fr, 1fr, 1fr), align: (left, right, right, right),
+  header: ("Group", "Respondents", "Invited", "Response rate"),
+  ..data.participation.map(p => (p.group, str(p.n), if p.invited == none [–] else [#p.invited],
+    if p.rate == none [not recorded] else [#pct(p.rate)])).flatten())
 
 = Evidence
 
@@ -344,3 +424,12 @@ before results were seen.
   header: ("Measure", "Axis", "Score", "95% range"),
   ..data.evidence.map(r => (r.signal, r.group, fmt(r.value), r.range)).flatten(),
 )
+
+#if data.glossary.len() > 0 [
+  = Glossary
+  #for g in data.glossary [
+    #text(weight: "semibold", fill: theme.primary, g.term) \
+    #text(size: 9pt, g.definition)
+    #v(2mm)
+  ]
+]

@@ -103,6 +103,7 @@ axes:
 #   tco_ratio.<option>, payback_months.<option>, tco_saving_fte.<option> (hosting, from mra/tco.py)
 signals:
   current_state:
+    label: Current state
     description: Derived, not declared
     derive:
       - {when: {signal: fact.deployables_in_scope, op: "<=", value: 1}, then: single_deployable}
@@ -110,14 +111,17 @@ signals:
                       {signal: fact.core_code_share_pct, op: ">=", value: 70}]}, then: single_deployable}   # core with satellites
       - {then: distributed}
   wait_state_share:
+    label: Share saying lead time is mostly waiting on process
     description: Share of answers saying lead time is mostly spent waiting on process (release trains excluded — in a shared deployable they are a coupling symptom)
     item: AN01
     share_of: ["Manual testing", "Approvals (e.g. change advisory board)", "Waiting for environments"]
   coordination_share:
+    label: Share saying lead time is mostly coordination between teams
     description: Share of answers saying lead time is mostly coordination or release trains
     item: AN01
     share_of: ["Coordinating with other teams' changes", "Waiting for a release window or release train"]
   distinct_profile_present:
+    label: A component with a distinct profile
     description: At least one component with a separate compliance scope or availability tier, or a distinct load profile that one node cannot absorb
     any:
       - {signal: fact.components_distinct_compliance, op: ">=", value: 1}
@@ -126,19 +130,23 @@ signals:
           - {signal: fact.components_distinct_load, op: ">=", value: 1}
           - {signal: fact.single_node_sufficient, op: "!=", value: "yes"}
   distinct_profile_hurts:
+    label: Evidence that the distinct component causes pain today
     description: The distinct profile costs something today (pain test — a catalogue entry alone is not enough)
     any:
       - {signal: fact.candidate_incident_share_pct, op: ">=", value: 25}
       - {signal: fact.candidate_scope_in_main_deployable, op: "==", value: "yes"}
       - {signal: fact.candidate_scaling_cost_share_pct, op: ">=", value: 25}
   run_cost_within_tolerance:
+    label: Estimated run-cost increase within the agreed tolerance
     description: Estimated run-cost increase of the target within the pre-registered tolerance
     all:
       - {signal: fact.target_run_cost_increase_pct, op: "<=", ref: fact.acceptable_run_cost_increase_pct}
   need_hosting_specific:
+    label: Strongest specific hosting need
     description: Strongest specific hosting need (needs are not averaged — one strong need is enough)
     max_of: [need.hosting.elasticity, need.hosting.reach, need.hosting.managed_services, need.hosting.capacity_lead_time]
   unmet_specific_need:
+    label: Unmet specific hosting need
     description: A strong specific need exists but the verdict keeps or improves the current setup
     all:
       - {signal: need_hosting_specific, op: ">=", value: 3.5}

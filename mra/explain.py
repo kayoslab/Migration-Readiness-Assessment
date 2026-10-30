@@ -41,12 +41,15 @@ def signal_label(signal: str, ins: Instrument) -> str:
     if head == "locality":
         return "Concentration of friction in a few areas"
     if head in ("tco_ratio", "payback_months", "payback_after_cutover", "tco_saving_fte"):
-        what = {"tco_ratio": "Cost relative to the current setup", "payback_months": "Payback (months from decision)",
+        if head == "tco_ratio":
+            base = "the current setup as it is" if p[1] == "improve_current" else "an improved current setup"
+            return f"Cost of {OPTION_WORDS.get(p[1], p[1])} relative to {base}"
+        what = {"payback_months": "Payback (months from decision)",
                 "payback_after_cutover": "Payback (months after cut-over)", "tco_saving_fte": "Annual saving in salaries"}[head]
         return f"{what} for {OPTION_WORDS.get(p[1], p[1])}"
     spec = ins.rules.get("signals", {}).get(signal)
-    if spec and spec.get("description"):
-        return spec["description"]
+    if spec and (spec.get("label") or spec.get("description")):
+        return spec.get("label") or spec["description"]
     return signal.replace("_", " ")
 
 
@@ -129,3 +132,15 @@ def uncertainty_sentence(u: dict, ins: Instrument) -> str:
         threshold = signal_label(str(u["threshold"]), ins).lower()
     return (f"{label}: too close to call — {OPS.get(u['op'], u['op'])} {threshold} in {u['share_true']:.0%} of draws, "
             f"not in the rest.")
+
+
+def with_unit(signal: str, value, ins: Instrument) -> str:
+    """A value formatted with its unit where the signal is a fact with a short unit."""
+    text = fmt(value)
+    if signal.startswith("fact.") and signal[5:] in ins.facts.index and not isinstance(value, (bool, str)):
+        unit = ins.facts.at[signal[5:], "unit"]
+        if unit == "%":
+            return f"{text}%"
+        if unit in ("months", "days", "hours", "minutes", "weeks", "teams", "FTE"):
+            return f"{text} {unit}"
+    return text

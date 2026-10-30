@@ -57,3 +57,32 @@ def test_one_document_includes_readiness_by_group(techco, tmp_path):
     assert big and big[0]["sub_area"] == "Alignment: reasons explained"
     import shutil
     shutil.rmtree(ROOT / "Output" / "build-test-ctx", ignore_errors=True)
+
+
+def test_options_appraisal_and_beliefs(techco):
+    from mra.appraisal import appraise
+    rows = {r["id"]: r for r in appraise(techco, "architecture")}
+    assert rows["modular_monolith"]["is_verdict"] and rows["modular_monolith"]["state"] == "applies after preparation"
+    split = " ".join(rows["broad_decomposition"]["beliefs"])
+    assert "at least 3.5" in split and "below 20%" in split          # need and capability conditions both listed
+    hosting = {r["id"]: r for r in appraise(techco, "hosting")}
+    assert hosting["improve_current"]["cost_vs_today"] < 1 < hosting["move_to_cloud"]["cost_vs_today"]
+    assert hosting["stay_as_is"]["state"] == "pre-empted"
+
+
+def test_risk_register_follows_findings(techco):
+    from mra.risks import register
+    reg = register(techco)
+    top = reg["risks"][0]
+    assert top["likelihood"] == "high" and "baseline" in top["title"].lower()
+    assert any(r["kind"] == "people" for r in reg["risks"])
+    assert any("80%" in a["assumption"] for a in reg["assumptions"])
+    assert reg["dependencies"][0]["status"] == "fail"
+
+
+def test_basis_of_preparation(techco, tmp_path):
+    ctx = build_context(techco, ROOT / "Output" / "build-test-basis", ROOT)
+    assert any("should not be relied upon" in p for p in ctx["notice"])
+    assert any(t["term"] == "Hard stop" for t in ctx["glossary"])
+    import shutil
+    shutil.rmtree(ROOT / "Output" / "build-test-basis", ignore_errors=True)

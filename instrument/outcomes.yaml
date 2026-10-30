@@ -2,9 +2,12 @@
 # `preference_label` generates the options of survey items S01/S02/S04/S05 (plain language for every group).
 # `offered_when_current` limits which options a respondent sees, based on the derived current state.
 # `preference_label` may be a mapping by current state where the wording must differ.
+# `appraisal` holds stated judgements for the options table (programme size, reversibility, time to value);
+# they are shown as judgement in the report and can be adjusted per engagement.
 
 architecture:
   stay_and_improve:
+    appraisal: {programme: none, reversibility: high, time_to_value: weeks}   # judgement; adjust per engagement
     label: Keep the current architecture and improve delivery practices
     preference_label: Keep the current structure and improve how we work with it
     offered_when_current: [single_deployable, distributed]
@@ -22,6 +25,7 @@ architecture:
       - Revisit the architecture question once these measures have improved.
 
   modular_monolith:
+    appraisal: {programme: medium, reversibility: high, time_to_value: months}   # judgement; adjust per engagement
     label: Restructure within the current system (modular monolith)
     preference_label: Reorganise the current system internally into clearly separated parts, still released as one
     offered_when_current: [single_deployable]
@@ -36,6 +40,7 @@ architecture:
       - Baseline the share of cross-team changes and track it quarterly.
 
   targeted_extraction:
+    appraisal: {programme: medium, reversibility: medium, time_to_value: months}   # judgement; adjust per engagement
     label: Separate out one or two specific parts
     preference_label:
       single_deployable: Separate out one or two specific parts
@@ -52,6 +57,7 @@ architecture:
       - Review cost, delivery and reliability after the first extraction before starting another.
 
   broad_decomposition:
+    appraisal: {programme: large, reversibility: low, time_to_value: years}   # judgement; adjust per engagement
     label: Gradually split into independently deployable services
     preference_label: Gradually split into many separately released parts
     offered_when_current: [single_deployable]
@@ -66,6 +72,7 @@ architecture:
       - Track outcome measures per phase against the agreed stop criteria.
 
   realign_services:
+    appraisal: {programme: medium, reversibility: medium, time_to_value: months}   # judgement; adjust per engagement
     label: Realign existing services with team and domain boundaries
     preference_label: Redraw the boundaries of our existing services
     offered_when_current: [distributed]
@@ -79,6 +86,7 @@ architecture:
       - Merge or move responsibilities where changes routinely span several services.
 
   consolidate:
+    appraisal: {programme: medium, reversibility: medium, time_to_value: months}   # judgement; adjust per engagement
     label: Consolidate over-split services
     preference_label: Merge closely linked services back together
     offered_when_current: [distributed]
@@ -94,6 +102,7 @@ architecture:
 
 hosting:
   stay_as_is:
+    appraisal: {programme: none, reversibility: high, time_to_value: immediate}   # judgement; adjust per engagement
     label: Keep the current infrastructure
     preference_label: Keep the current infrastructure without major changes
     offered_when_current: [own_infrastructure, cloud, hybrid]
@@ -105,6 +114,7 @@ hosting:
       - Record the cost and capacity assumptions and revisit them at the next refresh or contract renewal.
 
   improve_current:
+    appraisal: {programme: small, reversibility: high, time_to_value: months}   # judgement; adjust per engagement
     label: Improve, right-size and automate the current infrastructure
     preference_label: Improve and automate what we run today, and adjust its size to actual need
     offered_when_current: [own_infrastructure, cloud, hybrid]
@@ -119,6 +129,7 @@ hosting:
       - Ensure at least two people can restore the platform independently.
 
   hybrid:
+    appraisal: {programme: medium, reversibility: medium, time_to_value: months}   # judgement; adjust per engagement
     label: Run selected workloads in a public cloud
     preference_label:
       own_infrastructure: Move some workloads to a public cloud and keep the rest
@@ -135,6 +146,7 @@ hosting:
       - Establish cost visibility per workload before moving a second.
 
   move_to_cloud:
+    appraisal: {programme: large, reversibility: low, time_to_value: a year or more}   # judgement; adjust per engagement
     label: Move most workloads to a public cloud
     preference_label: Move most workloads to a public cloud
     offered_when_current: [own_infrastructure, hybrid]
@@ -148,6 +160,7 @@ hosting:
       - Put cost ownership and budgets per team in place before the first wave.
 
   repatriate:
+    appraisal: {programme: large, reversibility: low, time_to_value: a year or more}   # judgement; adjust per engagement
     label: Move workloads back from the public cloud
     preference_label: Move workloads back from the public cloud to our own infrastructure
     offered_when_current: [cloud, hybrid]

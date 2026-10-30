@@ -220,6 +220,11 @@ Step numbering beyond 9, evidence appendix labels and duplicates, explanation of
 
 ## 5. Sequence
 
+**Status (2026-10-30):** Phase 1 done — WS1, WS7, WS8 and the coverage part of WS3. Findings F1, F2, F4–F8 and
+F12 are addressed; F3 and F9–F11 belong to phase 2 and 3. Deviations from the plan: the run-cost check is a caveat
+only (the block condition "verdict flips within the gap" needs WS2's allocation of the difference); free-text claims
+are checked against named survey measures (`disputed_claims`) rather than all numbers in the text.
+
 | Phase | Workstreams | Outcome | Effort |
 |---|---|---|---|
 | **1. Do not mislead** | WS1, WS7, WS8, WS3 (coverage rule, lead-time exhibit) | Every contradiction surfaced; draft vs final; ties and pooled groups honest | ~5 days |

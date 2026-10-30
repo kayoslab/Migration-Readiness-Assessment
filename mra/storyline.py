@@ -326,15 +326,25 @@ def _preferences(f: Findings, d: str) -> list[dict]:
     st = f.a.stakes
     by = st.preferences[d]["by_group"]
     v = f.target(d)
-    tops = {g: max((o for o in s if o != "no_direction"), key=s.get, default=None)
-            for g, s in by.items() if g != "All respondents"}            # counted as in the exhibit title
-    groups = list(tops)
+    from .stakes import top_choice
+    tops = {g: top_choice(s)[0] for g, s in by.items() if g != "All respondents" and top_choice(s)[2]}
+    groups = list(tops)                                                  # counted as in the exhibit title
     agree = [g for g in groups if tops[g] == v]
     dissent = [g for g in groups if g not in agree and g != "Other groups" and tops[g]]
-    out = [T(f"{len(agree)} of {len(groups)} groups already prefer the recommended path, so communication can build on "
-             "agreement. ") if len(agree) * 2 > len(groups) else
-           T(f"Only {len(agree)} of {len(groups)} groups prefer the recommended path, so the evidence needs explaining "
-             "before the decision is announced. ")]
+    overall = by.get("All respondents") or {}
+    rival = max(((o, x) for o, x in overall.items() if o not in (v, "no_direction")), key=lambda kv: kv[1], default=None)
+    tied = [g for g, s in by.items() if g != "All respondents" and top_choice(s)[0] is None and v in top_choice(s)[2]]
+    if rival and rival[1] >= overall.get(v, 0):
+        split = f", {len(tied)} {'is' if len(tied) == 1 else 'are'} split between it and another option" if tied else ""
+        out = [T(f"Support is thin: {len(agree)} of {len(groups)} groups clearly prefer the recommended path{split}, and "
+                 f"across respondents “{f.label(d, rival[0])}” is as popular ({_pct(rival[1])} against "
+                 f"{_pct(overall.get(v, 0))}). Explaining how the two differ is the core of the communication. ")]
+    elif len(agree) * 2 > len(groups):
+        out = [T(f"{len(agree)} of {len(groups)} groups already prefer the recommended path, so communication can build "
+                 "on agreement. ")]
+    else:
+        out = [T(f"Only {len(agree)} of {len(groups)} groups prefer the recommended path, so the evidence needs "
+                 "explaining before the decision is announced. ")]
     for g in dissent[:2]:
         o, share = tops[g], by[g][tops[g]]
         concern = (st.concern.get(g) or {}).get("self")

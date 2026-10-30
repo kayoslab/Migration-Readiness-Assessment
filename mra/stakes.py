@@ -40,6 +40,16 @@ class StakesReport:
     findings: list = field(default_factory=list)            # neutral sentences for the report
 
 
+def top_choice(shares: dict) -> tuple[str | None, float, list[str]]:
+    """The single most preferred direction, or None when two or more share the lead (a tie is not agreement)."""
+    directed = {o: v for o, v in shares.items() if o != "no_direction"}
+    if not directed:
+        return None, 0.0, []
+    best = max(directed.values())
+    leaders = [o for o, v in directed.items() if abs(v - best) < 1e-9]
+    return (leaders[0] if len(leaders) == 1 else None), best, leaders
+
+
 # ---------------------------------------------------------------------------------------- disclosure control
 
 def reportable_groups(sizes: pd.Series, min_n: int) -> tuple[list[str], list[str], bool]:
@@ -120,14 +130,14 @@ def analyse(eng, evidence, results: dict) -> StakesReport:
         for g, shares in dist.items():
             if not evidence_path or g == "All respondents":
                 continue
-            directed = {o: s for o, s in shares.items() if o != "no_direction"}
-            if not directed:
+            top, top_share, leaders = top_choice(shares)
+            if not leaders:
                 continue
-            top, top_share = max(directed.items(), key=lambda kv: kv[1])
             rep.preference_vs_evidence.append({
-                "decision": decision, "group": g, "most_preferred": top, "share": round(top_share, 2),
-                "evidence_path": evidence_path, "share_preferring_evidence_path": round(shares.get(evidence_path, 0.0), 2),
-                "differs": top != evidence_path})
+                "decision": decision, "group": g, "most_preferred": top or leaders[0], "share": round(top_share, 2),
+                "tied": top is None, "evidence_path": evidence_path,
+                "share_preferring_evidence_path": round(shares.get(evidence_path, 0.0), 2),
+                "differs": evidence_path not in leaders})
 
         # ---- stakes per option and motivated-reasoning diagnostic
         stake_rows = ans[ans["item_id"].isin(stake_items) & ans["row"].notna()].copy()

@@ -18,6 +18,9 @@ def _capability_key(name: str, library: dict) -> str | None:
     return next((k for k in library.get("capabilities", {}) if k in name), None)
 
 
+FIRST_STEP_OWNER = {"architecture": "Technology lead", "hosting": "Platform lead"}
+
+
 def next_steps(assessment) -> list[dict]:
     """Ordered actions: [{phase, phase_label, decision, action, owner, reason}]."""
     eng = assessment.engagement
@@ -66,7 +69,7 @@ def next_steps(assessment) -> list[dict]:
         target = r.verdict if r.verdict != "insufficient_evidence" else None
         if target:
             for step in ins.outcomes[decision][target].get("first_steps", []):
-                add("first_steps", decision, step, "Sponsor", f"For “{path}”.")
+                add("first_steps", decision, step, FIRST_STEP_OWNER.get(decision, "Sponsor"), f"For “{path}”.")
 
     missing = [p.split(": ", 1)[1] for p in assessment.problems if p.startswith("required fact missing")]
     if missing and (e := lib.get("evidence", {}).get("missing_fact")):

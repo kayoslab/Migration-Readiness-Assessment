@@ -78,6 +78,20 @@ def _evidence_strength(assessment) -> str:
     return "strong" if scored.min() >= ev.get("strong_evidence_role_n", 15) else "indicative"
 
 
+def _evidence_note(assessment) -> str:
+    sizes = assessment.engagement.respondents["role"].value_counts()
+    ev = assessment.engagement.instrument.rules.get("evidence", {})
+    min_n, strong = ev.get("min_role_n", 5), ev.get("strong_evidence_role_n", 15)
+    scored = sizes[sizes >= min_n]
+    strength = _evidence_strength(assessment)
+    return (f"Share of draws: how often the path applies when respondents and estimates are resampled. "
+            f"Evidence {strength}: " + {
+                "strong": f"every group counted has at least {strong} respondents.",
+                "indicative": f"the smallest group counted has {int(scored.min()) if len(scored) else 0} respondents; "
+                              f"{strong} or more per group would make it strong.",
+                "limited": f"fewer than three groups reach {min_n} respondents."}[strength])
+
+
 def _rel(path: Path, root: Path) -> str:
     """Typst paths are relative to the project root; outside it (context only, no compile) keep the absolute path."""
     try:
@@ -126,9 +140,11 @@ def build_context(assessment, out: Path, root: Path) -> dict:
             "uncertain": [{"text": uncertainty_sentence(x, ins),
                            "facts": [ins.facts.at[f, "label"] for f in inputs_of(x["signal"], ins)["facts"]][:4],
                            "items": len(inputs_of(x["signal"], ins)["items"])} for x in r.uncertain_inputs],
-            "charts": {"probabilities": _rel(charts.outcome_probability_chart(
-                r.distribution, labels, r.verdict if r.verdict != "insufficient_evidence" else r.leaning,
-                ins.rules.get("evidence", {}).get("confidence", 0.8), cdir / f"{d}_probabilities.svg"), root)},
+            # a single bar at 100% says nothing a sentence cannot: the exhibit then carries only its title and so-what
+            "charts": {"probabilities": None if max(r.distribution.values(), default=0) >= 0.995 else
+                       _rel(charts.outcome_probability_chart(
+                           r.distribution, labels, r.verdict if r.verdict != "insufficient_evidence" else r.leaning,
+                           ins.rules.get("evidence", {}).get("confidence", 0.8), cdir / f"{d}_probabilities.svg"), root)},
         }
         block["insights"] = {"probabilities": register(f"{d}.probabilities", interpret.outcome_probabilities(
             r.distribution, labels, r.verdict, r.leaning, ins.rules.get("evidence", {}).get("confidence", 0.8),
@@ -200,6 +216,16 @@ def build_context(assessment, out: Path, root: Path) -> dict:
                                                                             cdir / f"{d}_stakes.svg"), root),
                                          "insight": register(f"{d}.stakes", interpret.stakes(st.stakes_by_option[d], labels),
                                              {g: {labels.get(o, o): v for o, v in row.items()} for g, row in st.stakes_by_option[d].items()})})
+    from .integrity import GROUP_NAMES
+    sizes_all = eng.respondents["role"].value_counts()
+    min_group = ins.rules.get("evidence", {}).get("min_role_n", 5)
+    small = [(g, int(n)) for g, n in sizes_all.items() if 0 < n < min_group]
+    if small:
+        listed = [f"{GROUP_NAMES.get(g, g)} ({n})" for g, n in sorted(small, key=lambda x: -x[1])]
+        listed = listed[0] if len(listed) == 1 else ", ".join(listed[:-1]) + " and " + listed[-1]
+        stakes["pooled_note"] = (f"{listed} {'has' if len(small) == 1 else 'have'} fewer than {min_group} respondents. "
+                                 "To protect anonymity, their answers appear together as “Other groups” and are not "
+                                 "shown separately in the stakeholder map.")
     from .stakeholders import stakeholder_map
     smap = stakeholder_map(assessment)
     if smap:
@@ -250,14 +276,18 @@ def build_context(assessment, out: Path, root: Path) -> dict:
                                  "significant": d["significant"]} for d in rd.differences[:8]]
 
     # ---------------------------------------------------------------- evidence appendix
-    rows = []
+    rows, seen = [], set()
+    composite = {"capability.architecture": "Capability (architecture, overall)",
+                 "capability.hosting": "Capability (hosting, overall)"}
     for name, values in sorted(ev.signals.items()):
         head = name.split(".")[0]
         if head in ("need", "capability", "fit", "requirement", "locality") and name.count(".") >= 1 or name == "locality":
             v = values[0]
-            if not np.isnan(v):
+            label = composite.get(name) or signal_label(name, ins)
+            if not np.isnan(v) and label not in seen:      # an axis and its only sub-area can share a label
+                seen.add(label)
                 lo, hi = np.nanpercentile(values, [2.5, 97.5])
-                rows.append({"signal": signal_label(name, ins), "group": head, "value": round(float(v), 2),
+                rows.append({"signal": label, "group": head, "value": round(float(v), 2),
                              "range": f"{lo:.1f}–{hi:.1f}"})
     sizes = eng.respondents["role"].value_counts().to_dict() if len(eng.respondents) else {}
 
@@ -293,6 +323,11 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     steps = next_steps(assessment)
     for i, s in enumerate(steps, 1):
         s["no"] = i                                     # one numbering across phases, for cross-references
+    people = {k: v for k, v in (eng.config.get("people") or {}).items() if v}
+    for s in steps:                                     # "Technology lead (CTO)" where the engagement names the role
+        role = s["owner"].lower().split(" with ")[0].replace(" ", "_")
+        if people.get(role) and people[role].lower() != s["owner"].lower():
+            s["owner"] = f"{s['owner']} ({people[role]})"
     from .integrity import run as run_integrity
     issues = run_integrity(assessment)
     for issue in issues:                                # a step that rests on a contradicted input is rewritten
@@ -364,6 +399,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         "notice": notice,
         "glossary": glossary,
         "evidence_strength": _evidence_strength(assessment),
+        "evidence_note": _evidence_note(assessment),
         "problems": assessment.problems + ([benchmark_problem] if benchmark_problem else [])
                     + ([bm["warning"]] if bm and bm.get("warning") else []),
         "fact_checks": [{"severity": f.severity, "message": f.message} for f in assessment.fact_checks],

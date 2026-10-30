@@ -97,8 +97,10 @@
     #v(1pt)
     #text(size: 10.5pt, weight: "semibold", fill: theme.primary, insight.title)
     #v(4pt)
-    #image(path, width: 100%)
-    #if source != none [#v(-2pt) #text(size: 7pt, fill: theme.muted, source)]
+    #if path != none [
+      #image(path, width: 100%)
+      #if source != none [#v(-2pt) #text(size: 7pt, fill: theme.muted, source)]
+    ]
     #block(width: 100%, inset: (left: 10pt, y: 5pt), stroke: (left: 2pt + theme.accent), above: 3mm, below: 5mm)[
       #text(size: 8pt, weight: "semibold", fill: theme.accent, tracking: 0.06em)[SO WHAT]
       #v(1pt)
@@ -205,6 +207,9 @@
     ]
   ]
 ]
+
+#v(4mm)
+#text(size: 7.5pt, fill: theme.muted, data.evidence_note)
 
 = Architecture
 
@@ -415,6 +420,7 @@ checked for the recommended path after the verdict.
 
 Preferences and personal stakes never influence the recommendation. They are reported at group level only, to help
 plan how a decision is communicated and supported.
+#if "pooled_note" in data.stakes [#text(size: 9pt, fill: theme.muted, data.stakes.pooled_note)]
 
 #if data.stakes.findings.len() > 0 [
   #callout(title: "Findings")[
@@ -441,6 +447,7 @@ plan how a decision is communicated and supported.
     ..data.stakes.map.map(r => (r.group, pct(r.support), r.influence + if r.influence_source == "default" [ (default)] else [],
       if r.concern == none [–] else [#pct(r.concern)], r.approach)).flatten(),
   )
+  #if "pooled_note" in data.stakes [#text(size: 7.5pt, fill: theme.muted, data.stakes.pooled_note)]
 ]
 #if "divergence_chart" in data.stakes [
   #block(breakable: false)[
@@ -536,7 +543,7 @@ owners and mitigations come from the action library.
   #for s in data.steps.filter(s => s.phase_label == ph) [
     #metadata(s.no)#label("step-" + str(s.no))
     #grid(columns: (9mm, 1fr),
-      text(size: 12pt, weight: "light", fill: theme.accent, numbering("01", s.no)),
+      text(size: 12pt, weight: "light", fill: theme.accent, (if s.no < 10 { "0" } else { "" }) + str(s.no)),
       [#s.action \ #text(size: 8pt, fill: theme.muted)[Owner: #s.owner#if s.reason != "" [ · #s.reason]]],
     )
     #v(2mm)

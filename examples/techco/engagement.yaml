@@ -1,8 +1,11 @@
 system: the Order Platform
 current_hosting: own_infrastructure
 people:
-  sponsor: Sponsor
-  fact_sheet_owner: Fact-sheet owner
+  sponsor: Chief Operating Officer
+  fact_sheet_owner: Head of Engineering
+  technology_lead: CTO
+  platform_lead: Head of Platform
+  hr: HR business partner
 fact_sheet_frozen_on: '2026-10-01'
 instrument: ../../instrument
 responses:

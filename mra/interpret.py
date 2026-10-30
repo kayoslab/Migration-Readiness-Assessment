@@ -156,13 +156,27 @@ def divergence(rows: list[dict]) -> dict:
 
 
 def preferences(by_group: dict, labels: dict, verdict: str | None) -> dict:
-    tops = {g: max(((o, v) for o, v in s.items() if o != "no_direction"), key=lambda kv: kv[1], default=(None, 0))
-            for g, s in by_group.items() if g != "All respondents"}
-    agree = [g for g, (o, _) in tops.items() if o == verdict]
-    title = (f"{len(agree)} of {len(tops)} groups most prefer the path the evidence supports"
-             if verdict else "Preferred directions by group")
+    from .stakes import top_choice
+    tops = {g: top_choice(s) for g, s in by_group.items() if g != "All respondents"}
+    tops = {g: t for g, t in tops.items() if t[2]}
+    agree = [g for g, (o, _, _) in tops.items() if o == verdict]
+    tied = [g for g, (o, _, leaders) in tops.items() if o is None and verdict in leaders]
+    if verdict:
+        title = f"{len(agree)} of {len(tops)} groups most prefer the path the evidence supports"
+        if tied:
+            title += f"; {len(tied)} {'is' if len(tied) == 1 else 'are'} split evenly between it and another"
+    else:
+        title = "Preferred directions by group"
     points = []
-    split = [g for g, (o, v) in tops.items() if v >= 0.6 and o != verdict]
+    overall = by_group.get("All respondents") or {}
+    if verdict and overall:
+        rival = max(((o, v) for o, v in overall.items() if o not in (verdict, "no_direction")), key=lambda kv: kv[1],
+                    default=None)
+        text = f"Across all respondents, {_pct(overall.get(verdict, 0))} prefer it"
+        if rival and rival[1] >= overall.get(verdict, 0):
+            text += f" and {_pct(rival[1])} prefer “{labels.get(rival[0], rival[0])}”"
+        points.append(text + ".")
+    split = [g for g, (o, v, _) in tops.items() if o and v >= 0.6 and o != verdict]
     if split:
         g = split[0]
         points.append(f"{g} clearly prefers “{labels.get(tops[g][0], tops[g][0])}” ({_pct(tops[g][1])}).")

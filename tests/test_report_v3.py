@@ -138,3 +138,24 @@ def test_stakeholder_map_off_by_default(techco):
         assert stakeholder_map(techco) == []
     finally:
         report["stakeholder_map"] = before
+
+
+def test_ties_are_not_counted_as_agreement():
+    from mra.interpret import preferences
+    from mra.stakes import top_choice
+    assert top_choice({"a": 0.3, "b": 0.3, "no_direction": 0.4})[0] is None
+    out = preferences({"G1": {"a": 0.6, "b": 0.4}, "G2": {"a": 0.3, "b": 0.3}, "All respondents": {"a": 0.31, "b": 0.33}},
+                      {"a": "A", "b": "B"}, "a")
+    assert out["title"].startswith("1 of 2 groups") and "split evenly" in out["title"]
+    assert "33% prefer “B”" in out["points"][0]
+
+
+def test_pooled_groups_owners_and_appendix(techco, tmp_path):
+    techco.engagement.config.setdefault("people", {})["technology_lead"] = "CTO"
+    ctx = build_context(techco, tmp_path, ROOT)
+    assert "Security (4) and Finance (3)" in ctx["stakes"]["pooled_note"]
+    assert any(s["owner"] == "Technology lead (CTO)" for s in ctx["steps"])
+    labels = [r["signal"] for r in ctx["evidence"]]
+    assert len(labels) == len(set(labels)) and not any(l.startswith(("capability.", "need.")) for l in labels)
+    assert ctx["decisions"][0]["charts"]["probabilities"] is None          # a single 100% bar is not drawn
+    assert "Evidence indicative" in ctx["evidence_note"]

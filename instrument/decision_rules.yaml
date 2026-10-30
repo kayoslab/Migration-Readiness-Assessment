@@ -11,7 +11,8 @@
 # uncertainty prevented a verdict, with an owner and a deadline.
 
 version: "0.3-draft"
-signed_off_by: null              # e.g. "CTO, CFO, Head of Product, Head of Platform team — 2026-11-04"
+signed_off_by: null              # e.g. "CTO, CFO, Head of Product, Head of Platform team"
+signed_off_on: null              # date of sign-off; must be before the fact sheet is frozen (instrument/integrity.yaml)
 
 # =========================================================================================== semantics
 semantics:

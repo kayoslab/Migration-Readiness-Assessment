@@ -230,17 +230,15 @@ Step numbering beyond 9, evidence appendix labels and duplicates, explanation of
 Phase 1 comes first because a report that is easy to decide on but contradicts its inputs is worse than one that is
 hard to decide on. WS9's rubric tests are written alongside each phase, not only at the end.
 
-## 6. Decisions needed
+## 6. Decisions (agreed 2026-10-30)
 
-1. **Blocking.** Should unsigned rules and `block`-level contradictions prevent a final report (recommended), or
-   only print a banner?
-2. **Euros in the client report.** Show absolute figures by default (recommended), or allow an engagement switch
-   for organisations that share the report widely?
-3. **Architecture effort estimates.** Who provides them — the technology lead with a second estimator
-   (recommended), or the consultant from a reference class?
-4. **Benefits.** Proceed with WS6 benefits in this plan, or keep the report cost-only until a pilot has run?
-5. **Reviewer persona.** Is an LLM review pass acceptable for client engagements (it sees the same findings as the
-   narrative writer), or should it stay a local tool?
+1. **Blocking.** Unsigned rules and `block`-level contradictions prevent a final report: the report is generated as
+   a draft with the reasons on the cover, and `mra report --final` fails.
+2. **Euros in the client report.** Shown by default; an engagement switch can suppress absolute figures.
+3. **Architecture effort estimates.** Provided by the technology lead with a second, independent estimator.
+4. **Benefits.** The report stays cost-only until a pilot has run; WS6 builds the architecture investment and phase
+   budget, and the benefit model waits for pilot data.
+5. **Reviewer persona.** `mra review` is a local tool for the analyst and is not run on client engagements.
 
 ## 7. Risks
 

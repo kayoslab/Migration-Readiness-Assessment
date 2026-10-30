@@ -131,6 +131,11 @@ if __name__ == "__main__":
                      "subtitle": "Recommended direction for the Order Platform", "prepared_for": "Executive Leadership Team",
                      "prepared_by": "Platform Advisory", "sample_data": True, "stakeholder_map": True}
     cfg["benchmark"] = {"industry": "technology", "organisation_size": "fewer_than_1000"}
+    # the engagement's own copy of the rules, signed off before the fact sheet was frozen (2026-10-01)
+    rules = (ROOT / "instrument" / "decision_rules.yaml").read_text().replace(
+        "signed_off_by: null", 'signed_off_by: "Executive Leadership Team (sample)"\nsigned_off_on: 2026-09-15', 1)
+    (path.parent / "decision_rules.yaml").write_text(rules)
+    cfg["rules"] = "decision_rules.yaml"
     cfg["influence"] = {"EXE": "high", "TEC": "high", "FIN": "high", "PRD": "medium", "ENG": "medium",
                         "OPS": "medium", "BUS": "medium", "SEC": "medium"}
     path.write_text(yaml.safe_dump(cfg, sort_keys=False))

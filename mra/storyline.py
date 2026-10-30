@@ -115,6 +115,10 @@ class Findings:
         self.risks = ctx["risks"]["risks"]
         self.measures = ctx["measures"]
         self.stake_map = {r["group"]: r for r in ctx["stakes"].get("map", [])}
+        self.caveats = (ctx.get("integrity") or {}).get("caveats", [])
+
+    def caveated(self, issue_id: str) -> bool:
+        return any(c["id"] == issue_id for c in self.caveats)
 
     def label(self, d: str, oid: str | None) -> str:
         return outcome_label(self.ins, d, oid) if oid else ""
@@ -247,7 +251,8 @@ def _arch_map(f: Findings) -> list[dict]:
                     T("), so the case rests on coupling, not speed. ")]
         elif v in ("stay_and_improve", "modular_monolith"):
             out += [T("Delivery speed at or above the industry average ("), X("readiness.benchmark"),
-                    T(") points the same way: no larger change is needed to keep up with peers. ")]
+                    T(") points the same way: no larger change is needed to keep up with peers"
+                      + (", provided the measures are confirmed. " if f.caveated("baseline_unverified") else ". "))]
         else:
             out += [T("Delivery speed is at or above the industry average ("), X("readiness.benchmark"),
                     T("), so the change must not slow it down. ")]
@@ -292,7 +297,10 @@ def _tco(f: Findings) -> list[dict]:
         found = next(b for b in be if b["value"] is not None)
         out += [T(found["sentence"].rstrip(".") + " ("), SEC("scenarios-hosting", "scenarios"), T("). ")]
     rid = f.risk(lambda x: x["kind"] == "cost")
-    if rid:
+    if f.caveated("run_cost_reconciliation"):
+        out += [T("The ranking holds on the modelled costs, but the invoiced run cost is well above the modelled one; "
+                  "allocate the difference before any budget is set.")]
+    elif rid:
         out += [T("Firm up the estimate behind "), R(rid), T(" before budgets are committed.")]
     else:
         no = f.step(lambda s: s["decision"] == "hosting" and s["phase"] == "first_steps")
@@ -502,8 +510,13 @@ def _benchmark(f: Findings) -> list[dict]:
         return [T("Without measured delivery data the comparison cannot be made; measuring it is part of "),
                 SEC("measures"), T(".")]
     below = [r["label"].lower() for r in rows if r["position"] == "below"]
-    out = [T(f"Catching up on {_join(below)} is part of what the change must deliver. ") if below else
-           T("Delivery performance is not the problem to solve, so it is the thing to protect. ")]
+    if f.caveated("baseline_unverified"):
+        out = [T("The comparison is provisional: the measures have not been verified against system data. ")]
+        out += [T(f"If confirmed, catching up on {_join(below)} is part of what the change must deliver. ") if below else
+                T("If confirmed, delivery performance is not the problem to solve but the thing to protect. ")]
+    else:
+        out = [T(f"Catching up on {_join(below)} is part of what the change must deliver. ") if below else
+               T("Delivery performance is not the problem to solve, so it is the thing to protect. ")]
     out += [T("These measures belong next to "), SEC("measures"),
             T(" as guardrails at each checkpoint, so that the change does not trade stability for structure.")]
     return out

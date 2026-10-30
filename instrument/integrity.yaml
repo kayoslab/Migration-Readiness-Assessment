@@ -1,0 +1,52 @@
+# Cross-source integrity checks (mra/integrity.py). Each check reads two or more sources against each other.
+#   block  — the report is a draft: the cover and executive summary say why, and `mra report --final` fails
+#   caveat — printed beside every finding, exhibit and step that uses the affected input
+#   note   — listed in the basis of preparation
+# Severities and thresholds may be tightened per engagement; loosening them should be recorded with the sign-off.
+
+checks:
+  rules_signed_off:
+    severity: block
+    # the decision rules must be signed off before the fact sheet was frozen and results were seen
+
+  baseline_unverified:
+    severity: caveat
+    facts: [lead_time_hours, deploys_per_week, change_failure_pct, restore_hours]
+    governance: GV06               # "baseline delivery measures have been measured in the last six months"
+    verified_answers: ["Yes"]
+
+  run_cost_reconciliation:
+    severity: caveat
+    tolerance_pct: 25              # invoice total vs the cost model's components, same scope (infrastructure + operations)
+
+  urgency_vs_dates:
+    severity: caveat
+    min_months: 12                 # a refresh or contract end further away than this is not "due"
+    keywords: [due, urgent, now, immediately, time-critical, before committing, deadline, running out]
+
+  critical_groups:
+    severity: caveat
+    groups:                        # groups whose perspective a decision cannot do without
+      architecture: [ENG, OPS, TEC]
+      hosting: [OPS, SEC, FIN]
+
+  disputed_claims:
+    severity: caveat
+    # A free-text explanation that a survey measure contradicts. `when` uses the same signals as the decision rules.
+    claims:
+      - id: process_not_coupling
+        keywords: [approval, approved, release process, change advisory, CAB, release window]
+        signal: wait_state_share
+        contradicted_below: 0.25
+        evidence: >-
+          {coordination:.0%} of respondents asked say lead time goes mainly to coordinating with other teams'
+          changes and {waiting:.0%} to waiting on approvals, testing or environments
+      - id: platform_has_capacity
+        keywords: [capacity, room to spare, handle the load]
+        fact: capacity_lead_time_weeks
+        contradicted_above: 6
+        evidence: "capacity takes {value:g} weeks to provision"
+
+  attestation:
+    severity: note
+    # facts without an attester, and estimates without a second estimator, are listed

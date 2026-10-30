@@ -26,7 +26,10 @@ is not in them; copy numbers exactly as given (shares may be written as percenta
 other than the one each decision's verdict names; you may mention the interim step. If a decision's status is
 "prepare_first", say that preconditions must be met first. If it is "insufficient", say that the evidence does not
 yet support a single path. Describe stakeholder stakes neutrally, as considerations for planning and
-communication, never as motives or bias. Attribute views to groups, never to individuals.
+communication, never as motives or bias. Attribute views to groups, never to individuals. "integrity" lists where the
+inputs contradict each other: carry each qualification where you use the affected finding, never present a view
+marked as unsupported as a finding or as common ground, and if any issue has severity "block", say in the first
+paragraph that the report is a draft and why.
 
 Return:
 - executive: 2 to 4 short paragraphs telling one coherent story — the situation, what the evidence says for each
@@ -102,6 +105,8 @@ def findings_payload(ctx: dict) -> dict:
                       for r in (ctx["readiness"].get("benchmark") or {}).get("rows", [])],
         "stakeholder_map": [{k: r[k] for k in ("group", "support", "influence", "approach")}
                             for r in ctx["stakes"].get("map", [])],
+        "integrity": [{"severity": i["severity"], "issue": i["title"], "detail": i["message"]}
+                      for i in (ctx.get("integrity") or {}).get("issues", [])],
     }
 
 

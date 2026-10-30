@@ -102,6 +102,11 @@
       [#eyebrow[Prepared by] \ #engagement.at("prepared_by", default: "")],
       [#eyebrow[Date] \ #engagement.at("date", default: "")],
     )
+    #if engagement.at("draft", default: false) [
+      #v(14pt)
+      #text(size: 11pt, weight: "semibold", fill: theme.status.RED)[DRAFT — NOT FOR DECISION]
+      #h(6pt) #text(size: 8.5pt, fill: theme.muted)[The reasons are set out in the Important notice.]
+    ]
     #if engagement.at("sample_data", default: false) [
       #v(14pt)
       #text(size: 8pt, fill: theme.muted)[This report was produced from synthetic sample data for illustration only.]

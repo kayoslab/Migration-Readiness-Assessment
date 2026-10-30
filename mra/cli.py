@@ -18,6 +18,8 @@ def main(argv: list[str] | None = None) -> int:
     rep.add_argument("--config", default="assessment.yaml", help="v2 only: assessment.yaml of a v2 survey")
     rep.add_argument("--output", help="PDF path (default: report.output in the config)")
     rep.add_argument("--llm", action="store_true", help="analyse free-text answers with the configured LLM")
+    rep.add_argument("--final", action="store_true",
+                     help="refuse to build unless every blocking integrity check passes (otherwise a draft is built)")
 
     bm = sub.add_parser("benchmarks", help="show the age of the DORA benchmark table, or rebuild it")
     bm.add_argument("--instrument", default="instrument")
@@ -170,8 +172,12 @@ def _decide(args) -> int:
         print(json.dumps({d: r.as_dict() for d, r in result.results.items()}, indent=1, default=str))
         return 0
     if args.pdf:
-        from .report_v3 import build_report as build_v3
-        print(f"Report written to {build_v3(result, Path(args.pdf), narrative=args.llm)}")
+        from .report_v3 import NotFinal, build_report as build_v3
+        try:
+            print(f"Report written to {build_v3(result, Path(args.pdf), narrative=args.llm, final=getattr(args, 'final', False))}")
+        except NotFinal as exc:
+            print(f"Not built as final: {exc}", file=sys.stderr)
+            return 2
         n = result.narrative
         if n is not None:
             if n.rejected:

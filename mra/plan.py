@@ -90,7 +90,7 @@ def measures(assessment) -> list[dict]:
         for fid in ins.outcomes[d][target_outcome].get("measures", []):
             fact = eng.facts.get(fid)
             if fact is None or fact.point is None or fid not in ins.facts.index:
-                out.append({"decision": d.title(), "measure": ins.facts.at[fid, "label"] if fid in ins.facts.index else fid,
+                out.append({"fact": fid, "decision": d.title(), "measure": ins.facts.at[fid, "label"] if fid in ins.facts.index else fid,
                             "baseline": "not measured", "target": "measure first", "basis": "missing baseline"})
                 continue
             value = float(fact.point)
@@ -102,7 +102,7 @@ def measures(assessment) -> list[dict]:
                 if word == "maintain":
                     target = f"maintain ({with_unit(f'fact.{fid}', value, ins)})"
                 basis = "proposed: next performance band"
-            out.append({"decision": d.title(), "measure": ins.facts.at[fid, "label"],
+            out.append({"fact": fid, "decision": d.title(), "measure": ins.facts.at[fid, "label"],
                         "baseline": with_unit(f"fact.{fid}", value, ins), "target": target, "basis": basis})
     return out
 

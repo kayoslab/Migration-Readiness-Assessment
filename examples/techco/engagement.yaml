@@ -36,6 +36,7 @@ report:
 benchmark:
   industry: technology
   organisation_size: fewer_than_1000
+rules: decision_rules.yaml
 influence:
   EXE: high
   TEC: high

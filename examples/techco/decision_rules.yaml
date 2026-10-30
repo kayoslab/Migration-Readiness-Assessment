@@ -1,0 +1,375 @@
+# Migration Readiness Assessment — decision rules (v0.2 draft, M0)
+#
+# PRE-REGISTRATION: copy this file into an engagement, adjust it with stakeholders, record the sign-off, and only
+# then look at results. Every adjustment to a default must cite a source; the report always shows the verdict under
+# the unmodified defaults next to the engagement's verdict ("shadow verdict").
+#
+# Value choice made explicit: changing the current state requires passing gates; keeping and improving it does not.
+# This favours reversibility. Both camps should sign this knowingly.
+#
+# "Insufficient evidence" is NOT a recommendation to keep the current state. The report names the inputs whose
+# uncertainty prevented a verdict, with an owner and a deadline.
+
+version: "0.3-draft"
+signed_off_by: "Executive Leadership Team (sample)"
+signed_off_on: 2026-09-15              # e.g. "CTO, CFO, Head of Product, Head of Platform team"
+signed_off_on: null              # date of sign-off; must be before the fact sheet is frozen (instrument/integrity.yaml)
+
+# =========================================================================================== semantics
+semantics:
+  bands: >-
+    A metric with cuts c1<c2<c3<c4 and direction "up" scores 1 if v < c1, 2 if c1 <= v < c2, 3 if c2 <= v < c3,
+    4 if c3 <= v < c4, 5 if v >= c4. Direction "down" mirrors this (5 if v < c1 … 1 if v >= c4).
+  survey_aggregation: >-
+    Item-first: per group, each item's mean over respondents who answered (not "don't know", not "not applicable");
+    then the mean of item means within the sub-area; then groups combined with role_weights. Technical items are
+    weighted by involvement (CX02): daily 1.0, weekly 0.7, a few times a year 0.4, not at all 0.
+  axis_combination: >-
+    Sub-area score = (fact_weight * mean fact band + survey_weight * survey score) / (weights present).
+    Axis score = weighted mean of its sub-areas; a sub-area with no fact input has weight 0.5, so survey-only
+    perceptions cannot outweigh measured ones. A composite is unresolved when a sub-area backed by a required fact
+    has no evidence at all, so opinions never fill a gap left by missing facts. Divergence |fact band − survey score| > divergence_flag_bands is reported.
+  grids: >-
+    Count-scored grids exclude "Don't know" rows and rescale the count band to the rows answered; a grid with more
+    than half its rows "Don't know" is unscored for that respondent.
+  max_of: >-
+    Maximum over the members present. Resolved true if a present member meets the threshold; unresolved only if a
+    missing member could change the result. Missing members are listed in the report.
+  requires_capability: >-
+    An unmet capability yields "prepare first: <outcome>" only if at most two conditions are unmet and each value
+    lies within its `reach` (default: 0.5 below the threshold on 1–5 scores; facts state `reach` explicitly).
+    Otherwise the draw falls through and the next outcome is the verdict. Economics is never preparable and sits in `when`.
+  missing: >-
+    A condition whose signal is missing in a draw is UNRESOLVED, not false. A draw with an unresolved condition on
+    the path to its outcome counts towards insufficient evidence.
+  hard_stops: >-
+    Blocking, not silent: an outcome excluded by a hard stop is reported as "prepare first: <outcome> (blocked by
+    <stop>)", and the next applicable outcome is shown as the interim step. A `permanent` hard stop (e.g. a legal
+    prohibition) cannot be prepared for: the outcome is excluded, the next outcome is evaluated, and the exclusion
+    is reported.
+  gates: >-
+    Evaluated after the verdict from the attested governance checklist (governance.csv: Yes with evidence = pass,
+    Partly = unresolved, No = fail), for the leading outcome and then down the rule order until an outcome passes;
+    that outcome is reported as the interim step. Survey items marked "Corroborates" are an awareness check;
+    disagreement between attestation and awareness is reported, never decisive.
+  track_record: >-
+    If at least 30% of informed respondents (not "don't know") in any group answer G14 "yes", the stop_criteria
+    gate becomes mandatory for every programme outcome and is shown prominently.
+  leaning: >-
+    When no outcome reaches `confidence`, the report states "insufficient evidence", plus "leaning <outcome>
+    (p = …)" if the most likely outcome has p >= 0.5.
+
+# =========================================================================================== evidence
+evidence:
+  fact_weight: 2
+  survey_weight: 1
+  divergence_flag_bands: 1.0
+  confidence: 0.80
+  bootstrap_iterations: 2000
+  min_role_n: 5
+  strong_evidence_role_n: 15
+  role_weights: {}               # default: each group counts equally on the items it is asked
+  involvement_weights: {"Daily, hands-on": 1.0, "Weekly, as a user or decision-maker": 0.7, "A few times a year": 0.4, "Not at all": 0.0}
+
+# Anti-gaming discipline for the fact sheet
+fact_discipline:
+  module_map_frozen_before_extraction: true    # one module map, signed off, used for need AND capability metrics
+  scripted_metrics: [teams_per_deployable, cross_team_change_pct, friction_concentration_index]
+  second_attester_for_unscripted: true
+  fact_sheet_owner_must_not_be_sponsor: true
+  freeze_before_survey_results: true
+  max_range_ratio: 3.0            # high/low wider than this needs a written justification
+  min_range_width_by_grade:       # applied to every economic input; narrower ranges are widened
+    invoice: 0.05
+    quote: 0.10
+    calculator_export: 0.20
+    benchmark: 0.30
+    estimate: 0.40
+  two_estimators_for: [hosting.economics, target_run_cost_increase_pct]   # model uses the union of both ranges
+  estimator_disagreement_flag: 0.25
+  second_attester_for: [components_distinct_availability, components_distinct_compliance, candidate_scope_in_main_deployable]
+  cloud_prices_from_region_compliant_with: fact.hosting_constraint
+
+# =========================================================================================== composite axes
+# Sub-areas averaged into a composite signal. Specific needs (distinct profiles, seam data) are used directly by
+# the rules that need them and are kept out of the composites, so their absence cannot dilute general need.
+axes:
+  need.architecture: {areas: [coupling, blast_radius, business_impact, cognitive_load, growth]}
+  locality.architecture: {areas: [concentration]}
+
+# =========================================================================================== signals
+# Generated automatically:
+#   need.<decision>, need.<decision>.<area>, capability.<decision>.<area>, locality, locality.<area>,
+#   fit.domain_ownership, fit.distributed_operations, requirement.consistency_tolerance,
+#   fact.<id> (raw value), band.<id> (1–5), item.<id> (group-combined score), hard_stop.<id>,
+#   tco_ratio.<option>, payback_months.<option>, tco_saving_fte.<option> (hosting, from mra/tco.py)
+signals:
+  current_state:
+    label: Current state
+    description: Derived, not declared
+    derive:
+      - {when: {signal: fact.deployables_in_scope, op: "<=", value: 1}, then: single_deployable}
+      - {when: {all: [{signal: fact.deployables_in_scope, op: "<=", value: 5},
+                      {signal: fact.core_code_share_pct, op: ">=", value: 70}]}, then: single_deployable}   # core with satellites
+      - {then: distributed}
+  wait_state_share:
+    label: Share saying lead time is mostly waiting on process
+    description: Share of answers saying lead time is mostly spent waiting on process (release trains excluded — in a shared deployable they are a coupling symptom)
+    item: AN01
+    share_of: ["Manual testing", "Approvals (e.g. change advisory board)", "Waiting for environments"]
+  coordination_share:
+    label: Share saying lead time is mostly coordination between teams
+    description: Share of answers saying lead time is mostly coordination or release trains
+    item: AN01
+    share_of: ["Coordinating with other teams' changes", "Waiting for a release window or release train"]
+  distinct_profile_present:
+    label: A component with a distinct profile
+    description: At least one component with a separate compliance scope or availability tier, or a distinct load profile that one node cannot absorb
+    any:
+      - {signal: fact.components_distinct_compliance, op: ">=", value: 1}
+      - {signal: fact.components_distinct_availability, op: ">=", value: 1}
+      - all:
+          - {signal: fact.components_distinct_load, op: ">=", value: 1}
+          - {signal: fact.single_node_sufficient, op: "!=", value: "yes"}
+  distinct_profile_hurts:
+    label: Evidence that the distinct component causes pain today
+    description: The distinct profile costs something today (pain test — a catalogue entry alone is not enough)
+    any:
+      - {signal: fact.candidate_incident_share_pct, op: ">=", value: 25}
+      - {signal: fact.candidate_scope_in_main_deployable, op: "==", value: "yes"}
+      - {signal: fact.candidate_scaling_cost_share_pct, op: ">=", value: 25}
+  run_cost_within_tolerance:
+    label: Estimated run-cost increase within the agreed tolerance
+    description: Estimated run-cost increase of the target within the pre-registered tolerance
+    all:
+      - {signal: fact.target_run_cost_increase_pct, op: "<=", ref: fact.acceptable_run_cost_increase_pct}
+  need_hosting_specific:
+    label: Strongest specific hosting need
+    description: Strongest specific hosting need (needs are not averaged — one strong need is enough)
+    max_of: [need.hosting.elasticity, need.hosting.reach, need.hosting.managed_services, need.hosting.capacity_lead_time]
+  unmet_specific_need:
+    label: Unmet specific hosting need
+    description: A strong specific need exists but the verdict keeps or improves the current setup
+    all:
+      - {signal: need_hosting_specific, op: ">=", value: 3.5}
+      - {signal: outcome.hosting, op: in, value: [stay_as_is, improve_current]}
+    report: "Need not met; cost of meeting it = TCO(cheapest option meeting it) − TCO(current)"
+
+# =========================================================================================== hard stops (from facts)
+hard_stops:
+  hs_rollback:
+    label: Faulty releases cannot be rolled back or switched off within an hour
+    when: {signal: fact.rollback_minutes, op: ">", value: 60}
+    perception_check: AC04
+  hs_observability:
+    label: No centralised logs and metrics with alerting
+    when: {signal: fact.logs_and_metrics, op: "==", value: "no"}
+    perception_check: AC05
+  hs_oncall:
+    label: Nobody formally owns out-of-hours failures
+    when: {signal: fact.oncall_model, op: "==", value: "none"}
+    perception_check: AC06
+  hs_automated_deploy:
+    label: Deployments involve manual steps
+    when: {signal: fact.deploy_automation, op: "==", value: "manual_steps"}
+    perception_check: AC02
+  hs_cloud_not_permitted:
+    label: Regulation requires hosting on own premises
+    when: {signal: fact.hosting_constraint, op: "==", value: "own_premises_only"}
+    permanent: true            # cannot be prepared for: the outcome is excluded (and reported), not deferred
+
+# =========================================================================================== gates (attested, post-verdict)
+gates:
+  sponsor:          {label: Accountable sponsor with budget and roadmap authority, staying 18 months, checks: [GV01, GV02], combine: min, corroborated_by: [G16]}
+  funding:          {label: Funding committed for 12 months incl. parallel running, checks: [GV03]}
+  capacity:         {label: Protected capacity and an owner for the current system, checks: [GV04, GV05], combine: min, corroborated_by: [G04, G05]}
+  baseline:         {label: Baseline measures and outcome targets, checks: [GV06, GV07], combine: min}
+  stop_criteria:    {label: Agreed checkpoints and stop criteria, checks: [GV08], mandatory_if: {signal: item.G14, op: "share_yes_>=", value: 0.5}}
+  change_load:      {label: No more than one other major change on the same teams, checks: [GV12], corroborated_by: [G10]}
+  compliance_release: {label: Change control allows independent deployment, checks: [GV09]}
+  compliance_hosting: {label: Hosting constraints assessed; exit plan in place, checks: [GV10, GV11], combine: min}
+
+# =========================================================================================== decisions
+# Outcomes are evaluated top to bottom; the first whose `when` holds is the draw's outcome.
+#   only_if_current      restricts by derived current state
+#   blocked_by           hard stops → "prepare first: <outcome> (blocked)", next outcome shown as interim
+#   requires_capability  unmet → "prepare first: <outcome> (capability)", next outcome shown as interim
+#   requires_gates       checked post-verdict from governance.csv
+#   reports_conditions   gates reported as conditions for success, never blocking
+decisions:
+
+  architecture:
+    outcomes:
+      - id: consolidate
+        only_if_current: distributed
+        when:
+          all:
+            - {signal: fact.lockstep_deploy_pct, op: ">=", value: 30}                 # Newman: distributed monolith — calibrate in M5
+            - any:
+                - {signal: fact.services_per_team, op: ">", value: 3}
+                - {signal: fact.cross_service_change_pct, op: ">=", value: 30}
+        requires_gates: [sponsor, capacity, stop_criteria]
+
+      - id: targeted_extraction          # also from distributed estates: "separate out further specific parts"
+        when:
+          all:
+            - {signal: distinct_profile_present, op: "==", value: true}
+            - {signal: distinct_profile_hurts, op: "==", value: true}
+        blocked_by: [hs_rollback, hs_observability, hs_oncall, hs_automated_deploy]
+        requires_capability:
+          - {signal: locality.seam_data, op: ">=", value: 3.0, reach: 2.0}
+          - {signal: capability.architecture.delivery_pipeline, op: ">=", value: 3.0}
+          - {signal: capability.architecture.platform_basics, op: ">=", value: 3.0}
+          - {signal: fit.distributed_operations, op: ">=", value: 3.0}
+        requires_gates: [sponsor, funding, capacity, baseline, stop_criteria, change_load, compliance_release]
+
+      - id: realign_services
+        only_if_current: distributed
+        when: {signal: need.architecture, op: ">=", value: 2.5}
+        requires_gates: [sponsor, capacity, stop_criteria]
+
+      - id: stay_and_improve
+        when:
+          any:
+            - {signal: need.architecture, op: "<", value: 2.5}                          # variant "low need"
+            - all:                                                                      # variant "problems would follow you"
+                - {signal: wait_state_share, op: ">=", value: 0.5}
+                - {signal: coordination_share, op: "<", value: 0.25}
+                - {signal: fact.cross_team_change_pct, op: "<", value: 15}
+                - {signal: capability.architecture.delivery_pipeline, op: "<", value: 2.5}
+        requires_gates: []
+        reports_conditions: [capacity, baseline]
+
+      - id: broad_decomposition
+        only_if_current: single_deployable
+        when:
+          all:
+            - {signal: need.architecture, op: ">=", value: 3.5}
+            - {signal: fact.teams_per_deployable, op: ">=", value: 6}
+            - {signal: locality, op: "<", value: 3.5}                                   # pain is spread out
+            - {signal: run_cost_within_tolerance, op: "==", value: true}                # economics is never preparable
+        blocked_by: [hs_rollback, hs_observability, hs_oncall, hs_automated_deploy]
+        requires_capability:
+          - {signal: capability.architecture.delivery_pipeline, op: ">=", value: 3.5}
+          - {signal: capability.architecture.platform_basics, op: ">=", value: 3.5}
+          - {signal: capability.architecture.operations, op: ">=", value: 3.5}
+          - {signal: fact.shared_tables_pct, op: "<", value: 20, reach: 30}
+          - {signal: fact.cross_module_transactions, op: "<=", value: 3, reach: 10}
+          - {signal: fact.provision_days, op: "<=", value: 2, reach: 5}                # practitioner review §3
+          - {signal: fit.domain_ownership, op: ">=", value: 3.5}
+          - {signal: fit.distributed_operations, op: ">=", value: 3.0}                  # 3.0 until M5 confirms the area's noise
+          - {signal: requirement.consistency_tolerance, op: ">=", value: 3.0}
+        requires_gates: [sponsor, funding, capacity, baseline, stop_criteria, change_load, compliance_release]
+
+      - id: modular_monolith                                                            # default when need is real
+        only_if_current: single_deployable
+        when: {signal: need.architecture, op: ">=", value: 2.5}
+        requires_gates: [sponsor, capacity, baseline, stop_criteria]
+
+    fallback: insufficient_evidence
+
+  hosting:
+    horizon_years: 5                 # sensitivity at 3 and 7 years; hardware lives 5–6 years
+    # One switching rule in both directions. A move is either NEED-motivated (strong specific need, ratio <= 1.0 plus
+    # the pre-registered premium) or COST-motivated (ratio <= 1 − switching_margin, payback within 24 months of
+    # cut-over, saving worth at least one FTE). Payback counts from cut-over, not from the decision: counted from the
+    # decision it is dominated by migration duration, which made cost-motivated moves practically unreachable
+    # (docs/calibration.md, finding 2; decided 2026-11-01). Ratios divide by the OPTIMISED current TCO, except improve_current, which divides by the
+    # current TCO as it is (so right-sizing and cloud optimisation show up).
+    switching_margin: 0.15
+    outcomes:
+      - id: repatriate                   # cost-motivated by definition
+        only_if_current: [cloud, hybrid]
+        when:
+          all:
+            - {signal: tco_ratio.repatriate, op: "<=", value: 0.85}
+            - {signal: payback_after_cutover.repatriate, op: "<=", value: 24}
+            - {signal: tco_saving_fte.repatriate, op: ">=", value: 1.0}
+            - {signal: need.hosting.elasticity, op: "<", value: 3.0}
+            - {signal: need.hosting.managed_services, op: "<", value: 3.5}
+        requires_capability:
+          - any:
+              - {signal: capability.hosting.onprem_ops, op: ">=", value: 3.0}
+              - {signal: fact.target_model, op: "==", value: "managed_dedicated"}
+          - {signal: fact.infra_oncall_people, op: ">=", value: 4, reach: 2}
+        requires_gates: [sponsor, funding, capacity, stop_criteria, compliance_hosting]
+
+      - id: hybrid                       # need-motivated, or cost-motivated partial move in either direction
+        when:
+          any:
+            - all:
+                - {signal: need_hosting_specific, op: ">=", value: 3.5}
+                - {signal: fact.need_share_pct, op: "<", value: 50}
+                - {signal: tco_ratio.hybrid, op: "<=", value: 1.0, premium: fact.accepted_premium_pct}
+            - all:
+                - {signal: tco_ratio.hybrid, op: "<=", value: 0.85}
+                - {signal: payback_after_cutover.hybrid, op: "<=", value: 24}
+                - {signal: tco_saving_fte.hybrid, op: ">=", value: 1.0}
+        blocked_by: [hs_cloud_not_permitted]
+        requires_capability:
+          - {signal: capability.hosting.automation, op: ">=", value: 3.0, reach: 1.5}   # IaC is buildable in months
+          - {signal: capability.hosting.onprem_ops, op: ">=", value: 3.0, only_if_current: [cloud]}
+        requires_gates: [sponsor, funding, capacity, stop_criteria, compliance_hosting]
+
+      - id: move_to_cloud
+        only_if_current: [own_infrastructure, hybrid]
+        when:
+          any:
+            - all:                                                                      # need-motivated: most of the estate has the need
+                - {signal: need_hosting_specific, op: ">=", value: 3.5}
+                - {signal: fact.need_share_pct, op: ">=", value: 50}
+                - {signal: tco_ratio.cloud, op: "<=", value: 1.0, premium: fact.accepted_premium_pct}
+            - all:                                                                      # cost-motivated (same test as repatriate)
+                - {signal: tco_ratio.cloud, op: "<=", value: 0.85}
+                - {signal: payback_after_cutover.cloud, op: "<=", value: 24}
+                - {signal: tco_saving_fte.cloud, op: ">=", value: 1.0}
+                - {signal: tco_ratio.cloud, op: "<=", ref: tco_ratio.hybrid}            # a partial move is not cheaper
+        blocked_by: [hs_cloud_not_permitted]
+        requires_capability:
+          - {signal: capability.hosting.automation, op: ">=", value: 3.0, reach: 1.5}   # IaC is buildable in months
+          - {signal: capability.hosting.cloud_skills, op: ">=", value: 2.5, reach: 1.5}
+        requires_gates: [sponsor, funding, capacity, stop_criteria, compliance_hosting]
+
+      - id: improve_current          # incl. right-sizing and, for cloud-current organisations, cloud optimisation
+        when:
+          any:
+            - {signal: capability.hosting.automation, op: "<", value: 3.0}
+            - {signal: capability.hosting.operations, op: "<", value: 3.0}
+            - {signal: fact.infra_bus_factor, op: "<=", value: 1}
+            - {signal: fact.infra_toil_pct, op: ">=", value: 20}
+            - {signal: tco_ratio.improve_current, op: "<=", value: 0.85}
+        requires_gates: []
+        reports_conditions: [capacity]
+
+      - id: stay_as_is
+        when: {all: []}
+        requires_gates: []
+
+    fallback: insufficient_evidence
+
+# =========================================================================================== hosting TCO model (mra/tco.py)
+tco:
+  formula: >-
+    TCO(option) = Σ_{t=1..H} (Infra_t + Staff_t + Tooling_t) / (1+r)^t + OneOff − Residual_H / (1+r)^H,
+    r = fact.discount_rate_pct. Ratios are computed within the same draw.
+  ratio_denominator:
+    improve_current: current_as_is        # captures right-sizing and cloud optimisation
+    default: current_optimised            # repatriate, hybrid, move_to_cloud
+  bridge: >-
+    When hardware or contracts end before fact.migration_months, the moving option carries fact.bridge_cost.
+  sampling: PERT on low/likely/high; migration_cost and dual_run_months right-skewed and correlated through a shared overrun factor
+  common_random_numbers: [growth_pct_annual, peak_hours_per_year, fte_cost_annual, own_price_change_pct_annual, cloud_price_change_pct_annual]
+  correlated: [migration_cost, migration_months, dual_run_months]   # one shared overrun quantile per draw
+  commitments_cover_baseline_only: true
+  sensitivity: [tornado, break_even_values, horizons_3_and_7]
+
+# =========================================================================================== stakes reporting
+stakes:
+  min_cell_n: 5                    # applies to every cross-tab incl. seniority; complementary cells suppressed
+  collapse_seniority_below_n: 15   # report manager vs not only
+  report_stake_gap_from: 0.3       # preferred option rated this much better for oneself than the alternatives (−1..1),
+                                   # tested within respondents (preferred option vs a random pick); false-discovery
+                                   # rate controlled across the groups tested for each decision (Benjamini–Hochberg q < 0.05)
+  symmetric: true                  # status-quo stakes and change stakes reported with equal weight, side by side
+  never_weight_answers_by_stake: true
+  frame_as: change_management_inputs

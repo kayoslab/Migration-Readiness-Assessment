@@ -293,6 +293,13 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     steps = next_steps(assessment)
     for i, s in enumerate(steps, 1):
         s["no"] = i                                     # one numbering across phases, for cross-references
+    from .integrity import run as run_integrity
+    issues = run_integrity(assessment)
+    for issue in issues:                                # a step that rests on a contradicted input is rewritten
+        if issue.step_rewrite:
+            for s in steps:
+                if s["action"].startswith(issue.step_rewrite["starts_with"]):
+                    s["action"] = issue.step_rewrite["action"]
     rm = plan.roadmap(assessment, steps)
     roadmap_block = {"gates": rm["gates"],
                      "chart": _rel(charts.roadmap_chart(rm, cdir / "roadmap.svg"), root) if rm["bars"] else None,
@@ -365,12 +372,44 @@ def build_context(assessment, out: Path, root: Path) -> dict:
                   "draws": ev.draws, "min_role_n": rules.get("evidence", {}).get("min_role_n", 5)},
         "text": None if assessment.text is None else _text_context(assessment.text),
     }
+    _apply_integrity(ctx, issues)
     from .storyline import compose
     compose(assessment, ctx)
     return ctx
 
 
-def build_report(assessment, output: Path, template: Path = TEMPLATE, narrative: bool = False) -> Path:
+def _apply_integrity(ctx: dict, issues) -> None:
+    """Put every caveat beside what it qualifies; blocks make the report a draft."""
+    caveats = [i for i in issues if i.severity == "caveat"]
+    blocks = [i for i in issues if i.severity == "block"]
+    ctx["integrity"] = {"draft": bool(blocks), "issues": [i.as_dict() for i in issues],
+                        "blocks": [i.as_dict() for i in blocks], "caveats": [i.as_dict() for i in caveats]}
+    ctx["engagement"]["draft"] = bool(blocks)
+
+    def short(i):
+        return {"title": i.title, "message": i.message}
+
+    for dec in ctx["decisions"]:
+        dec["caveats"] = [short(i) for i in caveats if dec["id"] in i.decisions]
+    for e in ctx["exhibits"]:
+        e["insight"]["caveats"] = [short(i) for i in caveats if e["insight"]["id"] in i.exhibits]
+    affected = {f: i.title for i in caveats for f in i.facts}
+    for m in ctx["measures"]:
+        if m.get("fact") in affected:
+            m["basis"] = f"provisional — {affected[m['fact']].lower()}"
+    if ctx.get("text"):
+        ctx["text"]["key_message_caveats"] = [[i.message for i in caveats if n in i.key_messages]
+                                              for n in range(len(ctx["text"]["key_messages"]))]
+        for n, th in enumerate(ctx["text"]["themes"]):
+            th["caveats"] = [i.message for i in caveats if n in i.themes]
+
+
+class NotFinal(Exception):
+    """Raised by build_report(final=True) while a blocking integrity issue remains."""
+
+
+def build_report(assessment, output: Path, template: Path = TEMPLATE, narrative: bool = False,
+                 final: bool = False) -> Path:
     import typst
     root = Path(__file__).resolve().parents[1]
     out = root / "Output" / "build-v3" / output.stem
@@ -378,6 +417,8 @@ def build_report(assessment, output: Path, template: Path = TEMPLATE, narrative:
         shutil.rmtree(out)
     out.mkdir(parents=True)
     context = build_context(assessment, out, root)
+    if final and context["integrity"]["draft"]:
+        raise NotFinal("; ".join(b["message"] for b in context["integrity"]["blocks"]))
     context["narrative"] = None
     if narrative:
         from .narrative import write as write_narrative

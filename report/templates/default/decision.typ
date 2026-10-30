@@ -4,6 +4,14 @@
 #let data = json(sys.inputs.data)
 #let e = data.engagement
 #let anchor(name) = [#metadata(name)#label(name)]
+#let caveat-box(items) = if items.len() > 0 {
+  block(width: 100%, inset: (left: 10pt, y: 5pt), stroke: (left: 2pt + theme.status.AMBER), above: 2mm, below: 4mm)[
+    #text(size: 8pt, weight: "semibold", fill: theme.muted, tracking: 0.06em)[CAVEAT]
+    #v(1pt)
+    #set text(size: 8.5pt)
+    #for c in items [*#c.title.* #c.message \ ]
+  ]
+}
 
 #let fmt(x, d: 2) = {
   if x == none { return "–" }
@@ -98,6 +106,7 @@
       #show link: set text(fill: theme.accent)
       #if "so_what" in insight [#so-what(insight.so_what)] else if insight.interpretation != none [#insight.interpretation] else [#insight.points.join(" ")]
     ]
+    #caveat-box(insight.at("caveats", default: ()))
   ]
 }
 
@@ -116,6 +125,20 @@
   #v(6mm)
   #set text(size: 9pt)
   #for p in data.notice [#p #v(2mm)]
+  #if data.integrity.issues.len() > 0 [
+    #v(4mm)
+    #text(size: 12pt, fill: theme.primary)[Qualifications]
+    #v(2mm)
+    The sources behind this report were read against each other. Where they disagree, the finding concerned is
+    qualified below and beside the finding itself.
+    #v(2mm)
+    #for i in data.integrity.issues [
+      #text(weight: "semibold", fill: if i.severity == "block" { theme.status.RED } else { theme.primary })[#i.title]
+      #text(size: 8pt, fill: theme.muted)[ · #if i.severity == "block" [prevents a final report] else if i.severity == "caveat" [qualifies findings] else [for information]] \
+      #i.message
+      #v(2mm)
+    ]
+  ]
 ]
 
 #page(header: none)[
@@ -127,6 +150,13 @@
 
 = Executive summary
 
+#if data.integrity.draft [
+  #block(width: 100%, inset: 8pt, stroke: 1pt + theme.status.RED, below: 4mm)[
+    #text(weight: "semibold", fill: theme.status.RED)[Draft — not for decision.]
+    #for b in data.integrity.blocks [#b.message ]
+  ]
+]
+
 #if data.narrative != none [
   #for p in data.narrative.executive [
     #text(size: 10pt, p)
@@ -137,6 +167,12 @@
 
 #callout(title: "Key messages")[
   #for m in data.key_messages [- #m \ ]
+]
+#if data.integrity.caveats.len() > 0 [
+  #v(2mm)
+  #text(size: 8.5pt, weight: "semibold", fill: theme.primary)[Qualifications: ]
+  #text(size: 8.5pt)[#data.integrity.caveats.map(c => c.title).join("; "). Each is explained in the Important notice
+    and beside the findings it affects.]
 ]
 
 #for dec in data.decisions [
@@ -179,6 +215,7 @@
 
 #for dec in data.decisions.filter(d => d.id == "architecture") [
   #text(size: 10pt)[Current state: #dec.current. Recommended: *#dec.verdict_label* — #dec.status_label.]
+  #caveat-box(dec.at("caveats", default: ()))
 
   == Why this path
   #if dec.why.len() == 0 [No single path reaches the agreed confidence.] else [
@@ -225,6 +262,7 @@
 
 #for dec in data.decisions.filter(d => d.id == "hosting") [
   #text(size: 10pt)[Current state: #dec.current. Recommended: *#dec.verdict_label* — #dec.status_label.]
+  #caveat-box(dec.at("caveats", default: ()))
 
   == Why this path
   #if dec.why.len() == 0 [The current setup is kept because no alternative meets the agreed need or cost criteria.] else [
@@ -416,12 +454,15 @@ plan how a decision is communicated and supported.
 #if data.text != none [
   == In respondents' own words
   #block(breakable: false, callout(title: "What respondents say")[
-    #for m in data.text.key_messages [- #m \ ]
+    #for (n, m) in data.text.key_messages.enumerate() [
+      - #m #for c in data.text.at("key_message_caveats", default: ()).at(n, default: ()) [#text(size: 8pt, fill: theme.status.AMBER)[Caveat:] #text(size: 8.5pt, c)] \
+    ]
   ])
   #for th in data.text.themes [
     #v(2mm)
     #block(sticky: true)[#text(weight: "semibold", fill: theme.primary, th.theme)]
     #th.finding
+    #caveat-box(th.at("caveats", default: ()).map(c => (title: "Caveat", message: c)))
     #for q in th.quotes [
       #block(inset: (left: 12pt, y: 4pt), stroke: (left: 1.5pt + theme.rule))[
         #text(style: "italic")[“#q.text”] #h(4pt) #text(size: 8pt, fill: theme.muted)[— #q.role]

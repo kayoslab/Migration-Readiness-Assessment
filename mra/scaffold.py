@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import re
 import shutil
 from pathlib import Path
 
@@ -119,7 +120,8 @@ def init(folder: Path, instrument_dir: Path) -> list[Path]:
         written.append(folder / name)
     rules = folder / "decision_rules.yaml"
     shutil.copy(instrument_dir / "decision_rules.yaml", rules)
-    text = rules.read_text().replace('signed_off_by: null', f'signed_off_by: null              # sign off before results ({dt.date.today():%Y-%m-%d} template)', 1)
+    text = re.sub(r"^signed_off_by: null.*$", f"signed_off_by: null              # names of those who agreed the rules "
+                  f"({dt.date.today():%Y-%m-%d} template)", rules.read_text(), count=1, flags=re.M)
     rules.write_text(text)
     (folder / "Responses").mkdir()
     return written + [rules]

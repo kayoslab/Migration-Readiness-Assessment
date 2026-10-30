@@ -20,6 +20,7 @@ class Assessment:
     results: dict[str, DecisionResult]
     problems: list[str] = field(default_factory=list)
     stakes: object = None                       # mra.stakes.StakesReport
+    fact_checks: list = field(default_factory=list)   # mra.fact_checks.FactCheck
     text: object = None                         # mra.llm.TextAnalysis (optional)
 
 
@@ -45,7 +46,9 @@ def assess(path: str | Path | Engagement, decisions=IMPLEMENTED, draws: int | No
     problems = list(eng.problems) + [f"required fact missing: {f}" for f in relevant] + \
         list(evidence.flags.get("tco_problems", []))
     from .stakes import analyse as analyse_stakes
-    assessment = Assessment(eng, evidence, results, problems, analyse_stakes(eng, evidence, results))
+    from .fact_checks import check as check_facts
+    assessment = Assessment(eng, evidence, results, problems, analyse_stakes(eng, evidence, results),
+                            check_facts(eng))
     if with_llm:
         from .llm import analyse_engagement_text
         assessment.text = analyse_engagement_text(eng)

@@ -109,3 +109,46 @@ def test_correlated_overruns(tmp_path):
     a = assess(build(Scenario("corr", {}), tmp_path, INSTRUMENT), draws=2000)
     cost, months = a.evidence.signals["fact.migration_cost"], a.evidence.signals["fact.migration_months"]
     assert np.corrcoef(cost, months)[0, 1] > 0.9
+
+
+# ---------------------------------------------------------------------------------------- fact-sheet discipline
+
+def _assess_with(tmp_path, facts_patch=None, config_patch=None):
+    import yaml as _yaml
+    path = build(Scenario("checks", {}), tmp_path, INSTRUMENT)
+    sheet = _yaml.safe_load((tmp_path / "facts.yaml").read_text())
+    sheet.update(facts_patch or {})
+    (tmp_path / "facts.yaml").write_text(_yaml.safe_dump(sheet))
+    cfg = _yaml.safe_load(path.read_text())
+    cfg.update(config_patch or {})
+    path.write_text(_yaml.safe_dump(cfg))
+    return assess(path, draws=100)
+
+
+def test_clean_fact_sheet_has_no_findings(tmp_path):
+    a = _assess_with(tmp_path, {"cloud_compute_baseline_annual": {"estimates": [
+        {"estimator": "Platform", "low": 270000, "likely": 300000, "high": 360000, "grade": "calculator_export"},
+        {"estimator": "Finance", "low": 280000, "likely": 310000, "high": 380000, "grade": "quote"}]}})
+    assert not [f for f in a.fact_checks if f.severity == "problem"]
+
+
+def test_sponsor_as_fact_sheet_owner_is_a_problem(tmp_path):
+    a = _assess_with(tmp_path, config_patch={"people": {"sponsor": "Head of Platform", "fact_sheet_owner": "Head of Platform"}})
+    assert any(f.severity == "problem" and "also the sponsor" in f.message for f in a.fact_checks)
+
+
+def test_hand_entered_coupling_metric_and_wide_range_are_flagged(tmp_path):
+    a = _assess_with(tmp_path, {"cross_team_change_pct": {"value": 40, "source": "estimate"},
+                                "migration_cost": {"low": 100000, "likely": 300000, "high": 900000, "grade": "estimate"}})
+    messages = " ".join(f.message for f in a.fact_checks)
+    assert "should be produced by `mra coupling`" in messages
+    assert "wider than 3x without a written justification" in messages
+
+
+def test_two_estimators_use_union_and_flag_disagreement(tmp_path):
+    a = _assess_with(tmp_path, {"cloud_compute_baseline_annual": {"estimates": [
+        {"estimator": "Platform team", "low": 200000, "likely": 220000, "high": 260000, "grade": "calculator_export"},
+        {"estimator": "Finance", "low": 300000, "likely": 340000, "high": 400000, "grade": "quote"}]}})
+    fact = a.engagement.facts["cloud_compute_baseline_annual"]
+    assert (fact.low, fact.high, fact.likely) == (200000, 400000, 280000)
+    assert any("estimators differ" in f.message for f in a.fact_checks)

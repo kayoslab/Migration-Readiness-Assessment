@@ -221,6 +221,13 @@ before results were seen.
   #for p in data.problems [- #p \ ]
 ]
 
+#if data.fact_checks.len() > 0 [
+  == Fact-sheet checks
+  These do not change the recommendation; they indicate how far the inputs can be trusted and what to fix before
+  the next run.
+  #for f in data.fact_checks [- #if f.severity == "problem" [#text(fill: theme.status.RED)[Independence:]] else [Evidence:] #f.message \ ]
+]
+
 == Participation
 #data-table(columns: (2fr, 1fr), align: (left, right), header: ("Group", "Respondents"),
   ..data.participation.map(p => (p.group, str(p.n))).flatten())

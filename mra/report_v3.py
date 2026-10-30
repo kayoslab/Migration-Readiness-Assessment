@@ -214,6 +214,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         "participation": [{"group": g, "n": int(n)} for g, n in sizes.items()],
         "evidence_strength": _evidence_strength(assessment),
         "problems": assessment.problems,
+        "fact_checks": [{"severity": f.severity, "message": f.message} for f in assessment.fact_checks],
         "rules": {"version": rules.get("version"), "signed_off_by": rules.get("signed_off_by"),
                   "confidence": rules.get("evidence", {}).get("confidence", 0.8),
                   "draws": ev.draws, "min_role_n": rules.get("evidence", {}).get("min_role_n", 5)},

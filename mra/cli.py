@@ -124,6 +124,8 @@ def _decide(args) -> int:
     outcomes = result.engagement.instrument.outcomes
     for problem in result.problems:
         print(f"! {problem}")
+    for fc in result.fact_checks:
+        print(f"{'!' if fc.severity == 'problem' else '~'} fact sheet: {fc.message}")
     for d, r in result.results.items():
         label = outcomes[d].get(r.verdict, outcomes["common"].get(r.verdict, {})).get("label", r.verdict)
         print(f"\n{d.title()} (current: {r.current_state})")

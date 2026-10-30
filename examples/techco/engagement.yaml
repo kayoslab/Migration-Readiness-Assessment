@@ -1,5 +1,9 @@
 system: the Order Platform
 current_hosting: own_infrastructure
+people:
+  sponsor: Sponsor
+  fact_sheet_owner: Fact-sheet owner
+fact_sheet_frozen_on: '2026-10-01'
 instrument: ../../instrument
 responses:
   ENG: Responses/ENG.csv

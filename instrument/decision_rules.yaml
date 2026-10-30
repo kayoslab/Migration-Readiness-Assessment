@@ -85,7 +85,7 @@ fact_discipline:
     estimate: 0.40
   two_estimators_for: [hosting.economics, target_run_cost_increase_pct]   # model uses the union of both ranges
   estimator_disagreement_flag: 0.25
-  second_attester_for: [slo_catalogue, compliance_scoping, candidate_scope_in_main_deployable]
+  second_attester_for: [components_distinct_availability, components_distinct_compliance, candidate_scope_in_main_deployable]
   cloud_prices_from_region_compliant_with: fact.hosting_constraint
 
 # =========================================================================================== composite axes

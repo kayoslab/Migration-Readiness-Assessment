@@ -14,6 +14,15 @@ facts.yaml — one entry per fact:
     teams_per_deployable: {value: 7, source: tools/git_coupling.py, date: 2026-10-01, attester: Platform lead}
     migration_cost: {low: 200000, likely: 300000, high: 600000, grade: estimate, source: ..., date: ...}
     deploy_automation: {value: team_triggered, source: CD config}
+    cloud_compute_baseline_annual:            # two independent estimators: the model uses the union of their ranges
+      estimates:
+        - {estimator: Platform team, low: 250000, likely: 300000, high: 380000, grade: calculator_export}
+        - {estimator: Finance, low: 280000, likely: 340000, high: 420000, grade: quote}
+    Optional per fact: scripted (true when produced by `mra coupling`), attester, second_attester,
+    justification (required for very wide ranges).
+
+engagement.yaml may also name `people: {sponsor: ..., fact_sheet_owner: ...}` and `fact_sheet_frozen_on: <date>`
+(see decision_rules.yaml → fact_discipline).
 
 governance.yaml — one entry per check in governance.csv:
     GV01: {answer: "Yes", evidence: "Board minute 2026-09-12", attested_by: CTO}
@@ -31,6 +40,9 @@ import yaml
 from .instrument import DONT_KNOW, Instrument, load_instrument
 
 
+GRADE_ORDER = ["invoice", "quote", "calculator_export", "benchmark", "estimate"]   # most to least certain
+
+
 @dataclass
 class Fact:
     value: object = None          # number or category
@@ -40,6 +52,11 @@ class Fact:
     grade: str | None = None
     source: str | None = None
     attester: str | None = None
+    second_attester: str | None = None
+    scripted: bool = False
+    justification: str | None = None
+    estimators: list[str] = field(default_factory=list)
+    disagreement: float | None = None   # spread of the estimators' likely values relative to their mean
 
     @property
     def is_range(self) -> bool:
@@ -75,10 +92,23 @@ def load_facts(path: Path | None) -> dict[str, Fact]:
         return {}
     raw = yaml.safe_load(path.read_text()) or {}
     facts = {}
+    keys = ("value", "low", "likely", "high", "grade", "source", "attester", "second_attester", "justification")
     for fid, spec in raw.items():
         if not isinstance(spec, dict):
             spec = {"value": spec}
-        facts[fid] = Fact(**{k: spec.get(k) for k in ("value", "low", "likely", "high", "grade", "source", "attester")})
+        fact = Fact(**{k: spec.get(k) for k in keys}, scripted=bool(spec.get("scripted", False)))
+        if spec.get("estimates"):
+            est = spec["estimates"]
+            likelies = [float(x["likely"]) for x in est]
+            fact.low = min(float(x["low"]) for x in est)
+            fact.high = max(float(x["high"]) for x in est)
+            fact.likely = sum(likelies) / len(likelies)
+            fact.grade = max((x.get("grade", "estimate") for x in est), key=GRADE_ORDER.index)
+            fact.estimators = [x.get("estimator", f"estimate {i + 1}") for i, x in enumerate(est)]
+            mean = abs(fact.likely) or 1.0
+            fact.disagreement = (max(likelies) - min(likelies)) / mean
+            fact.source = fact.source or "; ".join(str(x.get("source", x.get("estimator", ""))) for x in est)
+        facts[fid] = fact
     return facts
 
 

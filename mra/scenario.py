@@ -149,10 +149,26 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
         answers[role] = people
     files = write_form_exports(root, ins, scenario.system, current, answers)
 
-    (root / "facts.yaml").write_text(yaml.safe_dump({k: (v if isinstance(v, dict) else {"value": v})
-                                                     for k, v in facts.items() if v is not None}, sort_keys=False))
+    ins_rules = ins.rules.get("fact_discipline", {}) or {}
+    scripted = set(ins_rules.get("scripted_metrics", []))
+    second = set(ins_rules.get("second_attester_for", []))
+    sheet = {}
+    for k, v in facts.items():
+        if v is None:
+            continue
+        entry = dict(v) if isinstance(v, dict) else {"value": v}
+        entry.setdefault("source", "synthetic scenario")
+        entry.setdefault("attester", "Fact-sheet owner")
+        if k in scripted:
+            entry.setdefault("scripted", True)
+        if k in second:
+            entry.setdefault("second_attester", "Second attester")
+        sheet[k] = entry
+    (root / "facts.yaml").write_text(yaml.safe_dump(sheet, sort_keys=False))
     (root / "governance.yaml").write_text(yaml.safe_dump({**ALL_YES, **scenario.governance}, sort_keys=False))
     config = {"system": scenario.system, "current_hosting": scenario.current_hosting,
+              "people": {"sponsor": "Sponsor", "fact_sheet_owner": "Fact-sheet owner"},
+              "fact_sheet_frozen_on": "2026-10-01",
               "instrument": str(Path(instrument_dir).resolve()), "responses": files,
               "facts": "facts.yaml", "governance": "governance.yaml"}
     path = root / "engagement.yaml"

@@ -1,0 +1,76 @@
+# Migration Readiness Assessment — engagement configuration
+#
+# Agree the `decision_rules` section with stakeholders BEFORE any results are seen,
+# and record who signed it off. Changing thresholds after looking at the data
+# defeats the purpose of the assessment.
+
+engagement:
+  organisation: TechCo
+  title: Migration Readiness Assessment
+  subtitle: Readiness to execute a platform modernisation programme
+  prepared_for: Executive Leadership Team
+  prepared_by: Platform Advisory
+  date: null                     # null = today
+  classification: Strictly confidential
+  sample_data: true              # adds a "sample data" disclaimer to the report
+
+questionnaire: Questions/export.csv
+
+responses:
+  - role: Engineering
+    file: Responses/Engineering.csv
+  - role: Product
+    file: Responses/Product.csv
+  - role: Business
+    file: Responses/Business.csv
+  - role: Leadership
+    file: Responses/Leadership.csv
+
+# Answer labels -> scores. Anything else (blank, 0, unknown text) counts as missing.
+scale:
+  Strongly Disagree: 1
+  Disagree: 2
+  Neutral: 3
+  Agree: 4
+  Strongly Agree: 5
+dont_know_labels: ["Don't know", "Do not know", "N/A", "Not applicable"]
+
+decision_rules:
+  signed_off_by: null            # e.g. "CTO, CFO, Head of Product — 2026-11-04"
+
+  # Each stakeholder group gets this weight in a domain index, regardless of headcount.
+  # Omitted roles get weight 1. Weights are renormalised over the roles that answered.
+  role_weights: {}
+
+  # Roles whose view must be represented for any verdict to be issued.
+  essential_roles: [Engineering, Product, Business, Leadership]
+
+  # A strongly negative view from any essential role on these domains blocks a "proceed".
+  role_veto_domains: [Business Alignment & Strategy, Cultural Readiness]
+
+  red_below: 3.0                 # index below this = RED
+  green_from: 4.0                # index at or above this = GREEN, in between = AMBER
+  proceed_from: 3.5              # every domain must clear this for "Proceed"
+  confidence: 0.80               # probability required before a status or verdict is asserted
+
+  min_role_n: 5                  # roles with fewer respondents are not scored (reported qualitatively)
+  min_role_items: 3              # a role needs this many items in a domain for its score to count
+  strong_evidence_role_n: 15     # below this per essential role, findings are "indicative"
+  min_item_coverage: 0.6         # a person needs to answer this share of their items in a domain
+  min_reliability: 0.70          # Cronbach's alpha below this flags a domain as unreliable
+
+statistics:
+  bootstrap_iterations: 2000
+  permutation_iterations: 2000
+  seed: 42
+
+llm:
+  enabled: false                 # or pass --llm on the command line
+  model: anthropic/claude-opus-5.5  # Vercel AI Gateway model ID; overridden by MRA_LLM_MODEL
+  redact: true                   # strip e-mails, phone numbers, URLs and redact_terms before sending
+  redact_terms: []               # e.g. names of people, customers or systems
+  max_quotes: 3
+
+report:
+  template: report/templates/default
+  output: Output/report.pdf

@@ -36,6 +36,10 @@ def main(argv: list[str] | None = None) -> int:
     ini.add_argument("folder")
     ini.add_argument("--instrument", default="instrument")
 
+    frm = sub.add_parser("forms", help="v3: Google Apps Script that creates the survey forms")
+    frm.add_argument("engagement")
+    frm.add_argument("--out", default=None, help="write the script here (default: print)")
+
     cpl = sub.add_parser("coupling", help="v3: scripted coupling facts from a git repository")
     cpl.add_argument("repo", help="path to the repository of the deployable")
     own = cpl.add_mutually_exclusive_group(required=True)
@@ -63,6 +67,16 @@ def main(argv: list[str] | None = None) -> int:
         from .scaffold import init
         for p in init(Path(args.folder), Path(args.instrument)):
             print(f"created {p}")
+        return 0
+
+    if args.command == "forms":
+        from .forms import apps_script
+        script = apps_script(args.engagement)
+        if args.out:
+            Path(args.out).write_text(script)
+            print(f"Wrote {args.out}. Paste it into https://script.google.com and run createForms().")
+        else:
+            print(script)
         return 0
 
     if args.command == "coupling":

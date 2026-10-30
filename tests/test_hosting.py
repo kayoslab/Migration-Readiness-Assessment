@@ -152,3 +152,29 @@ def test_two_estimators_use_union_and_flag_disagreement(tmp_path):
     fact = a.engagement.facts["cloud_compute_baseline_annual"]
     assert (fact.low, fact.high, fact.likely) == (200000, 400000, 280000)
     assert any("estimators differ" in f.message for f in a.fact_checks)
+
+
+# ---------------------------------------------------------------------------------------- hybrid estates
+
+def test_hybrid_estate_options_are_costed():
+    s, problems = compute(_facts(current_cloud_share_pct=40, need_share_pct=40, sunk_commitment_cost=0), "hybrid")
+    assert not problems
+    assert {"tco.stay", "tco.improve_current", "tco.cloud", "tco.repatriate", "tco.hybrid"} <= set(s)
+    # rebalancing to the share already in the cloud migrates nothing: it costs the same as optimising the mix
+    assert s["tco_ratio.hybrid"][0] == pytest.approx(1.0, abs=0.03)
+
+
+def test_hybrid_estate_with_cheap_cloud_moves_the_rest(tmp_path):
+    scenario = Scenario("hybrid-cheap", {"hosting": "move_to_cloud"}, current_hosting="hybrid",
+                        targets={**STEADY, **GOOD_OPS, "capability.hosting.cloud_skills": 3.5},
+                        facts={"current_cloud_share_pct": 30, "ops_fte": 6, "infra_share_pct": 100,
+                               "rightsized_share_pct": 95, "cloud_ops_fte": 1, "sunk_commitment_cost": 0,
+                               "cloud_compute_baseline_annual": {"low": 50000, "likely": 60000, "high": 75000, "grade": "quote"},
+                               "migration_months": {"low": 5, "likely": 6, "high": 8, "grade": "estimate"}})
+    r = assess(build(scenario, tmp_path, INSTRUMENT), draws=DRAWS).results["hosting"]
+    assert r.verdict == "move_to_cloud", (r.verdict, r.economics.get("ratio"))
+
+
+def test_hybrid_estate_requires_current_share(tmp_path):
+    a = assess(build(Scenario("hybrid-missing", {}, current_hosting="hybrid"), tmp_path, INSTRUMENT), draws=50)
+    assert any("current_cloud_share_pct" in p for p in a.problems)

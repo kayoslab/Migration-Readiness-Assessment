@@ -10,6 +10,8 @@ pre-registered rate:
 Options by current hosting state:
     own_infrastructure: stay (as is) · improve_current (right-sized) · cloud · hybrid
     cloud:              stay (as is) · improve_current (optimised cloud) · repatriate · hybrid
+    hybrid:             stay (mix as is) · improve_current (both sides right-sized) · cloud (move the rest) ·
+                        repatriate (bring the cloud part back) · hybrid (rebalance to the target share)
 Ratios divide by the optimised current state, except improve_current, which divides by the current state as is.
 """
 
@@ -141,7 +143,30 @@ def _options(model: _Model, current: str) -> dict[str, dict]:
                        + model.at_month(model.v("sunk_commitment_cost") * back, start),
                        "residual": model.residual(back)},
         }
-    raise Missing(f"TCO for current hosting state {current!r} is not modelled yet")
+    if current == "hybrid":
+        c = np.clip(model.v("current_cloud_share_pct") / 100, 0, 1)    # share already in the cloud
+        h = np.clip(model.v("need_share_pct") / 100, 0, 1)             # target cloud share when rebalancing
+        overhead = ((model.v("hybrid_interconnect_annual") + model.v("hybrid_overhead_fte") * model.fte) / 12)[:, None]
+        as_is = model.own(1 - c) + model.cloud(c, staff=False) + overhead
+        optimised = model.own(k * (1 - c), toil) + model.cloud(c, k, staff=False) + overhead
+        rebalanced = model.own(k * (1 - h), toil) + model.cloud(h, staff=False) + overhead
+        training = model.v("training_hiring_cost")
+        return {
+            "stay": {"cost": as_is + model.refresh(1 - c), "residual": model.residual(1 - c)},
+            "improve_current": {"cost": optimised + model.refresh(k * (1 - c)) + improve_once,
+                                "residual": model.residual(k * (1 - c))},
+            "cloud": {"cost": model.transition(as_is, model.cloud(one)) + exit_cost
+                      + model.at_month(model.v("migration_cost") * (1 - c) + training, start),
+                      "residual": None},
+            "repatriate": {"cost": model.transition(as_is, model.own(one)) + model.at_month(model.v("hw_refresh_capex") * c, start)
+                           + model.at_month(model.v("migration_cost") * c + training + model.v("sunk_commitment_cost"), start),
+                           "residual": model.residual(one)},
+            "hybrid": {"cost": model.transition(as_is, rebalanced)
+                       + model.at_month(model.v("migration_cost") * np.abs(h - c) + training, start)
+                       + model.at_month(model.v("hw_refresh_capex") * np.clip(c - h, 0, 1), start),
+                       "residual": model.residual(k * (1 - h))},
+        }
+    raise Missing(f"TCO for current hosting state {current!r} is not modelled")
 
 
 def compute(facts: dict[str, np.ndarray], current: str, horizon_years: int = 5) -> tuple[dict[str, np.ndarray], list[str]]:

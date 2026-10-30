@@ -41,7 +41,7 @@ def facts_template(ins) -> str:
             lines += ["", f"# ===== {heading} " + "=" * max(0, 90 - len(heading))]
             current = heading
         req = {"true": "REQUIRED", "false": "optional", "if_distributed": "required if several deployables",
-               "if_cloud": "required if currently in the cloud", "if_distinct_profile": "required if a component has a distinct profile"
+               "if_cloud": "required if currently in the cloud", "if_hybrid": "required if currently hybrid", "if_distinct_profile": "required if a component has a distinct profile"
                }.get(f["required"], f["required"])
         lines.append(f"# {f['label']} [{f['unit']}] — {req}")
         if f["how_to_measure"]:

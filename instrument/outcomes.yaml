@@ -1,0 +1,174 @@
+# Plain-language outcome definitions (v0.2), used verbatim in the report.
+# `preference_label` generates the options of survey items S01/S02/S04/S05 (plain language for every group).
+# `offered_when_current` limits which options a respondent sees, based on the derived current state.
+# `preference_label` may be a mapping by current state where the wording must differ.
+
+architecture:
+  stay_and_improve:
+    label: Keep the current architecture and improve delivery practices
+    preference_label: Keep the current structure and improve how we work with it
+    offered_when_current: [single_deployable, distributed]
+    summary:
+      low_need: >-
+        The evidence does not show that the architecture is a material constraint. Investment is better directed at
+        delivery practices and the product itself.
+      problems_would_follow: >-
+        Delivery is slowed mainly by how work is tested, approved and released, not by coordination between teams.
+        These constraints would carry over into any new architecture and should be addressed first.
+    fits_when: Low coupling pain, or lead time dominated by process waits rather than coordination between teams.
+    first_steps:
+      - Shorten the slowest wait in the release path (for example pre-approved standard changes or automated regression tests), within regulatory requirements.
+      - Measure lead time, deployment frequency, change failure rate and time to restore, and review them monthly.
+      - Revisit the architecture question once these measures have improved.
+
+  modular_monolith:
+    label: Restructure within the current system (modular monolith)
+    preference_label: Reorganise the current system internally into clearly separated parts, still released as one
+    offered_when_current: [single_deployable]
+    summary: >-
+      Coupling pain is real and can be addressed inside one deployable at lower cost and risk, while keeping a later
+      split possible.
+    fits_when: Need is real; the stricter conditions for extraction or decomposition are not met.
+    first_steps:
+      - Agree a map of business domains and assign each to one owning team.
+      - Enforce module boundaries with build tooling and architecture tests.
+      - Give each module ownership of its own tables; remove cross-module writes.
+      - Baseline the share of cross-team changes and track it quarterly.
+
+  targeted_extraction:
+    label: Separate out one or two specific parts
+    preference_label:
+      single_deployable: Separate out one or two specific parts
+      distributed: Separate out further specific parts
+    offered_when_current: [single_deployable, distributed]
+    summary: >-
+      One or more components have a distinct compliance scope, availability target or load profile and largely own
+      their data. Separating those components, one at a time, addresses that specific need while keeping the rest of
+      the system simple.
+    fits_when: A distinct profile is present, the candidate's data is separable, and delivery and platform basics are in place.
+    first_steps:
+      - Confirm that in-process options (scaling that part separately from the same build, isolating it with bulkheads or queues) do not already solve the problem.
+      - Choose the single component with the clearest need and cleanest data boundary; extract it behind a stable interface and run both paths until parity is proven.
+      - Review cost, delivery and reliability after the first extraction before starting another.
+
+  broad_decomposition:
+    label: Gradually split into independently deployable services
+    preference_label: Gradually split into many separately released parts
+    offered_when_current: [single_deployable]
+    summary: >-
+      Coupling pain is high and spread across the system, many teams contend for one deployable, and the organisation
+      already operates the practices a distributed system requires: reliable delivery pipelines, a self-service
+      platform, team-owned operations and domain-aligned teams.
+    fits_when: High and diffuse need, six or more teams, strong capability in every area, all gates passed.
+    first_steps:
+      - Start with a domain that is both valuable and comparatively easy to separate.
+      - Keep the self-service path to production (≤ 2 days for a new deployable) as a standing commitment of the platform team.
+      - Track outcome measures per phase against the agreed stop criteria.
+
+  realign_services:
+    label: Realign existing services with team and domain boundaries
+    preference_label: Redraw the boundaries of our existing services
+    offered_when_current: [distributed]
+    summary: >-
+      The system is already distributed, but service boundaries do not match how teams and business domains work,
+      which causes coordination pain. Redrawing boundaries — merging some services and splitting others selectively —
+      addresses this without a wholesale change.
+    fits_when: Distributed estate with real coupling pain that is not mainly over-splitting.
+    first_steps:
+      - Map services to owning teams and business domains; list services with shared ownership.
+      - Merge or move responsibilities where changes routinely span several services.
+
+  consolidate:
+    label: Consolidate over-split services
+    preference_label: Merge closely linked services back together
+    offered_when_current: [distributed]
+    summary: >-
+      The system is split into more services than the teams can own effectively, and services are mostly released
+      together. Merging closely coupled services reduces operating cost and coordination without losing meaningful
+      independence.
+    fits_when: A high share of lockstep releases, and more than about three services per team or frequent cross-service changes.
+    first_steps:
+      - Identify services that are always released together and merge them first.
+      - Pause new services until the lockstep share falls below the agreed level.
+      - Align the remaining services to team boundaries.
+
+hosting:
+  stay_as_is:
+    label: Keep the current infrastructure
+    preference_label: Keep the current infrastructure without major changes
+    offered_when_current: [own_infrastructure, cloud, hybrid]
+    summary: >-
+      Hosting needs are met, the current infrastructure is reliable and automated, and no option offers a material
+      cost or capability advantage over the planning horizon.
+    fits_when: Low specific need, good operations, no favourable cost case for change.
+    first_steps:
+      - Record the cost and capacity assumptions and revisit them at the next refresh or contract renewal.
+
+  improve_current:
+    label: Improve, right-size and automate the current infrastructure
+    preference_label: Improve and automate what we run today, and adjust its size to actual need
+    offered_when_current: [own_infrastructure, cloud, hybrid]
+    summary: >-
+      The case for moving is weak, but the current setup is oversized, depends on manual work or on too few people,
+      or can be run materially cheaper. For organisations already in the cloud this means optimising commitments,
+      sizing and storage before considering a move.
+    fits_when: Weak automation or operations, a low bus factor, high toil, or a right-sizing saving of 15% or more.
+    first_steps:
+      - Right-size capacity to measured demand.
+      - Bring provisioning and configuration under infrastructure as code.
+      - Ensure at least two people can restore the platform independently.
+
+  hybrid:
+    label: Run selected workloads in a public cloud
+    preference_label:
+      own_infrastructure: Move some workloads to a public cloud and keep the rest
+      cloud: Bring some workloads back to our own infrastructure and keep the rest in the cloud
+      hybrid: Keep a mix, but change which workloads run where
+    offered_when_current: [own_infrastructure, cloud, hybrid]
+    summary: >-
+      A specific need — peaks, global reach or managed services — applies to part of the estate only. Placing those
+      workloads where the need is best met, and keeping the steady core where it runs most economically, captures
+      the benefit without the full cost of a complete move.
+    fits_when: A strong specific need for less than half of the estate, acceptable cost, automation in place.
+    first_steps:
+      - Start with the workload whose specific need is strongest (often stateless front ends or content delivery).
+      - Establish cost visibility per workload before moving a second.
+
+  move_to_cloud:
+    label: Move most workloads to a public cloud
+    preference_label: Move most workloads to a public cloud
+    offered_when_current: [own_infrastructure, hybrid]
+    summary: >-
+      A specific hosting need applies to most of the estate, the total cost over the horizon is neutral or
+      favourable (or within the premium leadership agreed in advance for that need), and the team can operate cloud
+      infrastructure through code.
+    fits_when: Strong specific need for most of the estate, favourable TCO, automation and skills in place, gates passed.
+    first_steps:
+      - Migrate in waves, starting with stateless workloads.
+      - Put cost ownership and budgets per team in place before the first wave.
+
+  repatriate:
+    label: Move workloads back from the public cloud
+    preference_label: Move workloads back from the public cloud to our own infrastructure
+    offered_when_current: [cloud, hybrid]
+    summary: >-
+      Load is steady, managed services are not essential, and even an optimised cloud setup costs materially more
+      over the horizon than owned or leased infrastructure — by enough to fund at least one person — with payback
+      within two years.
+    fits_when: Low elasticity need, a clearly unfavourable cloud cost case after optimisation, on-premises skills in place.
+    first_steps:
+      - Optimise the cloud setup first and re-run the comparison.
+      - Start with steady, high-cost workloads; keep bursty or managed-service workloads in the cloud.
+
+common:
+  prepare_first:
+    label: Prepare first
+    summary: >-
+      The evidence points to the outcome shown, but one or more preconditions (gates, hard stops or capabilities) are
+      not in place. Resolve them, with owners and dates, before committing budget or a timeline. The best outcome whose
+      preconditions already pass is shown as the interim step.
+  insufficient_evidence:
+    label: Insufficient evidence
+    summary: >-
+      No path reaches the agreed level of confidence. This is not a recommendation to keep the current state. The
+      report lists the inputs whose uncertainty matters most, with an owner and a deadline for collecting them.

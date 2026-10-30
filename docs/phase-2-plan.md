@@ -40,7 +40,7 @@ A proposal such as "microservices **and** move to the cloud" becomes two indepen
 |---|---|---|---|
 | **Need (N)** | Is there real pain, and does this decision address it? | Teams per deployable, cross-team change share, where lead time goes, blast-radius incidents, components with distinct scale/SLO/compliance needs | Load variability (peak/average), growth, hardware end of life, geographic reach, managed services genuinely required |
 | **Capability (C)** — scored in sub-areas | Can we build and run the target? | Delivery (DORA, test automation), platform & operations, data separability, **mindset: domain thinking**, **mindset: distributed operations** | Infrastructure as code & automation, cloud skills, cost discipline, operations capacity |
-| **Gates (G)** — pass / fail / unresolved | Are the preconditions in place? | Sponsor with budget and roadmap authority, committed funding incl. dual running, protected capacity, baseline metrics, agreed stop criteria | Same, plus compliance / data residency, contractual lock-in |
+| **Gates (G)** — pass / fail / unresolved, attested with evidence after the verdict | Are the preconditions in place for the leading outcome? | Sponsor with budget and roadmap authority, committed funding incl. dual running, protected capacity, baseline metrics, agreed stop criteria | Same, plus compliance / data residency, contractual lock-in |
 | **Locality (L)** — architecture only | Is the pain concentrated? | Share of friction in the top 2–3 areas, data ownership of those areas | – |
 | **Economics (E)** | Does it pay off? | Run cost of the target architecture vs today | 3-year total cost of ownership per option, with ranges |
 | **Alignment & stakes** — diagnostic, never decisive | Who wants what, and why? | Preferences, personal stakes, cross-group and within-leadership gaps | Same |
@@ -56,15 +56,21 @@ architecture (calibrated in M5):
 
 | Outcome | Rule |
 |---|---|
-| **Stay and improve** | N < 2.5, *or* lead time dominated by wait states (approvals, release windows) with delivery capability < 2.5 — "the problems would follow you" |
-| **Modular monolith** | N ≥ 2.5 and (data separability < 3 *or* domain-thinking mindset < 3 *or* no enforced module boundaries) |
-| **Targeted extraction** | L ≥ 3.5, the area has a distinct scale/compliance profile, its data is separable, delivery & platform capability ≥ 3, gates passed |
-| **Broad decomposition** | N ≥ 3.5 and diffuse, all capability sub-areas ≥ 3.5, both mindset axes ≥ 3.5, gates passed, economics acceptable |
-| **Consolidate** | Already distributed, > ~3 services per team, mostly lockstep deploys, run cost growing faster than value |
-| **Hard stops** | No automated deploy, no rollback, no central logs/metrics, or no on-call ownership → decomposition outcomes excluded |
+| **Consolidate** (distributed) | ≥ 30% lockstep releases and > 3 services per team or ≥ 30% cross-service changes |
+| **Realign services** (distributed) | Need ≥ 2.5 without over-splitting |
+| **Targeted extraction** | A component with a distinct compliance scope, availability tier, or load profile that one node cannot absorb, **and** evidence that it hurts today (incidents, compliance scope, scaling cost); seam data, pipeline, platform basics and distributed-operations fit as capabilities |
+| **Stay and improve** | N < 2.5, *or* lead time dominated by process waits (not release trains) with little coordination, < 15% cross-team changes and weak delivery pipeline — "the problems would follow you" |
+| **Broad decomposition** | N ≥ 3.5, ≥ 6 teams, diffuse pain; pipeline, platform and operations ≥ 3.5, shared tables < 20%, provisioning ≤ 2 days, both fit axes ≥ 3.5, run cost within the pre-registered tolerance |
+| **Modular monolith** | Default when N ≥ 2.5 and the stricter conditions above are not met |
+| **Hard stops** (from facts) | Rollback > 60 min, manual deployment steps, no central logs/metrics, no on-call owner → "prepare first" for extraction and decomposition, with the next outcome as interim step |
 
-Rules are evaluated in a fixed order. A failed gate never yields "proceed"; it produces "prepare first" together
-with the outcome that would apply once the gate is passed.
+Delivery is split into **pipeline quality** (a precondition) and **throughput** (diagnostic only), because a coupled
+monolith cannot show high throughput precisely because it is coupled.
+
+Rules are evaluated in a fixed order. Missing inputs make a condition *unresolved*, not false. A failed gate, hard
+stop or capability never yields "proceed"; it produces "prepare first" with the blocked outcome, plus the best
+outcome whose preconditions already pass as the interim step. The report also shows a **shadow verdict** under the
+unmodified default rules, and "insufficient evidence" is explicitly not a recommendation to keep the current state.
 
 ### 1.4 Uncertainty propagates to the outcome
 
@@ -76,13 +82,13 @@ leading outcome with its probability, or "insufficient evidence" below the agree
 
 ---
 
-## 2. Mindset & operating-model fit
+## 2. Operating-model fit
 
-- **8–10 scenario items** whose options map onto two axes: *domain thinking* (ownership, shared language,
-  data boundaries) and *distributed operations* (partial failure, eventual consistency, team-owned on-call,
-  decisions within guardrails).
-- **4–6 behavioural items** (event storming held, domain map exists, schema changes need board approval,
-  who is paged at night).
+- **Descriptive, retrospective scenario items** ("think of the last time…", with a "has not happened" option)
+  on two axes: *domain ownership* and *distributed operations*, plus facts (module ownership, domain map).
+  Scores express fit with domain-owned, distributed working — not maturity; a central SRE team or one
+  company-wide definition is a legitimate choice.
+- Business **consistency tolerance** is measured as a requirement, not as mindset.
 - **Fit, not maturity:** each outcome has minimum mindset requirements (modular monolith: high domain thinking,
   low distributed operations; broad decomposition: both high). The report shows fit per outcome.
 - **Cross-group gaps** are findings ("Leadership expects autonomy; scenario answers show decisions go to the board").
@@ -90,9 +96,11 @@ leading outcome with its probability, or "insufficient evidence" below the agree
 
 ## 3. Stakes, preference and personal interests
 
-- **Items:** preferred path (plain language) + confidence; expected effect on own role (−2…+2);
-  skills/career gain; workload effect; role/job-security concern (reverse-keyed). Stance and motives also coded
-  from free text.
+- **Items** (asked *after* the substantive questions, stakes on a separate skippable page): preferred path per
+  decision (plain-language options generated from the current state) + confidence; effect of **each** option on
+  the respondent's role and on their skills (so stake and preference are measured independently); a gently worded,
+  non-reversed concern item with a projective companion; "what evidence would change your preferred direction?"
+  as a pre-commitment compared with the evidence afterwards.
 - **Analysis (group level only, n ≥ 5):** preference distribution per group; association between preference and
   personal stake (within-group rank correlation, ordinal model controlling for group); **preference vs evidence**;
   within-leadership disagreement; the "watermelon" pattern (leadership optimistic, engineering pessimistic).
@@ -102,11 +110,14 @@ leading outcome with its probability, or "insufficient evidence" below the agree
 
 ## 4. Hosting economics
 
-Transparent cost model (`mra/tco.py`) with low/likely/high inputs: hardware amortisation and refresh,
-data centre / colocation, licences, operations staff; cloud compute and storage sized from current usage
-(incl. commitment discounts), egress, managed services, platform/FinOps staff, migration effort and dual running.
-Output: 3-year TCO per option with range, payback period, and how much of the cost case depends on load
-variability. If load is flat and a single machine suffices, the model shows it plainly.
+Transparent cost model (`mra/tco.py`): **5-year net present value** with residual hardware value (3 and 7 years
+as sensitivity), per option — stay, improve/right-size (or optimise the cloud), hybrid, cloud, repatriate. About
+40 inputs as low/likely/high with a source grade that sets a minimum range width; cloud and on-premises sizing
+generated from monitoring data, commitments applied to baseline load only, PERT sampling with common random
+numbers across options, migration and dual-run overruns correlated. One **symmetric switching rule** applies to a
+move in either direction (ratio ≤ 1.0, plus a premium leadership pre-registers for a named need). Output: ratio,
+payback and saving in FTE per option, tornado chart and break-even values. If load is flat and one machine
+suffices, the model shows it plainly.
 
 ## 5. Instrument
 
@@ -163,7 +174,7 @@ supporting evidence.
 
 | # | Milestone | Deliverable | Owner input |
 |---|---|---|---|
-| **M0** | Design freeze | Item bank draft, fact-sheet spec, `decision_rules.yaml` v0, outcome definitions; independent expert re-review | Approve item bank and rules; recruit 3–5 pretest participants |
+| **M0** | Design freeze | Item bank, fact-sheet spec, governance checklist, `decision_rules.yaml`, outcome definitions, participant pack; two rounds of independent expert review | Approve; recruit 3–5 pretest participants (incl. one BUS, one FIN, one OPS) |
 | **M1** | Instrument & data layer | Schemas, loaders, v2 converter, fact sheet, clear validation errors | – |
 | **M2** | Architecture decision | Axes, gates, rule engine, probabilities, flip analysis; tests | Review outcome wording |
 | **M3** | Hosting decision | TCO model, hosting axes and rules | Sanity-check cost assumptions |

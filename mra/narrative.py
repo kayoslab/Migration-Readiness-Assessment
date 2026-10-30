@@ -16,6 +16,8 @@ from dataclasses import dataclass, field
 
 import pydantic
 
+from .storyline import plain
+
 NARRATIVE_INSTRUCTIONS = """You write the narrative parts of a management-consulting report on the future of a
 software platform, in the register of a Big Four advisory report: formal, concise British English, no jargon.
 
@@ -30,9 +32,11 @@ Return:
 - executive: 2 to 4 short paragraphs telling one coherent story — the situation, what the evidence says for each
   decision and why, what must happen first, and what it means for the people involved.
 - chapters: one short paragraph (2–3 sentences) introducing each of: architecture, hosting, readiness, people.
-- exhibits: for every exhibit in "exhibits", an interpretation of 2–3 sentences: what the exhibit shows (using its
-  title, observations and data), why it matters for the decision, and what the reader should take from it. Do not
-  repeat the title verbatim. Return the exhibit's id unchanged."""
+- exhibits: for every exhibit in "exhibits", ONE sentence that replaces the first sentence of its "so_what_draft".
+  It states what the exhibit implies for the recommended path, read against all the other findings and the
+  exhibit's "role" in the storyline — not what the chart shows (the title already says that). Add what the rest of
+  the draft does not say and never repeat it. At most 35 words. Do not mention exhibit numbers, steps, risks or
+  sections: the rest of the so-what links to them. Return the id unchanged."""
 
 BANNED = ("bias", "biased", "self-interest", "motivated", "agenda", "resist", "resistance", "obstruct", "blame")
 RECOMMEND = re.compile(r"\b(recommend|should|must|advise|propose|best option|the right path)\w*", re.I)
@@ -86,8 +90,18 @@ def findings_payload(ctx: dict) -> dict:
         "stakeholder_findings": ctx["stakes"]["findings"],
         "free_text": (ctx.get("text") or {}).get("key_messages", []),
         "next_steps": [{"phase": s["phase_label"], "action": s["action"]} for s in ctx["steps"]][:10],
-        "exhibits": [{"id": e["insight"]["id"], "title": e["insight"]["title"], "observations": e["insight"]["points"],
+        "exhibits": [{"id": e["insight"]["id"], "role": e["insight"].get("role", ""), "title": e["insight"]["title"],
+                      "so_what_draft": plain(e["insight"].get("so_what") or []), "observations": e["insight"]["points"],
                       "data": e["data"]} for e in ctx.get("exhibits", [])],
+        "options": {d["id"]: [{"option": o["label"], "status": o["state"], "would_need": o["beliefs"]}
+                              for o in d.get("options", [])] for d in ctx["decisions"]},
+        "risks": [{"id": r["id"], "risk": r["title"], "likelihood": r["likelihood"], "impact": r["impact"]}
+                  for r in ctx["risks"]["risks"]],
+        "success_measures": ctx.get("measures", []),
+        "benchmark": [{k: r[k] for k in ("label", "shown", "position")}
+                      for r in (ctx["readiness"].get("benchmark") or {}).get("rows", [])],
+        "stakeholder_map": [{k: r[k] for k in ("group", "support", "influence", "approach")}
+                            for r in ctx["stakes"].get("map", [])],
     }
 
 
@@ -159,7 +173,7 @@ def validate(out: dict, payload: dict, all_paths: set[str]) -> Narrative:
     for e in out.get("exhibits") or []:
         if e["id"] in known:
             text = clean(e["interpretation"])
-            if len(_sentences(text)) >= 2:          # a single surviving sentence reads worse than the computed text
+            if len(_sentences(text)) == 1:          # exactly one sentence; otherwise the computed one stays
                 exhibits[e["id"]] = text
     story = " ".join(executive).lower()
     for d in payload["decisions"]:

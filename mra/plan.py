@@ -49,9 +49,9 @@ def roadmap(assessment, steps: list[dict]) -> dict:
                          f"{outcome_label(ins, 'hosting', hosting.verdict).lower()}", "start": start,
                          "end": start + likely, "end_high": (start + high) if high else None, "decision": "hosting"})
             horizon = max(horizon, int(np.ceil(start + (high or likely))))
-    gates = [{"month": 3, "label": "Review: preconditions in place, stop criteria agreed — commit, re-scope or stop"},
-             {"month": 6, "label": "Review: success measures against baseline"},
-             {"month": 12, "label": "Review: success measures; continue, adjust or stop"}]
+    gates = [{"month": 3, "label": "Preconditions in place, stop criteria agreed — commit, re-scope or stop"},
+             {"month": 6, "label": "Success measures against baseline"},
+             {"month": 12, "label": "Success measures; continue, adjust or stop"}]
     return {"bars": bars, "gates": gates, "horizon": horizon}
 
 

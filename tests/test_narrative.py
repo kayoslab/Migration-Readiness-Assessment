@@ -48,12 +48,14 @@ def test_missing_precondition_rejects_the_narrative():
     assert validate(out, PAYLOAD, PATHS).rejected
 
 
-def test_exhibit_interpretations_are_checked():
+def test_exhibit_means_sentence_is_checked():
     payload = {**PAYLOAD, "exhibits": [{"id": "hosting.tco", "title": "t", "observations": [], "data": {"Move to cloud": 2.6}}]}
     good = {"executive": ["Preconditions first."], "chapters": {},
-            "exhibits": [{"id": "hosting.tco", "interpretation": "Moving to the cloud would cost 2.6 times today. "
-                                                                 "The cost case therefore points away from a move."}]}
+            "exhibits": [{"id": "hosting.tco", "interpretation": "At 2.6 times today's cost, the cloud is not a saving."}]}
     assert "hosting.tco" in validate(good, payload, PATHS).exhibits
-    bad = {"executive": ["Preconditions first."], "chapters": {},
-           "exhibits": [{"id": "hosting.tco", "interpretation": "The cloud would save 40%. It is cheaper."}]}
-    assert "hosting.tco" not in validate(bad, payload, PATHS).exhibits      # one sentence left: computed text is used
+    invented = {"executive": ["Preconditions first."], "chapters": {},
+                "exhibits": [{"id": "hosting.tco", "interpretation": "The cloud would save 40%."}]}
+    assert "hosting.tco" not in validate(invented, payload, PATHS).exhibits     # number not in the findings
+    two = {"executive": ["Preconditions first."], "chapters": {},
+           "exhibits": [{"id": "hosting.tco", "interpretation": "It costs 2.6 times today. That is a lot."}]}
+    assert "hosting.tco" not in validate(two, payload, PATHS).exhibits          # one sentence only

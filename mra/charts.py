@@ -438,7 +438,7 @@ def roadmap_chart(roadmap: dict, path: Path) -> Path:
         ax.text((lane["high"] or lane["end"]) + 0.2, yi, count, va="center", fontsize=7.5, color=INK_MUTED)
     for i, g in enumerate(roadmap["gates"], 1):
         ax.axvline(g["month"], color=INK_MUTED, lw=0.8, ls="--")
-        ax.text(g["month"], len(names) - 0.25, f"R{i}", ha="center", va="bottom", fontsize=7.5, color=INK_MUTED)
+        ax.text(g["month"], len(names) - 0.25, f"C{i}", ha="center", va="bottom", fontsize=7.5, color=INK_MUTED)
     ax.set_yticks(range(len(names)), [_wrap(n, 32) for n in names])
     ax.tick_params(axis="y", length=0)
     ax.spines["left"].set_visible(False)

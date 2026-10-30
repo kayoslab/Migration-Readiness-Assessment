@@ -291,6 +291,8 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     # ---------------------------------------------------------------- roadmap, success measures, scenarios
     from . import plan
     steps = next_steps(assessment)
+    for i, s in enumerate(steps, 1):
+        s["no"] = i                                     # one numbering across phases, for cross-references
     rm = plan.roadmap(assessment, steps)
     roadmap_block = {"gates": rm["gates"],
                      "chart": _rel(charts.roadmap_chart(rm, cdir / "roadmap.svg"), root) if rm["bars"] else None,
@@ -332,7 +334,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         notice.append("This report was produced from synthetic data for illustration only.")
 
     rules = ins.rules
-    return {
+    ctx = {
         "engagement": {
             "organisation": cfg.get("organisation", eng.system), "title": cfg.get("title", "Architecture and Hosting Assessment"),
             "subtitle": cfg.get("subtitle", f"Recommended direction for {eng.system}"),
@@ -363,6 +365,9 @@ def build_context(assessment, out: Path, root: Path) -> dict:
                   "draws": ev.draws, "min_role_n": rules.get("evidence", {}).get("min_role_n", 5)},
         "text": None if assessment.text is None else _text_context(assessment.text),
     }
+    from .storyline import compose
+    compose(assessment, ctx)
+    return ctx
 
 
 def build_report(assessment, output: Path, template: Path = TEMPLATE, narrative: bool = False) -> Path:
@@ -380,8 +385,12 @@ def build_report(assessment, output: Path, template: Path = TEMPLATE, narrative:
         assessment.narrative = n
         if not n.rejected:
             context["narrative"] = {"executive": n.executive, "chapters": n.chapters}
-        for e in context["exhibits"]:                  # exhibit interpretations stand on their own checks
-            e["insight"]["interpretation"] = n.exhibits.get(e["insight"]["id"])
+        from .storyline import check, polish_ok, replace_means
+        for e in context["exhibits"]:                  # only the "means" sentence is polished; links stay computed
+            sentence = n.exhibits.get(e["insight"]["id"])
+            if sentence and polish_ok(e["insight"]["so_what"], sentence):
+                e["insight"]["so_what"] = replace_means(e["insight"]["so_what"], sentence)
+        context["so_what_issues"] = check(context)
     data = out / "report.json"
     data.write_text(json.dumps(context, indent=1, ensure_ascii=False, default=str))
     output.parent.mkdir(parents=True, exist_ok=True)

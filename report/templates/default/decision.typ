@@ -3,6 +3,7 @@
 
 #let data = json(sys.inputs.data)
 #let e = data.engagement
+#let anchor(name) = [#metadata(name)#label(name)]
 
 #let fmt(x, d: 2) = {
   if x == none { return "–" }
@@ -25,6 +26,7 @@
 }
 
 #let options(dec) = [
+  #anchor("options-" + dec.id)
   == Options considered
   Every path open from the current state, assessed on the same evidence. Programme size, reversibility and time to
   value are stated judgements; all other columns come from the assessment.
@@ -58,10 +60,32 @@
 
 // An exhibit in advisory style: number, action title (the insight), chart, source, and "so what".
 #let exhibit-counter = counter("exhibit")
+// cross-references in a "so what": exhibits by number, steps, risks, checkpoints and sections by anchor
+#let xref(lbl, body) = context {
+  if query(lbl).len() > 0 { link(lbl, body) } else { body }
+}
+#let so-what(segments) = for s in segments {
+  if "t" in s { s.t }
+  else if s.ref == "exhibit" {
+    context {
+      let q = query(label("exh-" + s.id))
+      if q.len() > 0 {
+        let loc = q.first().location()
+        link(loc)[Exhibit #exhibit-counter.at(loc).first()]
+      } else [a related exhibit]
+    }
+  }
+  else if s.ref == "step" { xref(label("step-" + str(s.no)), [step #s.no]) }
+  else if s.ref == "risk" { xref(label("risk-" + s.id), if s.at("short", default: false) [#s.id] else [risk #s.id]) }
+  else if s.ref == "checkpoint" { xref(label("checkpoint-" + str(s.no)), if s.at("short", default: false) [C#s.no] else [checkpoint C#s.no]) }
+  else { xref(label(s.id), s.name) }
+}
+
 #let exhibit(path, insight, source: none) = {
   exhibit-counter.step()
   block(width: 100%, breakable: false, above: 6mm)[
-    #eyebrow[Exhibit #context exhibit-counter.display()]
+    #metadata(insight.id)#label("exh-" + insight.id)
+    #eyebrow[Exhibit #context exhibit-counter.display()#if insight.at("role", default: "") != "" [ · #insight.role]]
     #v(1pt)
     #text(size: 10.5pt, weight: "semibold", fill: theme.primary, insight.title)
     #v(4pt)
@@ -71,7 +95,8 @@
       #text(size: 8pt, weight: "semibold", fill: theme.accent, tracking: 0.06em)[SO WHAT]
       #v(1pt)
       #set text(size: 9pt)
-      #if insight.interpretation != none [#insight.interpretation] else [#insight.points.join(" ")]
+      #show link: set text(fill: theme.accent)
+      #if "so_what" in insight [#so-what(insight.so_what)] else if insight.interpretation != none [#insight.interpretation] else [#insight.points.join(" ")]
     ]
   ]
 }
@@ -232,6 +257,7 @@
     #exhibit(dec.charts.tco, dec.insights.tco,
       source: "Five-year net present value relative to the current setup; dot = likely value, line = 90% range.")
     #if "scenarios" in dec and dec.scenarios.len() > 0 [
+      #anchor("scenarios-hosting")
       == Scenarios
       #data-table(
         columns: (2.2fr, 1fr, 1fr, 1fr),
@@ -322,6 +348,7 @@ means more ready. Each group answers only the questions it can judge, so cells a
   #v(3mm)
 ]
 
+#anchor("preconditions")
 = Preconditions
 
 Preconditions are attested with evidence by the sponsor, Finance, the technology lead and risk and compliance, and
@@ -403,19 +430,21 @@ plan how a decision is communicated and supported.
   ]
 ]
 
+#anchor("risks")
 = Risks, assumptions and dependencies
 
 Each entry follows from a finding in this report; likelihood and impact are rated by rule (high · medium · low),
 owners and mitigations come from the action library.
 
 #data-table(
-  columns: (3.2fr, 0.45fr, 0.45fr, 1.4fr, 3fr),
-  align: (left, center, center, left, left),
-  header: ("Risk", "L", "I", "Owner", "Mitigation"),
-  ..data.risks.risks.map(r => ([#r.title #linebreak() #text(size: 7.5pt, fill: theme.muted, r.cause)],
+  columns: (0.45fr, 3.2fr, 0.4fr, 0.4fr, 1.3fr, 2.9fr),
+  align: (left, left, center, center, left, left),
+  header: ("", "Risk", "L", "I", "Owner", "Mitigation"),
+  ..data.risks.risks.map(r => ([#metadata(r.id)#label("risk-" + r.id)#text(weight: "semibold", r.id)], [#r.title #linebreak() #text(size: 7.5pt, fill: theme.muted, r.cause)],
     upper(r.likelihood.slice(0, 1)), upper(r.impact.slice(0, 1)), text(size: 8pt, r.owner), text(size: 8pt, r.mitigation))).flatten(),
 )
 
+#anchor("assumptions")
 == Key assumptions
 #data-table(
   columns: (3.4fr, 1.6fr, 1.8fr),
@@ -439,14 +468,16 @@ owners and mitigations come from the action library.
   #exhibit(data.roadmap.chart, data.roadmap.insight,
     source: "Indicative sequencing from the next steps below; hatched = high estimate of the migration duration.")
   #v(2mm)
-  #data-table(columns: (0.5fr, 0.8fr, 5fr), align: (left, right, left), header: ("", "Month", "Review point"),
-    ..data.roadmap.gates.enumerate().map(((i, g)) => ("R" + str(i + 1), str(g.month), g.label)).flatten())
+  #data-table(columns: (0.5fr, 0.8fr, 5fr), align: (left, right, left), header: ("", "Month", "Checkpoint"),
+    ..data.roadmap.gates.enumerate().map(((i, g)) => ([#metadata(i)#label("checkpoint-" + str(i + 1))C#(i + 1)],
+      str(g.month), g.label)).flatten())
   #v(3mm)
 ]
 
 #if data.measures.len() > 0 [
+  #anchor("measures")
   == Success measures
-  The measures by which the decision should be judged at each review point. Proposed targets move one performance
+  The measures by which the decision should be judged at each checkpoint. Proposed targets move one performance
   band; targets agreed with the sponsor replace them.
   #data-table(
     columns: (0.9fr, 3.4fr, 0.9fr, 1.3fr, 1.4fr),
@@ -461,9 +492,10 @@ owners and mitigations come from the action library.
 #let phases = data.steps.map(s => s.phase_label).dedup()
 #for ph in phases [
   == #ph
-  #for (i, s) in data.steps.filter(s => s.phase_label == ph).enumerate() [
+  #for s in data.steps.filter(s => s.phase_label == ph) [
+    #metadata(s.no)#label("step-" + str(s.no))
     #grid(columns: (9mm, 1fr),
-      text(size: 12pt, weight: "light", fill: theme.accent, numbering("01", i + 1)),
+      text(size: 12pt, weight: "light", fill: theme.accent, numbering("01", s.no)),
       [#s.action \ #text(size: 8pt, fill: theme.muted)[Owner: #s.owner#if s.reason != "" [ · #s.reason]]],
     )
     #v(2mm)

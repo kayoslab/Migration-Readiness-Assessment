@@ -133,4 +133,6 @@ def register(assessment) -> dict:
          "basis": "decision rules; 3- and 7-year results in the economics", "sensitivity": "–"},
     ]
     risks.sort(key=lambda x: (-x["score"], x["kind"]))
+    for i, x in enumerate(risks, 1):
+        x["id"] = f"R{i}"
     return {"risks": risks, "assumptions": assumptions, "dependencies": dependencies}

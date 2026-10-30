@@ -30,7 +30,7 @@ One report per assessment, ready for an executive audience:
 </tr>
 <tr>
 <td><em>Executive summary: a recommended path per decision, whether to proceed or prepare first, and why.</em></td>
-<td><em>Every exhibit states its insight and what it means for the decision.</em></td>
+<td><em>Every exhibit states its insight, its role in the argument, and what it means for the decision — linked to the related findings, steps and risks.</em></td>
 </tr>
 </table>
 
@@ -176,11 +176,13 @@ mra report engagements/acme/engagement.yaml --llm
 - **Free-text answers** are coded per respondent (sentiment, stance on change, themes, motives, centralised or
   domain-owned thinking) and summarised by group with verbatim quotes. E-mail addresses, phone numbers, links and any
   names you list are removed before sending. The withdrawal word respondents may enter is never sent.
-- **Narrative and interpretation** — the model drafts the executive narrative, chapter introductions and the
-  interpretation of each exhibit from the report's own findings. Every sentence is checked before use: numbers must
-  appear in the findings, only the recommended path may be recommended, and wording about people's stakes must stay
-  neutral. If the narrative omits a precondition or overstates certainty it is discarded. Without `--llm` the report
-  uses its own computed text throughout.
+- **Narrative and interpretation** — the model drafts the executive narrative and chapter introductions from the
+  report's own findings, and rewrites the opening sentence of each exhibit's "so what" in the light of all of them.
+  The rest of each "so what" — its links to related exhibits, next steps, risks and checkpoints — is always computed.
+  Every sentence is checked before use: numbers must appear in the findings, only the recommended path may be
+  recommended, wording about people's stakes must stay neutral, and a rewritten sentence may not repeat the one after
+  it. If the narrative omits a precondition or overstates certainty it is discarded. Without `--llm` the report uses
+  its own computed text throughout.
 - Results are cached, so re-running a report costs nothing. Participants must be told that free text is processed by
   a language model; the participant information covers this.
 

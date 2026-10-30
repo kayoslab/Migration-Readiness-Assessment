@@ -27,7 +27,7 @@ ROLE = {
     "preferences": "Who needs bringing along", "stakes": "Who needs bringing along",
     "people.map": "Who needs bringing along", "people.divergence": "What must be clarified",
     "readiness.matrix": "What must be built", "readiness.weakest": "What must be built",
-    "readiness.benchmark": "How we compare", "plan.roadmap": "What happens first",
+    "readiness.benchmark": "How we compare", "plan.roadmap": "What happens first", "sourcing.map": "Why this path",
 }
 SECTIONS = {"preconditions": "the preconditions chapter", "measures": "the success measures",
             "risks": "the risk register", "assumptions": "the key assumptions"}
@@ -313,6 +313,48 @@ def _leadtime(f: Findings) -> list[dict]:
         out += [T("Whether restructuring works shows in the share of cross-team changes ("), S(no), T(").")]
     else:
         out += [T("Progress shows in "), SEC("measures"), T(".")]
+    return out
+
+
+def _sourcing(f: Findings) -> list[dict]:
+    block = f.ctx["sourcing"]
+    parts, rules = block["parts"], block["rules"]
+    replace = [p for p in parts if p["verdict"] == "replace_with_product"]
+    keep = [p for p in parts if p["verdict"] == "keep_building"]
+    out = []
+    if replace:
+        freed = sum(max(p.get("fte_freed") or 0, 0) for p in replace)
+        names = _join([p["name"].lower() for p in replace])
+        out.append(T(f"Replacing {names} frees capacity of about {freed:.1f} FTE for the parts that set the organisation "
+                     "apart. "
+                     if freed >= 0.5 else f"Replacing {names} lowers cost without touching what sets the organisation "
+                                          "apart. "))
+    for p in keep[:2]:
+        if p["status"] == "excluded":
+            why = "replacing it is ruled out"
+        elif p.get("differentiation") is not None and p["differentiation"] >= rules["commodity_below"]:
+            why = "it is part of what sets the organisation apart"
+        elif p.get("coverage") is not None and p["coverage"] < rules["coverage"]:
+            why = "no product covers enough of it"
+        else:
+            why = "buying would not be clearly cheaper"
+        out.append(T(f"{p['name']} stays in-house because {why}. "))
+    tangled = [p for p in replace if p["status"] == "prepare_first"]
+    if tangled:
+        no = f.step(lambda s: tangled[0]["name"] in s["action"] and "separate its data" in s["action"])
+        arch = f.step(lambda s: s["decision"] == "architecture" and "own tables" in s["action"])
+        out += [T(f"{tangled[0]['name']}'s data must be separated first")]
+        out += [T(" — the restructuring's step on data ownership ("), S(arch), T(") does that")] if arch else \
+            ([T(" ("), S(no), T(")")] if no else [])
+        out.append(T(". "))
+    poc = f.step(lambda s: s["decision"] == "sourcing" and "proof of concept" in s["action"])
+    rid = f.risk(lambda r: r["title"].startswith("Build or buy: dependence"))
+    if poc:
+        out += [T("The proof of concept ("), S(poc), T(") decides before any contract is signed")]
+        out += [T("; the dependence on the vendor is "), R(rid)] if rid else []
+        out.append(T("."))
+    elif f.ctx.get("triggers"):
+        out += [T("When to look again is agreed ("), SEC("triggers", "when to reopen"), T(").")]
     return out
 
 
@@ -641,7 +683,7 @@ def compose(assessment, ctx: dict) -> None:
                 seg = (_preferences if tail == "preferences" else _stakes)(f, head)
             else:
                 seg = {"architecture.map": lambda: _arch_map(f), "architecture.leadtime": lambda: _leadtime(f),
-                       "hosting.tco": lambda: _tco(f),
+                       "hosting.tco": lambda: _tco(f), "sourcing.map": lambda: _sourcing(f),
                        "hosting.tornado": lambda: _tornado(f), "people.map": lambda: _people_map(f),
                        "people.divergence": lambda: _divergence(f), "readiness.matrix": lambda: _readiness_matrix(f),
                        "readiness.weakest": lambda: _readiness_weakest(f), "readiness.benchmark": lambda: _benchmark(f),

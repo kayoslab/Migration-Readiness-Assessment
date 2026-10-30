@@ -87,7 +87,8 @@ def form_specs(engagement_path) -> dict:
     root = path.parent
     ins = load_instrument(root / cfg.get("instrument", "instrument"))
     facts = load_facts(root / cfg["facts"]) if cfg.get("facts") else {}
-    current = {"architecture": derive_current_state(ins, facts), "hosting": cfg.get("current_hosting", "own_infrastructure")}
+    current = {"architecture": derive_current_state(ins, facts), "hosting": cfg.get("current_hosting", "own_infrastructure"),
+               "_candidates": list(((cfg.get("sourcing") or {}).get("candidates") or {}).values())}
     system = cfg.get("system", "the system")
     report = cfg.get("report", {}) or {}
     groups = list((cfg.get("responses") or {}).keys()) or list(GROUP_NAMES)

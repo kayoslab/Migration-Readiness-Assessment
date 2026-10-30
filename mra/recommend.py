@@ -71,6 +71,25 @@ def next_steps(assessment) -> list[dict]:
             for step in ins.outcomes[decision][target].get("first_steps", []):
                 add("first_steps", decision, step, FIRST_STEP_OWNER.get(decision, "Sponsor"), f"For “{path}”.")
 
+    # build or buy: preparation, first steps and evidence work per candidate part
+    for part in getattr(assessment, "sourcing", []) or []:
+        name, outcome = part["name"], part["verdict"]
+        if outcome == "insufficient_evidence":
+            what = "; ".join(m[0].lower() + m[1:] for m in part.get("missing", [])) or \
+                "the product's coverage of the requirements and the cost estimates, firmed up with quotes"
+            add("evidence", "sourcing", f"{name}: settle whether to build or buy it — {what}.", "Technology lead")
+            continue
+        if outcome == "replace_with_product" and part.get("status") == "prepare_first":
+            add("before_commitment", "sourcing", f"{name}: separate its data from the other parts, so that it can be "
+                "replaced cleanly.", "Technology lead", "Its tables are also written by other parts.")
+        for gate in part.get("gates", []):
+            if gate["status"] != "pass" and gate["id"] in lib.get("gates", {}):
+                g = lib["gates"][gate["id"]]
+                add("before_commitment", "sourcing", f"{name}: {g['action'][0].lower() + g['action'][1:]}", g["owner"],
+                    "Precondition for replacing it.")
+        for step in ins.outcomes.get("sourcing", {}).get(outcome, {}).get("first_steps", []):
+            add("first_steps", "sourcing", f"{name}: {step[0].lower() + step[1:]}", "Technology lead")
+
     missing = [p.split(": ", 1)[1] for p in assessment.problems if p.startswith("required fact missing")]
     if missing and (e := lib.get("evidence", {}).get("missing_fact")):
         facts = assessment.engagement.instrument.facts

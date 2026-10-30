@@ -1,0 +1,58 @@
+billing:
+  part_maintain_fte: &id001
+    low: 3.5
+    likely: 4
+    high: 5
+    grade: estimate
+  part_run_cost_annual: &id002
+    value: 60000
+    grade: invoice
+  product_licence_annual:
+    value: 90000
+    grade: quote
+  product_integration_cost: &id003
+    low: 200000
+    likely: 250000
+    high: 350000
+    grade: estimate
+  product_remaining_fte: &id004
+    low: 0.3
+    likely: 0.5
+    high: 1.0
+    grade: estimate
+  product_switch_months: &id005
+    low: 6
+    likely: 9
+    high: 12
+    grade: estimate
+  product_exit_cost: &id006
+    value: 50000
+    grade: estimate
+  product_coverage_pct:
+    value: 92
+    grade: quote
+  product_data_export:
+    value: 'yes'
+  product_compliance:
+    value: 'yes'
+  part_shared_tables_pct:
+    value: 30
+pricing:
+  part_maintain_fte: *id001
+  part_run_cost_annual: *id002
+  product_licence_annual:
+    value: 150000
+    grade: quote
+  product_integration_cost: *id003
+  product_remaining_fte: *id004
+  product_switch_months: *id005
+  product_exit_cost: *id006
+  product_coverage_pct:
+    value: 70
+    grade: quote
+  product_data_export:
+    value: 'yes'
+  product_compliance:
+    value: 'yes'
+  part_shared_tables_pct:
+    value: 10

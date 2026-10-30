@@ -194,6 +194,24 @@ gates:
   change_load:      {label: No more than one other major change on the same teams, checks: [GV12], corroborated_by: [G10]}
   compliance_release: {label: Change control allows independent deployment, checks: [GV09]}
   compliance_hosting: {label: Hosting constraints assessed; exit plan in place, checks: [GV10, GV11], combine: min}
+  exit_plan:        {label: Exit plan for the product (data export tested; contract allows leaving), checks: [GV13]}
+
+# =========================================================================================== build or buy
+# Per candidate part named in engagement.yaml (sourcing: candidates). Replace a part with a product only if it does
+# not set the organisation apart, a product covers enough of it, and buying beats building by the same switching
+# margin as hosting. Keeping it needs no preconditions; replacing does. Below the confidence level: insufficient
+# evidence. Hard stops rule replacing out until removed.
+sourcing:
+  horizon_years: 5
+  differentiation: {item: SO01, groups: [PRD, BUS, TEC, EXE], commodity_below: 2.5, differentiating_from: 3.5}
+  replace_when:
+    coverage_at_least: 80          # % of current requirements met without custom development
+    cost_ratio_at_most: 0.85       # five-year cost of buying ÷ building, i.e. at least 15% cheaper
+  hard_stops:
+    hs_no_export: {label: The part's data cannot be exported from the product, fact: product_data_export, equals: "no"}
+    hs_compliance: {label: The product does not meet a compliance requirement of the part, fact: product_compliance, equals: "no"}
+  seam: {fact: part_shared_tables_pct, at_most: 20}   # otherwise prepare first: separate the part's data
+  requires_gates: [sponsor, funding, exit_plan]
 
 # =========================================================================================== decisions
 # Outcomes are evaluated top to bottom; the first whose `when` holds is the draw's outcome.

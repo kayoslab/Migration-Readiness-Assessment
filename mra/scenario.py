@@ -68,7 +68,7 @@ HOSTING_FACTS = {
     "contract_end_months": 36,
 }
 
-ALL_YES = {f"GV{i:02d}": {"answer": "Yes", "evidence": "Reference document", "attested_by": "Sponsor"} for i in range(1, 13)}
+ALL_YES = {f"GV{i:02d}": {"answer": "Yes", "evidence": "Reference document", "attested_by": "Sponsor"} for i in range(1, 14)}
 
 
 @dataclass
@@ -80,6 +80,7 @@ class Scenario:
     facts: dict = field(default_factory=dict)
     governance: dict = field(default_factory=dict)
     sizes: dict[str, int] = field(default_factory=dict)
+    sourcing: dict = field(default_factory=dict)          # candidate id -> {name, differentiation, facts}
     noise: float = 0.5                  # spread of personal optimism between respondents
     item_noise: float = 0.5             # spread of each single answer around the respondent's view
     system: str = "the Order Platform"
@@ -104,6 +105,10 @@ def _answer(ins: Instrument, q: dict, target: float | None, fixed: str | None, r
         return ""
     choices = [o for o in q["options"] if o != DONT_KNOW and o != ins.items.at[q["item_id"], "not_applicable"]]
     if q["row"] is not None:                                  # grids
+        scale = ins.scores(q["item_id"])
+        if isinstance(scale, dict) and target is not None:    # a rated grid: answer each row on its scale
+            wanted = target + rng.normal(0, item_noise) if item_noise else target
+            return min(scale, key=lambda label: (abs(scale[label] - wanted), rng.random()))
         if ins.items.at[q["item_id"], "scored"] != "true":
             return choices[rng.integers(len(choices))]
         if target is None:
@@ -135,7 +140,9 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
                         high=max(x["high"] for x in est))
         return Fact(**{k: x for k, x in v.items() if k in Fact.__dataclass_fields__})
     fact_objs = {k: as_fact(v) for k, v in facts.items() if v is not None}
-    current = {"architecture": derive_current_state(ins, fact_objs), "hosting": scenario.current_hosting}
+    current = {"architecture": derive_current_state(ins, fact_objs), "hosting": scenario.current_hosting,
+               "_candidates": [c["name"] for c in scenario.sourcing.values()]}
+    differentiation = {c["name"]: c["differentiation"] for c in scenario.sourcing.values()}
 
     labels = {d: {oid: label for oid, label in ins.preference_options(d, current[d])} for d in ("architecture", "hosting")}
     answers = {}
@@ -151,6 +158,8 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
             for q in spec:
                 keys = _area_key(ins, q["item_id"]) + [f"item.{q['item_id']}"]
                 target = next((scenario.targets[k] for k in keys if k in scenario.targets), None)
+                if q["item_id"] == "SO01":                         # differentiation per candidate part
+                    target = differentiation.get(q["row"])
                 fixed = scenario.labels.get(q["item_id"])
                 if q["item_id"] == "CX02" and fixed is None:
                     fixed = q["options"][0] if role in ("ENG", "OPS", "TEC") else q["options"][1]
@@ -189,6 +198,12 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
               "fact_sheet_frozen_on": "2026-10-01",
               "instrument": str(Path(instrument_dir).resolve()), "responses": files,
               "facts": "facts.yaml", "governance": "governance.yaml"}
+    if scenario.sourcing:
+        (root / "sourcing.yaml").write_text(yaml.safe_dump(
+            {cid: {k: (v if isinstance(v, dict) else {"value": v}) for k, v in c["facts"].items()}
+             for cid, c in scenario.sourcing.items()}, sort_keys=False))
+        config["sourcing"] = {"candidates": {cid: c["name"] for cid, c in scenario.sourcing.items()},
+                              "facts": "sourcing.yaml"}
     path = root / "engagement.yaml"
     path.write_text(yaml.safe_dump(config, sort_keys=False))
     return path

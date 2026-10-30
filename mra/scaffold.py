@@ -20,6 +20,7 @@ CHECKLIST = """# Engagement checklist
 4. Generate the survey forms (`mra forms engagement.yaml`), send them with the participant pack
    (`instrument/participant-information.md`) and export each group's responses to `Responses/<GROUP>.csv`.
 5. Run `mra decide engagement.yaml` for the verdict.
+   For build or buy, name the candidate parts under `sourcing:` in `engagement.yaml` and fill in `sourcing.yaml`.
 6. Complete `governance.yaml` for the recommended path, with evidence references.
 7. Run `mra decide engagement.yaml --pdf report.pdf` for the report.
 """
@@ -36,7 +37,7 @@ def facts_template(ins) -> str:
              "# Two estimators: {estimates: [{estimator: ..., low: .., likely: .., high: .., grade: ...}, {...}]}",
              "# Categories: {value: <one of the listed options>, source: ...}", ""]
     current = None
-    for fid, f in ins.facts.iterrows():
+    for fid, f in ins.facts[ins.facts["decision"] != "sourcing"].iterrows():   # build-or-buy facts: sourcing.yaml
         heading = f"{f['decision']} · {f['axis']}"
         if heading != current:
             lines += ["", f"# ===== {heading} " + "=" * max(0, 90 - len(heading))]
@@ -54,6 +55,22 @@ def facts_template(ins) -> str:
             lines.append(f"{fid}: {{low: null, likely: null, high: null, grade: estimate, source: null, date: null}}")
         else:
             lines.append(f"{fid}: {{value: null, source: null, date: null}}")
+    return "\n".join(lines) + "\n"
+
+
+def sourcing_template(ins) -> str:
+    """Facts per candidate part for build or buy; one block per id named in engagement.yaml → sourcing."""
+    lines = ["# Build or buy — facts per candidate part. One block per id under sourcing: candidates in engagement.yaml.",
+             "# Same formats as facts.yaml; cost inputs as ranges from two estimators.", "", "example_part:"]
+    for fid, f in ins.facts[ins.facts["decision"] == "sourcing"].iterrows():
+        lines.append(f"  # {f['label']} [{f['unit']}]" + (f" — options: {f['categories'].replace('|', ' | ')}"
+                                                          if f["kind"] == "category" else ""))
+        if f["kind"] == "category":
+            lines.append(f"  {fid}: {{value: null, source: null}}")
+        elif f["range"] == "true":
+            lines.append(f"  {fid}: {{low: null, likely: null, high: null, grade: estimate, source: null}}")
+        else:
+            lines.append(f"  {fid}: {{value: null, source: null}}")
     return "\n".join(lines) + "\n"
 
 
@@ -87,6 +104,9 @@ benchmark:                                     # comparison group for delivery m
   organisation_size: all                       # e.g. fewer_than_1000 (500 to 999 employees)
 targets: {{}}                                   # success-measure targets agreed with the sponsor, by fact id
 influence: {{}}                                 # stakeholder map: GROUP: high | medium | low (default: EXE, TEC high)
+sourcing:                                      # build or buy: parts that could be replaced by a product (optional)
+  candidates: {{}}                             # id: name, e.g. billing: Billing and invoicing
+  facts: sourcing.yaml
 report:
   stakeholder_map: false                       # discuss with the sponsor before switching on
   show_amounts: true                           # false hides absolute euro amounts (ratios remain)
@@ -115,6 +135,7 @@ def init(folder: Path, instrument_dir: Path) -> list[Path]:
         "engagement.yaml": engagement_template(folder.name).replace('"../instrument"', f'"{rel}"'),
         "facts.yaml": facts_template(ins),
         "governance.yaml": governance_template(ins),
+        "sourcing.yaml": sourcing_template(ins),
         "CHECKLIST.md": CHECKLIST,
     }
     written = []

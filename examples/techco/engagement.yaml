@@ -19,6 +19,11 @@ responses:
   FIN: Responses/FIN.csv
 facts: facts.yaml
 governance: governance.yaml
+sourcing:
+  candidates:
+    billing: Billing and invoicing
+    pricing: Pricing and promotions
+  facts: sourcing.yaml
 invited:
   ENG: 22
   PRD: 11

@@ -530,3 +530,31 @@ def lead_time_chart(by_group: dict, path: Path) -> Path:
     ax.spines["left"].set_visible(False)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=4, fontsize=7, handlelength=1)
     return _save(fig, path)
+
+
+def sourcing_map(parts: list[dict], commodity_below: float, coverage_at_least: float, path: Path) -> Path:
+    """Each candidate part: how much it sets the organisation apart (x) against how much a product covers (y),
+    with 90% ranges; the shaded corner is where replacing it can apply (if buying is also cheaper)."""
+    apply_style()
+    fig, ax = plt.subplots(figsize=(WIDTH, 3.4))
+    ax.add_patch(plt.Rectangle((1, coverage_at_least), commodity_below - 1, 100 - coverage_at_least,
+                               color="#f3f7fd", lw=0, zorder=0))
+    ax.text(1.06, coverage_at_least + 1, "Replacing can apply (if buying is also cheaper)", fontsize=7.5,
+            color=INK_MUTED, va="bottom")
+    ax.text(4.94, coverage_at_least - 1, "Keep building", fontsize=7.5, color=INK_MUTED, va="top", ha="right")
+    ax.axvline(commodity_below, color=RULE, lw=0.8)
+    ax.axhline(coverage_at_least, color=RULE, lw=0.8)
+    for p in parts:
+        if p.get("differentiation") is None:
+            continue
+        x, y = p["differentiation"], p["coverage"]
+        (x0, x1), (y0, y1) = p["differentiation_range"], p["coverage_range"]
+        ax.plot([x0, x1], [y, y], color=ACCENT, lw=1.2, alpha=0.6, zorder=2)
+        ax.plot([x, x], [y0, y1], color=ACCENT, lw=1.2, alpha=0.6, zorder=2)
+        ax.scatter(x, y, s=60, color=ACCENT, edgecolor=SURFACE, lw=1.5, zorder=3)
+        ax.text(x + 0.06, y + 1.5, p["name"], fontsize=8, color=INK)
+    ax.set_xlim(1, 5)
+    ax.set_ylim(max(0, min([p["coverage_range"][0] for p in parts if p.get("coverage") is not None] + [50]) - 5), 100)
+    ax.set_xlabel("How much the part sets the organisation apart (1–5, business-facing groups)")
+    ax.set_ylabel("Requirements a product\nmeets as is (%)")
+    return _save(fig, path)

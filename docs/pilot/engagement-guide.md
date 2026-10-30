@@ -62,6 +62,8 @@ order (rules before facts, facts before results).
   effort, external cost and duration of the first architecture steps. If comparable past programmes overran, record
   the typical overrun.
 - Reconcile the invoiced run cost with the cost components with Finance; allocate any difference.
+- If build or buy is in scope, name the candidate parts in `engagement.yaml` and fill in `sourcing.yaml`; the
+  product's coverage of the requirements comes from a walk-through with the vendor, not from its brochure.
 - Check the governance answer on baseline measures: if delivery measures were not measured recently, measure them
   now rather than estimating.
 - Record `fact_sheet_frozen_on`.

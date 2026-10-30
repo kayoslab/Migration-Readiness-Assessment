@@ -57,8 +57,48 @@ def build(assessment, ctx: dict) -> dict:
             not_yet = f"{not_yet} {reopen}" if not_yet else reopen
         requests.append({"decision": dec["title"], "path": dec["verdict_label"], "status": dec["status_label"],
                          "tone": dec["tone"], "ask": ask, "not_yet": not_yet, "budget": _budget(assessment, d, dec)})
-    return {"requests": requests, "scr": _scr(assessment, ctx, decs), "money": _money(assessment, decs),
+    requests += _sourcing_requests(assessment, ctx, people)
+    return {"requests": requests, "scr": _scr(assessment, ctx, decs), "money": _money(assessment, decs) + _sourcing_money(ctx),
             "conditions": _conditions(ctx, decs), "again": _again(ctx, triggers)}
+
+
+def _sourcing_requests(assessment, ctx: dict, people: dict) -> list[dict]:
+    block = ctx.get("sourcing") or {}
+    owner = _named("Technology lead", people)
+    out = []
+    for p in block.get("parts", []):
+        name, status = p["name"], p["status"]
+        budget = not_yet = None
+        if p["verdict"] == "insufficient_evidence":
+            ask = f"Do not decide yet whether to build or buy {name}; approve the work that settles it."
+        elif p["verdict"] == "keep_building" and status == "excluded":
+            ask = f"Keep building {name}: replacing it is ruled out — {_lower(p['hard_stops'][0])}."
+        elif p["verdict"] == "keep_building":
+            ask = f"Keep building {name}. No approval is needed."
+        elif status == "prepare_first":
+            ask = (f"Approve the preparation for replacing {name} with a product, led by {owner}: separate its data "
+                   "from the other parts first.")
+            not_yet = "Choosing and contracting the product; decided after the proof of concept."
+        else:
+            ask = (f"Approve replacing {name} with a product, led by {owner}: start with a proof of concept and an "
+                   "export test.")
+            not_yet = "Signing the product contract, until the proof of concept confirms coverage and the exit plan."
+        if p["verdict"] == "replace_with_product" and p.get("costs") and p.get("show_amounts"):
+            saving = (p["build_eur"] - p["buy_eur"]) / 5
+            budget = (f"One-off integration and migration: {p['costs']['integration']}; saves about "
+                      f"€{saving / 1e3:,.0f}k a year over five years once switched.")
+        out.append({"decision": f"Build or buy · {name}", "path": p["label"], "status": p["status_label"],
+                    "tone": p["tone"], "ask": ask, "not_yet": not_yet, "budget": budget})
+    return out
+
+
+def _sourcing_money(ctx: dict) -> list[str]:
+    out = []
+    for p in (ctx.get("sourcing") or {}).get("parts", []):
+        if p["verdict"] == "replace_with_product" and p.get("costs") and p.get("show_amounts"):
+            out.append(f"Replacing {p['name'].lower()} costs {p['costs']['buy']} over five years against "
+                       f"{p['costs']['build']} for keeping it.")
+    return out
 
 
 def _budget(assessment, d: str, dec: dict) -> str | None:
@@ -114,6 +154,14 @@ def _scr(assessment, ctx: dict, decs: dict) -> dict:
     resolution = [f"{d['title']}: {_lower(d['verdict_label'])}"
                   + (" — once the preconditions are in place" if d["status"] == "prepare_first" else "") + "."
                   for d in decs.values() if d["verdict"] != "insufficient_evidence"]
+    parts = (ctx.get("sourcing") or {}).get("parts", [])
+    replace = [p["name"].lower() + (" (after separating its data)" if p["status"] == "prepare_first" else "")
+               for p in parts if p["verdict"] == "replace_with_product"]
+    keep = [p["name"].lower() for p in parts if p["verdict"] == "keep_building"]
+    if replace or keep:
+        resolution.append("Build or buy: " + "; ".join(
+            ([f"replace {_join(replace)} with a product"] if replace else []) +
+            ([f"keep building {_join(keep)}"] if keep else [])) + ".")
     return {"situation": " ".join(situation), "complication": " ".join(complication), "resolution": " ".join(resolution)}
 
 
@@ -157,7 +205,8 @@ def _again(ctx: dict, triggers: dict) -> list[str]:
     host = next((d for d in ctx["decisions"] if d["id"] == "hosting"), {})
     out += [f"Month {c['month']:g}: {_lower(c['event'])}." for c in host.get("calendar", []) if c["month"] > 0
             and c["event"] != "Colocation contract ends"]
-    for t in triggers.values():
-        out.append(f"{t['decision'].title()}: “{t['alternative']}” can be reopened at {t['when']}, only under the "
-                   "agreed criteria.")
+    reopen = list(triggers.values()) + [t for t in ctx.get("triggers", []) if t["decision"].startswith("sourcing:")]
+    if reopen:
+        out.append(f"Each decision is reopened only under criteria agreed now ({len(reopen)} in the plan), at the "
+                   "checkpoint or date set for it.")
     return out

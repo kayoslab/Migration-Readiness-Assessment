@@ -196,3 +196,21 @@ common:
     summary: >-
       No path reaches the agreed level of confidence. This is not a recommendation to keep the current state. The
       report lists the inputs whose uncertainty matters most, with an owner and a deadline for collecting them.
+
+sourcing:
+  keep_building:
+    label: Keep building it
+    summary: >-
+      The part sets the organisation apart, no product covers it well enough, or buying would not be clearly cheaper:
+      keep developing it in-house and revisit at the next major change of requirements or prices.
+    first_steps:
+      - Record why the part is kept, and the condition under which it would be reconsidered.
+  replace_with_product:
+    label: Replace it with a product
+    summary: >-
+      The part does not set the organisation apart, a product covers most of it, and buying is clearly cheaper over
+      five years: replace it, keeping the data and the way out under the organisation's control.
+    first_steps:
+      - Run a proof of concept with the shortlisted product on the requirements it does not yet cover.
+      - Test a full export of the part's data and agree contract terms that allow leaving.
+      - Plan the switch, including the period of running the part and the product side by side.

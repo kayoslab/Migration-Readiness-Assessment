@@ -41,6 +41,10 @@ One report per assessment, ready for an executive audience:
     · separate out one or two specific parts · gradually split into services · realign or consolidate existing services.
   - *Hosting* — keep as is · improve and right-size what you run · move selected workloads (hybrid) · move to the cloud
     · move back from the cloud.
+  - *Build or buy* — for each part you name (billing, search, identity…): keep building it, or replace it with a
+    product. Replacing applies only to parts that do not set the organisation apart, that a product covers well
+    enough, and where buying is clearly cheaper — and it is linked to the architecture decision when the part's data
+    must first be separated ([details](docs/build-or-buy.md)).
 - **Why** — the evidence behind the verdict, and the single changes that would alter it
   ("splitting into services would apply if the need for change were at least 3.5; it is 3.3").
 - **Every option considered** — side by side, with what you would need to believe for each alternative to win, so
@@ -142,6 +146,8 @@ mra init engagements/acme        # a folder with annotated templates and a check
    ```bash
    mra coupling path/to/repo --modules modules.yaml      # or --codeowners CODEOWNERS
    ```
+   For build or buy, name the candidate parts under `sourcing:` and fill in `sourcing.yaml` (people and running cost
+   today; the product's licence, coverage of requirements, switching and exit cost; data export and compliance).
    Give cost inputs as low / likely / high estimates with their source grade, from two independent estimators —
    including the effort, external cost and duration of the first architecture steps. If you know how much comparable
    past programmes overran, record it: it raises the high end of the effort, cost and duration estimates. Record the date
@@ -275,7 +281,8 @@ an issue before larger changes.
 - The business case is cost-only: the benefits of a change (faster delivery, fewer incidents) are not yet valued,
   and will be added once a pilot provides data to calibrate them.
 - Industry benchmarks are what DORA's survey respondents report; the comparison with measured values is indicative.
-- Build-versus-buy (replacing parts with SaaS) is flagged but not yet evaluated as a decision.
+- Build or buy assesses replacing an existing part with a product; adopting a product for a capability that does
+  not exist yet is not assessed.
 
 ## License
 

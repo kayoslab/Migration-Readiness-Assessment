@@ -312,8 +312,25 @@ def triggers(assessment, rows_by_decision: dict, measures_rows: list[dict], cale
         conditions.append(_as_trigger(alt["beliefs"][0]))
         own = [{"role": q["role"], "text": q["text"]} for q in quotes
                if any(w in q["text"].lower() for w in DECISION_WORDS[d])][:2]
-        out.append({"decision": d, "alternative": alt["label"], "when": when, "conditions": conditions,
-                    "own_tests": own})
+        out.append({"decision": d, "title": d.title(), "alternative": alt["label"], "when": when,
+                    "conditions": conditions, "own_tests": own})
+    labels = {k: v["label"] for k, v in assessment.engagement.instrument.outcomes.get("sourcing", {}).items()}
+    rw = (assessment.engagement.instrument.rules.get("sourcing") or {}).get("replace_when", {})
+    for part in getattr(assessment, "sourcing", []) or []:
+        title = f"Build or buy — {part['name']}"
+        if part["verdict"] == "keep_building" and part["status"] == "go" and part["beliefs"]:
+            out.append({"decision": f"sourcing:{part['id']}", "title": title,
+                        "alternative": labels.get("replace_with_product", "Replace it with a product"),
+                        "when": "the next annual review", "conditions": [_as_trigger(b) for b in part["beliefs"][:2]],
+                        "own_tests": []})
+        elif part["verdict"] == "replace_with_product":
+            out.append({"decision": f"sourcing:{part['id']}", "title": title,
+                        "alternative": labels.get("keep_building", "Keep building it"),
+                        "when": "the end of the proof of concept",
+                        "conditions": [f"the product meets less than {rw.get('coverage_at_least', 80):g}% of the "
+                                       "requirements as is",
+                                       f"the confirmed cost of buying exceeds {rw.get('cost_ratio_at_most', 0.85):.2f} "
+                                       "of building over five years"], "own_tests": []})
     return out
 
 

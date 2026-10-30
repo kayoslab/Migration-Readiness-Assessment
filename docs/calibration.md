@@ -100,3 +100,9 @@ its story; the rule itself is unchanged. The quick simulation still finds no wro
 Full re-run after the change (1,770 runs: grid of 720 plus five threshold sweeps of 210): no wrong and no
 overconfident outcome; 4 of 210 runs in the architecture-need sweep return "insufficient evidence" next to the
 boundary, as before (finding 1).
+
+## Build or buy (2026-10-30)
+
+Six expert cases for the per-part build-or-buy decision (docs/build-or-buy.md) across group sizes 5, 10, 15 and 30
+with five seeds each: 120 runs, every one decided correctly (verdict and status), none returned as insufficient
+evidence except the case designed to be.

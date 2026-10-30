@@ -61,6 +61,9 @@ class Instrument:
     def _expand(self, raw: str, current: dict[str, str] | None) -> list[str]:
         result = []
         for part in raw.split("|"):
+            if part == "@candidates":                     # parts named for build-or-buy in engagement.yaml
+                result += list((current or {}).get("_candidates", []))
+                continue
             if part.startswith("@preference:"):
                 decision = part.split(":", 1)[1]
                 state = (current or {}).get(decision)
@@ -100,6 +103,8 @@ class Instrument:
             extra = ([DONT_KNOW] if it["dont_know"] == "true" else []) + \
                     ([it["not_applicable"].replace("{system}", system)] if it["not_applicable"] else [])
             grid_rows = self.rows(item_id, current)
+            if it["rows"] and not grid_rows:              # e.g. no build-or-buy candidates in this engagement
+                continue
             base = {"item_id": item_id, "page": int(it["page"]), "format": it["format"], "text": text,
                     "options": options + extra}
             if grid_rows:

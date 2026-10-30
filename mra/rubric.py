@@ -69,8 +69,10 @@ def run(ctx: dict) -> list[dict]:
     decisions = ctx["decisions"]
     brief = ctx.get("brief") or {}
     asked = {r["decision"] for r in brief.get("requests", [])}
-    check("Decision requested for every decision", all(d["title"] in asked for d in decisions),
-          "the decision page lacks a request for " + ", ".join(d["title"] for d in decisions if d["title"] not in asked))
+    parts = [f"Build or buy · {p['name']}" for p in (ctx.get("sourcing") or {}).get("parts", [])]
+    wanted = [d["title"] for d in decisions] + parts
+    check("Decision requested for every decision", all(t in asked for t in wanted),
+          "the decision page lacks a request for " + ", ".join(t for t in wanted if t not in asked))
 
     host = next((d for d in decisions if d["id"] == "hosting"), None)
     if host and host.get("economics") and host.get("show_amounts", True):

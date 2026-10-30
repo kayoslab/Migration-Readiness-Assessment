@@ -156,3 +156,43 @@ def expected(case: str) -> tuple[str, str, str]:
 
 
 ALL_CASES = {**ARCHITECTURE_CASES, **HOSTING_CASES}
+
+
+# ------------------------------------------------------------------------------------------- build or buy
+# One candidate part per case; architecture and hosting are left at their defaults. The part costs four people a
+# year to maintain; a product would cost a licence, half a person and a one-off switch.
+BILLING = {
+    "part_maintain_fte": {"low": 3.5, "likely": 4, "high": 5, "grade": "estimate"},
+    "part_run_cost_annual": {"value": 60000, "grade": "invoice"},
+    "product_licence_annual": {"value": 90000, "grade": "quote"},
+    "product_integration_cost": {"low": 200000, "likely": 250000, "high": 350000, "grade": "estimate"},
+    "product_remaining_fte": {"low": 0.3, "likely": 0.5, "high": 1.0, "grade": "estimate"},
+    "product_switch_months": {"low": 6, "likely": 9, "high": 12, "grade": "estimate"},
+    "product_exit_cost": {"value": 50000, "grade": "estimate"},
+    "product_coverage_pct": {"value": 92, "grade": "quote"},
+    "product_data_export": "yes", "product_compliance": "yes", "part_shared_tables_pct": 10,
+}
+
+
+def _part(name: str, differentiation: float, **changes) -> dict:
+    return {"part": {"name": name, "differentiation": differentiation, "facts": {**BILLING, **changes}}}
+
+
+SOURCING_CASES = {
+    # (a) invoicing is a commodity, a product covers it, buying is clearly cheaper
+    "a_commodity_billing": (Scenario("sa", {}, sourcing=_part("Billing", 1.5)), "replace_with_product", "go"),
+    # (b) the pricing engine is what sets the company apart: keep it, whatever the cost
+    "b_differentiating_pricing": (Scenario("sb", {}, sourcing=_part("Pricing engine", 4.5)), "keep_building", "go"),
+    # (c) a commodity, but the product meets barely half of the requirements
+    "c_poor_coverage": (Scenario("sc", {}, sourcing=_part("Billing", 1.5, product_coverage_pct={"value": 55, "grade": "quote"})),
+                        "keep_building", "go"),
+    # (d) everything speaks for buying, but the data could not be exported again
+    "d_no_export": (Scenario("sd", {}, sourcing=_part("Billing", 1.5, product_data_export="no")), "keep_building", "excluded"),
+    # (e) buy, but other parts still write the billing tables: separate the data first
+    "e_tangled_data": (Scenario("se", {}, sourcing=_part("Billing", 1.5, part_shared_tables_pct=45)),
+                       "replace_with_product", "prepare_first"),
+    # (f) coverage right at the bar, from a rough estimate: the evidence does not decide
+    "f_borderline_coverage": (Scenario("sf", {}, sourcing=_part(
+        "Billing", 1.5, product_coverage_pct={"low": 65, "likely": 80, "high": 92, "grade": "estimate"})),
+        "insufficient_evidence", "insufficient"),
+}

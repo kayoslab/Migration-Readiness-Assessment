@@ -10,7 +10,7 @@ from pathlib import Path
 
 import yaml
 
-from mra.cases import STRONG_CAPABILITY, STRONG_CAPABILITY_FACTS
+from mra.cases import BILLING, STRONG_CAPABILITY, STRONG_CAPABILITY_FACTS
 from mra.scenario import Scenario, build
 
 HERE = Path(__file__).resolve().parent
@@ -126,6 +126,13 @@ TECHCO = Scenario(
                {"estimator": "Technology lead", "low": 8, "likely": 10, "high": 14, "grade": "estimate"},
                {"estimator": "Principal engineer", "low": 9, "likely": 12, "high": 18, "grade": "estimate"}]},
            "past_programme_overrun_pct": 40},
+    # build or buy: billing is a commodity a product covers, but other parts still write its tables; the pricing and
+    # promotions engine is what sets TechCo apart
+    sourcing={"billing": {"name": "Billing and invoicing", "differentiation": 1.6,
+                          "facts": {**BILLING, "part_shared_tables_pct": 30}},
+              "pricing": {"name": "Pricing and promotions", "differentiation": 4.3,
+                          "facts": {**BILLING, "product_coverage_pct": {"value": 70, "grade": "quote"},
+                                    "product_licence_annual": {"value": 150000, "grade": "quote"}}}},
     governance={"GV06": {"answer": "No", "evidence": "", "attested_by": "CTO"},
                 "GV07": {"answer": "Partly", "evidence": "Draft measures only", "attested_by": "Sponsor"}},
     sizes={"ENG": 18, "PRD": 9, "BUS": 6, "TEC": 6, "EXE": 5, "OPS": 7, "SEC": 4, "FIN": 3},

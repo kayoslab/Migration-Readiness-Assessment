@@ -116,6 +116,57 @@ def _eur(x: float, signed: bool = False) -> str:
     return f"{sign}€{x / 1e6:.2f}M" if x >= 1e6 else f"{sign}€{x / 1e3:,.0f}k"
 
 
+SOURCING_STATUS = {"go": "Proceed", "prepare_first": "Prepare first", "insufficient": "Insufficient evidence",
+                   "excluded": "Keep — replacing is ruled out"}
+
+
+def _sourcing_context(assessment, cdir: Path, root: Path, register) -> dict | None:
+    """Build or buy per candidate part: verdict, why, what would change it, cost in euros, seam and gates."""
+    parts = assessment.sourcing
+    if not parts:
+        return None
+    eng, ins = assessment.engagement, assessment.engagement.instrument
+    spec = ins.rules["sourcing"]
+    labels = {k: v["label"] for k, v in ins.outcomes.get("sourcing", {}).items()}
+    labels["insufficient_evidence"] = "Not yet decided: the evidence is insufficient"
+    show = (eng.config.get("report") or {}).get("show_amounts", True)
+    arch = assessment.results.get("architecture")
+    blocks = []
+    for p in parts:
+        seam_note = None
+        if p.get("seam") is not None and p["seam"] > spec["seam"]["at_most"]:
+            seam_note = (f"{p['seam']:.0f}% of the part's tables are also written by other parts (at most "
+                         f"{spec['seam']['at_most']}% for a clean switch): its data must be separated first")
+            if arch and arch.verdict in ("modular_monolith", "broad_decomposition", "targeted_extraction"):
+                seam_note += ", which the architecture restructuring's step on data ownership delivers."
+            else:
+                seam_note += "."
+        blocks.append({**{k: v for k, v in p.items() if k not in ("missing",)},
+                       "label": labels.get(p["verdict"], p["verdict"]),
+                       "summary": ins.outcomes.get("sourcing", {}).get(p["verdict"], {}).get("summary", ""),
+                       "status_label": ("No change" if p["verdict"] == "keep_building" and p["status"] == "go"
+                                        else SOURCING_STATUS.get(p["status"], p["status"])),
+                       "tone": TONE.get(p["status"], "neutral"),
+                       "missing": p.get("missing", []), "seam_note": seam_note, "show_amounts": show,
+                       "costs": None if p.get("build_eur") is None else {
+                           "build": _eur(p["build_eur"]), "build_range": f"{_eur(p['build_range'][0])}–{_eur(p['build_range'][1])}",
+                           "buy": _eur(p["buy_eur"]), "buy_range": f"{_eur(p['buy_range'][0])}–{_eur(p['buy_range'][1])}",
+                           "ratio": f"{p['ratio']:.2f}", "ratio_range": f"{p['ratio_range'][0]:.2f}–{p['ratio_range'][1]:.2f}",
+                           "payback": p["payback_months"], "integration": _eur(p["integration_cost"]),
+                           "switch_months": round(p["switch_months"])}})
+    rated = [b for b in blocks if b.get("differentiation") is not None]
+    chart = insight = None
+    if rated:
+        chart = _rel(charts.sourcing_map(rated, spec["differentiation"]["commodity_below"],
+                                         spec["replace_when"]["coverage_at_least"], cdir / "sourcing_map.svg"), root)
+        insight = register("sourcing.map", interpret.sourcing(rated), [
+            {k: b[k] for k in ("name", "verdict", "differentiation", "coverage", "ratio")} for b in rated])
+    return {"parts": blocks, "chart": chart, "insight": insight,
+            "rules": {"commodity_below": spec["differentiation"]["commodity_below"],
+                      "coverage": spec["replace_when"]["coverage_at_least"],
+                      "ratio": spec["replace_when"]["cost_ratio_at_most"]}}
+
+
 def _readable_problem(problem: str, ins) -> str:
     """Data gaps for the report reader: labels, not field names (the CLI keeps the technical form)."""
     import re as _re
@@ -277,6 +328,9 @@ def build_context(assessment, out: Path, root: Path) -> dict:
             block["inaction"] = plan.inaction(assessment, show)
             block["tornado_option"] = words.get(r.economics.get("tornado_option"), "")
         decisions.append(block)
+
+    # ---------------------------------------------------------------- build or buy
+    sourcing = _sourcing_context(assessment, cdir, root, register)
 
     # ---------------------------------------------------------------- stakeholders
     st = assessment.stakes
@@ -515,6 +569,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         "roadmap": roadmap_block,
         "measures": success,
         "triggers": reopen,
+        "sourcing": sourcing,
         "budget": programme_budget,
         "evidence": rows,
         "participation": participation,

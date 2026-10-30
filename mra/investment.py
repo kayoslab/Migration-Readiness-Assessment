@@ -104,6 +104,14 @@ def budget(assessment, show_amounts: bool = True) -> dict | None:
                          for _, a, b in PHASES]
             rows.append({"item": f"Hosting: {item['label'].lower()}", "cells": cells, "total": float(amount[0]),
                          "range": None})
+    for part in getattr(assessment, "sourcing", []) or []:     # replacing a part: integration over the switch
+        if part["verdict"] != "replace_with_product" or part.get("integration_cost") is None:
+            continue
+        start = 3.0 if part["status"] == "prepare_first" else 0.0
+        amount, months = np.array([part["integration_cost"]]), np.array([max(part["switch_months"], 1.0)])
+        cells = [float(_spread(amount, np.array([start]), months, a, b)[0]) for _, a, b in PHASES]
+        rows.append({"item": f"Build or buy: replacing {part['name'].lower()}", "cells": cells,
+                     "total": float(amount[0]), "range": None})
     if not rows:
         return None
     totals = [sum(r["cells"][i] for r in rows) for i in range(len(PHASES))]

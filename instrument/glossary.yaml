@@ -13,3 +13,5 @@ DORA metrics: Lead time, deployment frequency, failed deployment recovery time, 
 DORA score: DORA's 0–10 scale for each delivery measure, 10 best, used to compare with the published benchmarks.
 Operating-model fit: How current ways of working match what a path requires, such as domain ownership or team-owned operations. It describes fit, not maturity.
 Stake: How a respondent expects an option to affect their own role and skills. Reported for groups only and never used to weight answers.
+Build or buy: For a named part of the system, whether to keep developing it in-house or replace it with a product (software bought as a service or licence). Decided per part, with its own evidence.
+Requirements coverage: The share of a part's current requirements a product meets as it is, without custom development, established in a walk-through with the vendor.

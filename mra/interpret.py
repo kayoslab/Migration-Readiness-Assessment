@@ -282,3 +282,22 @@ def lead_time(by_group: dict, cross_team_pct: float | None) -> dict:
     if cross_team_pct is not None:
         points.append(f"{cross_team_pct:g}% of merged changes touch code owned by more than one team.")
     return {"title": title, "points": points}
+
+
+def sourcing(parts: list[dict]) -> dict:
+    decided = [p for p in parts if p.get("differentiation") is not None]
+    replace = [p["name"] for p in decided if p["verdict"] == "replace_with_product"]
+    keep = [p["name"] for p in decided if p["verdict"] == "keep_building"]
+    if replace and keep:
+        title = f"Replace {_join_names(replace)} with a product; keep building {_join_names(keep)}"
+    elif replace:
+        title = f"Every part assessed can be replaced with a product: {_join_names(replace)}"
+    elif keep:
+        title = f"Keep building every part assessed: {_join_names(keep)}"
+    else:
+        title = "The evidence does not yet decide whether to build or buy"
+    return {"title": title, "points": [f"{p['name']}: {p['verdict'].replace('_', ' ')}." for p in decided]}
+
+
+def _join_names(names: list[str]) -> str:
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]

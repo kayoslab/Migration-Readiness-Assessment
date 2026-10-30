@@ -23,6 +23,7 @@ class Assessment:
     fact_checks: list = field(default_factory=list)   # mra.fact_checks.FactCheck
     text: object = None                         # mra.llm.TextAnalysis (optional)
     narrative: object = None                    # mra.narrative.Narrative (optional)
+    sourcing: list = field(default_factory=list)  # build or buy per candidate part (mra.sourcing)
 
 
 def assess(path: str | Path | Engagement, decisions=IMPLEMENTED, draws: int | None = None, seed: int = 42,
@@ -50,6 +51,8 @@ def assess(path: str | Path | Engagement, decisions=IMPLEMENTED, draws: int | No
     from .fact_checks import check as check_facts
     assessment = Assessment(eng, evidence, results, problems, analyse_stakes(eng, evidence, results),
                             check_facts(eng))
+    from .sourcing import evaluate as evaluate_sourcing
+    assessment.sourcing = evaluate_sourcing(assessment, draws, seed)
     if with_llm:
         from .llm import analyse_engagement_text
         assessment.text = analyse_engagement_text(eng)

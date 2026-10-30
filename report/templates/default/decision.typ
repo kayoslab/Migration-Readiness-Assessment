@@ -159,19 +159,23 @@
   #text(weight: "semibold", fill: theme.status.RED)[Draft — not for decision until the conditions below are resolved.]
   #v(2mm)
 ]
-#for r in data.brief.requests [
-  #block(breakable: false, below: 4mm)[
+#for r in data.brief.requests.filter(r => r.status != "No change") [
+  #block(breakable: false, below: 3mm)[
     #eyebrow[#r.decision · #text(fill: theme.tone.at(r.tone), r.status)]
     #v(1pt)
-    #text(size: 10.5pt, weight: "semibold", fill: theme.primary, r.ask)
-    #set text(size: 9pt)
+    #text(size: 10pt, weight: "semibold", fill: theme.primary, r.ask)
+    #set text(size: 8.5pt)
     #if r.not_yet != none [\ *Not approved now:* #r.not_yet]
     #if r.budget != none [\ *Budget:* #r.budget]
   ]
 ]
+#let unchanged = data.brief.requests.filter(r => r.status == "No change")
+#if unchanged.len() > 0 [
+  #block(below: 3mm)[#text(size: 8.5pt)[*No change:* #unchanged.map(r => r.ask).join(" ")]]
+]
 
-#set text(size: 9pt)
-#grid(columns: (24mm, 1fr), row-gutter: 2.5mm, column-gutter: 4mm,
+#set text(size: 8.5pt)
+#grid(columns: (24mm, 1fr), row-gutter: 2mm, column-gutter: 4mm,
   text(weight: "semibold", fill: theme.primary)[Situation], data.brief.scr.situation,
   text(weight: "semibold", fill: theme.primary)[Complication], data.brief.scr.complication,
   text(weight: "semibold", fill: theme.primary)[Resolution], data.brief.scr.resolution,
@@ -419,6 +423,68 @@
     source: "Share of " + str(data.rules.draws) + " draws in which each hosting path applies; each draw resamples the respondents and every estimate within its range.")
 ]
 
+#if data.at("sourcing", default: none) != none [
+  #anchor("sourcing")
+  = Build or buy
+
+  For each part named for this question: keep building it, or replace it with a product. Replacing applies only if
+  the part does not set the organisation apart (below #fmt(data.sourcing.rules.commodity_below, d: 1) on the
+  business-facing groups' ratings), a product meets at least #fmt(data.sourcing.rules.coverage, d: 0)% of its
+  requirements as is, and buying costs at most #fmt(data.sourcing.rules.ratio, d: 2) of building over five years.
+  Keeping a part needs no preconditions; replacing one does.
+
+  #if data.sourcing.chart != none [
+    #exhibit(data.sourcing.chart, data.sourcing.insight,
+      source: "Point: likely value; lines: 90% range across draws. Ratings by Product, Business, Technology leadership and Executive; coverage from the requirements walk-through with the vendor.")
+  ]
+
+  #for p in data.sourcing.parts [
+    #block(breakable: false)[
+      #v(3mm)
+      #eyebrow[#p.name · #text(fill: theme.tone.at(p.tone), p.status_label)#if p.status != "insufficient" [ · #pct(p.probability) of draws]]
+      #v(1pt)
+      #text(size: 13pt, weight: "regular", fill: theme.primary, p.label)
+      #v(1pt)
+      #text(size: 9pt, p.summary)
+    ]
+    #if p.missing.len() > 0 [
+      Missing before this part can be assessed: #p.missing.map(m => lower(m)).join("; ").
+    ] else [
+      #if p.why.len() > 0 [
+        #text(weight: "semibold", fill: theme.primary)[Why] \
+        #for w in p.why [- #w \ ]
+      ]
+      #if p.hard_stops.len() > 0 [
+        #text(weight: "semibold", fill: theme.status.RED)[Ruled out:] #p.hard_stops.join("; ").
+        \
+      ]
+      #if p.seam_note != none [#text(weight: "semibold", fill: theme.primary)[First:] #p.seam_note \ ]
+      #if p.beliefs.len() > 0 [
+        #text(weight: "semibold", fill: theme.primary)[What would change it] \
+        #for b in p.beliefs [- #b \ ]
+      ]
+      #if p.costs != none [
+        #data-table(
+          columns: (1.6fr, 1.2fr, 1.6fr, 2.4fr),
+          align: (left, right, right, left),
+          header: ("Five years", "Cost", "90% range", ""),
+          [Keep building], if p.show_amounts [#p.costs.build] else [–], if p.show_amounts [#p.costs.build_range] else [–], [Today's team and running cost],
+          [Replace with a product], if p.show_amounts [#p.costs.buy] else [–], if p.show_amounts [#p.costs.buy_range] else [–],
+            [#p.costs.ratio of building (#p.costs.ratio_range)#if p.costs.payback != none [; pays back after #p.costs.payback months]],
+        )
+        #text(size: 7.5pt, fill: theme.muted)[Replacing includes #if p.show_amounts [#p.costs.integration one-off for
+          integration and data migration, ]running both for about #p.costs.switch_months months, and the cost of leaving
+          the product at the end.]
+      ]
+      #if p.gates.len() > 0 [
+        #v(2mm)
+        #text(weight: "semibold", fill: theme.primary)[Before committing] \
+        #for g in p.gates [- #g.label (#if g.status == "pass" [in place] else if g.status == "fail" [not met] else [unresolved]) \ ]
+      ]
+    ]
+  ]
+]
+
 = Organisational readiness
 
 #if data.narrative != none and data.narrative.chapters.at("readiness", default: "") != "" [
@@ -650,7 +716,7 @@ owners and mitigations come from the action library.
   #for tr in data.triggers [
     #v(1mm)
     #block(breakable: false)[
-      #text(weight: "semibold", fill: theme.primary)[#upper(tr.decision.slice(0, 1))#tr.decision.slice(1)]: reopen
+      #text(weight: "semibold", fill: theme.primary)[#tr.title]: reopen
       “#tr.alternative” at #tr.when if
       #for (i, c) in tr.conditions.enumerate() [- #if i > 0 [or ]#c \ ]
       #if tr.own_tests.len() > 0 [

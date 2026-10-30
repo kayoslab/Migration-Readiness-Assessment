@@ -11,6 +11,7 @@ scoring readiness for a path chosen in advance. See [`docs/phase-2-plan.md`](../
 | `decision_rules.yaml` | Semantics, thresholds, hard stops, gates, outcome rules, TCO model — **pre-registered** | Agreed and signed off by stakeholders before results |
 | `outcomes.yaml` | Plain-language outcome definitions and preference labels | – |
 | `recommendations.yaml` | Action library for the report's next steps (by gate, hard stop, capability gap and stakeholder finding) | Replace wording to match an organisation |
+| `facts.csv` (decision `sourcing`) | Facts per candidate part for build or buy, supplied in the engagement's `sourcing.yaml` | Technology lead and Finance, two estimators |
 | `glossary.yaml` | Terms printed in the report's glossary | Reword freely |
 | `benchmarks.yaml` | DORA delivery benchmarks (2025 data by industry and organisation size; 2024 levels) with source, commit and retrieval date | Rebuild with `mra benchmarks --update`; never by hand |
 | `participant-information.md` | Cover screen, participant information, data protection, form settings, invitation | Analyst, reviewed by DPO / works council |

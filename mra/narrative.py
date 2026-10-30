@@ -42,7 +42,9 @@ Return:
   the draft does not say and never repeat it. At most 35 words. Do not mention exhibit numbers, steps, risks or
   sections: the rest of the so-what links to them. Return the id unchanged."""
 
-BANNED = ("bias", "biased", "self-interest", "motivated", "agenda", "resist", "resistance", "obstruct", "blame")
+# motive language about people; "agenda" only where it implies a motive (a meeting agenda is fine)
+BANNED = ("bias", "biased", "self-interest", "motivated", "hidden agenda", "own agenda", "personal agenda", "resist",
+          "resistance", "obstruct", "blame")
 RECOMMEND = re.compile(r"\b(recommend|should|must|advise|propose|best option|the right path)\w*", re.I)
 NUMBER = re.compile(r"(?<![\w.])(\d+(?:[.,]\d+)*)(\s?%)?")
 
@@ -111,6 +113,9 @@ def findings_payload(ctx: dict) -> dict:
         "decision_requested": (ctx.get("brief") or {}).get("requests", []),
         "decision_calendar": next((d.get("calendar", []) for d in ctx["decisions"] if d["id"] == "hosting"), []),
         "reopen_criteria": ctx.get("triggers", []),
+        "build_or_buy": [{k: p.get(k) for k in ("name", "label", "status_label", "probability", "why", "beliefs",
+                                                 "hard_stops", "seam_note", "costs")}
+                         for p in (ctx.get("sourcing") or {}).get("parts", [])],
         "budget_by_phase": {k: (ctx.get("budget") or {}).get(k) for k in ("phases", "totals_text", "total_text")}
         | {"rows": [{"item": r["item"], "cells": r["cells_text"], "total": r["total_text"], "range": r["range"]}
                     for r in (ctx.get("budget") or {}).get("rows", [])]},

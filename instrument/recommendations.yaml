@@ -33,6 +33,9 @@ gates:
   compliance_release:
     action: Agree with risk and compliance how teams can deploy their part independently within change-control requirements.
     owner: Risk and compliance
+  exit_plan:
+    action: Test a full export of the part's data from the product and agree contract terms that allow leaving at reasonable notice and cost.
+    owner: Risk and compliance with the technology lead
   compliance_hosting:
     action: Obtain a written assessment of hosting constraints and a tested exit plan for the chosen provider(s).
     owner: Risk and compliance

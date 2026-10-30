@@ -79,18 +79,29 @@ class Engagement:
     governance: dict[str, dict] = field(default_factory=dict)
     problems: list[str] = field(default_factory=list)
 
+    sourcing_facts: dict[str, dict[str, Fact]] = field(default_factory=dict)   # candidate id -> facts
+
     @property
     def system(self) -> str:
         return self.config.get("system", "the system")
 
-    def current_states(self, architecture_state: str) -> dict[str, str]:
-        return {"architecture": architecture_state, "hosting": self.config.get("current_hosting", "own_infrastructure")}
+    @property
+    def candidates(self) -> dict[str, str]:
+        """Parts assessed for build or buy: id -> name (engagement.yaml → sourcing: candidates)."""
+        return dict((self.config.get("sourcing") or {}).get("candidates") or {})
+
+    def current_states(self, architecture_state: str) -> dict:
+        return {"architecture": architecture_state, "hosting": self.config.get("current_hosting", "own_infrastructure"),
+                "_candidates": list(self.candidates.values())}
 
 
 def load_facts(path: Path | None) -> dict[str, Fact]:
     if not path or not path.exists():
         return {}
-    raw = yaml.safe_load(path.read_text()) or {}
+    return load_facts_from(yaml.safe_load(path.read_text()) or {})
+
+
+def load_facts_from(raw: dict) -> dict[str, Fact]:
     facts = {}
     keys = ("value", "low", "likely", "high", "grade", "source", "attester", "second_attester", "justification")
     for fid, spec in raw.items():
@@ -142,7 +153,8 @@ def load_engagement(path: str | Path) -> Engagement:
     # the right preference options, so derive it here the same way.
     from .axes import derive_current_state
     arch_state = derive_current_state(ins, facts)
-    current = {"architecture": arch_state, "hosting": cfg.get("current_hosting", "own_infrastructure")}
+    current = {"architecture": arch_state, "hosting": cfg.get("current_hosting", "own_infrastructure"),
+               "_candidates": list(((cfg.get("sourcing") or {}).get("candidates") or {}).values())}
 
     rows, people = [], []
     for role, file in (cfg.get("responses") or {}).items():
@@ -168,11 +180,22 @@ def load_engagement(path: str | Path) -> Engagement:
                         problems.append(f"{rid} {q['item_id']}: answer {label!r} is not an option")
                         continue
                 else:
-                    score, dk, na = np.nan, label == DONT_KNOW, False
+                    scale = ins.scores(q["item_id"])           # a rated grid (one scale per row) keeps its score
+                    score = scale.get(label, np.nan) if isinstance(scale, dict) else np.nan
+                    score, dk, na = score, label == DONT_KNOW, False
                 rows.append((rid, role, q["item_id"], q["row"], label, score, dk, na))
     answers = pd.DataFrame(rows, columns=["respondent_id", "role", "item_id", "row", "label", "score",
                                           "dont_know", "not_applicable"])
-    return Engagement(root, cfg, ins, default_rules, answers, pd.DataFrame(people), facts, governance or {}, problems)
+    sourcing_cfg = cfg.get("sourcing") or {}
+    sourcing_facts = {}
+    if sourcing_cfg.get("facts") and (root / sourcing_cfg["facts"]).exists():
+        raw = yaml.safe_load((root / sourcing_cfg["facts"]).read_text()) or {}
+        for cand in sourcing_cfg.get("candidates") or {}:
+            sourcing_facts[cand] = load_facts_from(raw.get(cand) or {})
+            problems += [f"build or buy ({cand}): fact {f} not in facts.csv"
+                         for f in sourcing_facts[cand] if f not in ins.facts.index]
+    return Engagement(root, cfg, ins, default_rules, answers, pd.DataFrame(people), facts, governance or {}, problems,
+                      sourcing_facts)
 
 
 def by_header_text(spec: list[dict], item_id: str) -> str:

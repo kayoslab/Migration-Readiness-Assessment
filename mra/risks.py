@@ -79,6 +79,28 @@ def register(assessment) -> dict:
                                                        f"{min(t['low'], t['high']):.2f} and {max(t['low'], t['high']):.2f} "
                                                        "of an improved current setup"})
 
+    rules_sourcing = rules.get("sourcing") or {}
+    for part in getattr(assessment, "sourcing", []) or []:
+        name = part["name"]
+        if part["verdict"] == "replace_with_product":
+            risks.append(_risk(f"Build or buy: dependence on the product that replaces {name}",
+                               "Once replaced, the part's data, prices and roadmap sit with the vendor.", "medium", "medium",
+                               "Risk and compliance", "Keep the exit plan current: test the export yearly and review the "
+                               "contract at each renewal.", "sourcing", "technical"))
+            lo, hi = part.get("coverage_range") or (None, None)
+            bar = (rules_sourcing.get("replace_when") or {}).get("coverage_at_least", 80)
+            if lo is not None and lo < bar:
+                risks.append(_risk(f"Build or buy: the product may cover less of {name} than estimated",
+                                   f"Within its estimated range, coverage falls below {bar:g}% ({lo:.0f}–{hi:.0f}%).",
+                                   "medium", "high", "Technology lead",
+                                   "Confirm coverage in the proof of concept before the contract is signed.",
+                                   "sourcing", "evidence"))
+        elif part["verdict"] == "insufficient_evidence":
+            risks.append(_risk(f"Build or buy: no decision yet on {name}", "The evidence does not reach the agreed "
+                               "confidence either way.", "medium", "medium", "Technology lead",
+                               "Firm up the product's coverage and the cost estimates, then re-run the assessment.",
+                               "sourcing", "evidence"))
+
     if ev.flags.get("track_record_concern"):
         risks.append(_risk("Programme history: past large technology programmes overran or under-delivered",
                            "At least 30% of informed respondents in a group reported it.", "medium", "high", "Sponsor",

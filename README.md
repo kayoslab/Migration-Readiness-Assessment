@@ -55,6 +55,7 @@ implemented, M5 calibrated it on 1,350 simulated engagements ([`docs/calibration
 mra validate                         # cross-check the instrument files
 mra decide path/to/engagement.yaml   # recommended path per decision, probability, preconditions, cost case, what would change it
 mra report examples/techco/engagement.yaml   # one document: recommended paths, readiness by group, preconditions, people, next steps
+mra report examples/techco/engagement.yaml --llm   # adds the free-text analysis and a checked executive narrative (Vercel AI Gateway)
 mra init engagements/acme                    # blank engagement with annotated templates
 mra coupling <repo> --modules modules.yaml   # scripted coupling facts from git history
 mra forms engagements/acme/engagement.yaml --out forms.gs   # Google Apps Script that creates the survey forms

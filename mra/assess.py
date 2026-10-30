@@ -22,6 +22,7 @@ class Assessment:
     stakes: object = None                       # mra.stakes.StakesReport
     fact_checks: list = field(default_factory=list)   # mra.fact_checks.FactCheck
     text: object = None                         # mra.llm.TextAnalysis (optional)
+    narrative: object = None                    # mra.narrative.Narrative (optional)
 
 
 def assess(path: str | Path | Engagement, decisions=IMPLEMENTED, draws: int | None = None, seed: int = 42,

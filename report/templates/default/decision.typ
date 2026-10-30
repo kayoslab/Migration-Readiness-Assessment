@@ -37,6 +37,14 @@
 
 = Executive summary
 
+#if data.narrative != none [
+  #for p in data.narrative.executive [
+    #text(size: 10pt, p)
+    #v(3mm)
+  ]
+  #v(2mm)
+]
+
 #callout(title: "Key messages")[
   #for m in data.key_messages [- #m \ ]
 ]
@@ -73,6 +81,11 @@
 ]
 
 = Architecture
+
+#if data.narrative != none and data.narrative.chapters.at("architecture", default: "") != "" [
+  #text(size: 10pt, data.narrative.chapters.architecture)
+  #v(2mm)
+]
 
 #for dec in data.decisions.filter(d => d.id == "architecture") [
   #text(size: 10pt)[Current state: #dec.current. Recommended: *#dec.verdict_label* — #dec.status_label.]
@@ -114,6 +127,11 @@
 
 = Hosting
 
+#if data.narrative != none and data.narrative.chapters.at("hosting", default: "") != "" [
+  #text(size: 10pt, data.narrative.chapters.hosting)
+  #v(2mm)
+]
+
 #for dec in data.decisions.filter(d => d.id == "hosting") [
   #text(size: 10pt)[Current state: #dec.current. Recommended: *#dec.verdict_label* — #dec.status_label.]
 
@@ -154,6 +172,11 @@
 ]
 
 = Organisational readiness
+
+#if data.narrative != none and data.narrative.chapters.at("readiness", default: "") != "" [
+  #text(size: 10pt, data.narrative.chapters.readiness)
+  #v(2mm)
+]
 
 Whatever path is chosen, it depends on how ready each part of the organisation is. This chapter shows how each
 stakeholder group rates the capabilities, ways of working, alignment and governance it can judge; higher always
@@ -205,6 +228,11 @@ checked for the recommended path after the verdict.
 ]
 
 = Stakeholder perspectives
+
+#if data.narrative != none and data.narrative.chapters.at("people", default: "") != "" [
+  #text(size: 10pt, data.narrative.chapters.people)
+  #v(2mm)
+]
 
 Preferences and personal stakes never influence the recommendation. They are reported at group level only, to help
 plan how a decision is communicated and supported.

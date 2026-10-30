@@ -252,7 +252,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     }
 
 
-def build_report(assessment, output: Path, template: Path = TEMPLATE) -> Path:
+def build_report(assessment, output: Path, template: Path = TEMPLATE, narrative: bool = False) -> Path:
     import typst
     root = Path(__file__).resolve().parents[1]
     out = root / "Output" / "build-v3" / output.stem
@@ -260,6 +260,13 @@ def build_report(assessment, output: Path, template: Path = TEMPLATE) -> Path:
         shutil.rmtree(out)
     out.mkdir(parents=True)
     context = build_context(assessment, out, root)
+    context["narrative"] = None
+    if narrative:
+        from .narrative import write as write_narrative
+        n = write_narrative(context, assessment.engagement)
+        assessment.narrative = n
+        if not n.rejected:
+            context["narrative"] = {"executive": n.executive, "chapters": n.chapters}
     data = out / "report.json"
     data.write_text(json.dumps(context, indent=1, ensure_ascii=False, default=str))
     output.parent.mkdir(parents=True, exist_ok=True)

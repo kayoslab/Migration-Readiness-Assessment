@@ -150,7 +150,13 @@ def _decide(args) -> int:
         return 0
     if args.pdf:
         from .report_v3 import build_report as build_v3
-        print(f"Report written to {build_v3(result, Path(args.pdf))}")
+        print(f"Report written to {build_v3(result, Path(args.pdf), narrative=args.llm)}")
+        n = result.narrative
+        if n is not None:
+            if n.rejected:
+                print(f"~ narrative discarded ({n.rejected}); the report uses its deterministic text")
+            for d in n.dropped:
+                print(f"~ narrative sentence dropped — {d}")
     outcomes = result.engagement.instrument.outcomes
     for problem in result.problems:
         print(f"! {problem}")

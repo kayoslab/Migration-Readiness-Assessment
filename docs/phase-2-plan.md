@@ -19,7 +19,8 @@ underneath; Phase 2 builds on top of it.
 | M4 Stakes & fit | Done — within-respondent stake test (no false alarms on random answers across seeds), watermelon and leadership-disagreement checks, disclosure control, fit per outcome, `mental_model` code |
 | M5 Simulator & calibration | Done — 1,350 simulated runs, no wrong outcome; see `docs/calibration.md`. Payback now counted from cut-over |
 | M6 Report v3 & notebook | Done — executive summary per decision, need × capability map, cost case and sensitivity, preconditions, stakeholder perspectives, library-driven next steps (`instrument/recommendations.yaml`), `Decision.ipynb`; TechCo example in `examples/` |
-| M7 Pilot | Open |
+| After M6 | Done — `mra coupling`, fact-sheet checks and two estimators, `mra init`, `mra forms`, hybrid estates in the TCO, uncertain inputs named, five calibrated threshold sweeps, one combined report with readiness by group, live free-text analysis, and a narrative whose every sentence is checked against the findings |
+| M7 Pilot | Open — needs pretest participants and a pilot organisation |
 
 ## Agreed defaults
 

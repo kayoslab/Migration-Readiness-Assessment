@@ -223,7 +223,8 @@ def test_decision_page(techco, tmp_path):
     brief = ctx["brief"]
     arch = next(r for r in brief["requests"] if r["decision"] == "Architecture")
     assert arch["ask"].startswith("Approve the preparation for") and "checkpoint C1" in arch["not_yet"]
-    assert "not yet estimated" in arch["budget"]
+    assert arch["budget"].startswith("Estimated cost of the first steps: €467k") and "checkpoint C1" in arch["budget"]
+    assert any(m.startswith("The restructuring's first steps cost about €467k") for m in brief["money"])
     hosting = next(r for r in brief["requests"] if r["decision"] == "Hosting")
     assert hosting["ask"].startswith("Approve “Improve") and hosting["budget"].startswith("First phase: €50k")
     assert any(m.startswith("Doing nothing on hosting costs €") for m in brief["money"])

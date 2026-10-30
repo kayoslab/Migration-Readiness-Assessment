@@ -114,7 +114,18 @@ TECHCO = Scenario(
            "shared_tables_pct": 38, "cross_module_transactions": 9, "provision_days": 6, "domain_map": "outdated",
            "module_single_owner_pct": 55, "friction_concentration_index": 1.4,
            "peak_to_median_load": 1.6, "rightsized_share_pct": 55, "single_node_sufficient": "no",
-           "cloud_compute_baseline_annual": {"low": 520000, "likely": 600000, "high": 720000, "grade": "calculator_export"}},
+           "cloud_compute_baseline_annual": {"low": 520000, "likely": 600000, "high": 720000, "grade": "calculator_export"},
+           # the restructuring, estimated by the technology lead and independently by a second estimator
+           "arch_effort_person_months": {"estimates": [
+               {"estimator": "Technology lead", "low": 30, "likely": 40, "high": 60, "grade": "estimate"},
+               {"estimator": "Principal engineer", "low": 36, "likely": 48, "high": 72, "grade": "estimate"}]},
+           "arch_external_cost": {"estimates": [
+               {"estimator": "Technology lead", "low": 60000, "likely": 90000, "high": 150000, "grade": "estimate"},
+               {"estimator": "Principal engineer", "low": 80000, "likely": 110000, "high": 160000, "grade": "quote"}]},
+           "arch_duration_months": {"estimates": [
+               {"estimator": "Technology lead", "low": 8, "likely": 10, "high": 14, "grade": "estimate"},
+               {"estimator": "Principal engineer", "low": 9, "likely": 12, "high": 18, "grade": "estimate"}]},
+           "past_programme_overrun_pct": 40},
     governance={"GV06": {"answer": "No", "evidence": "", "attested_by": "CTO"},
                 "GV07": {"answer": "Partly", "evidence": "Draft measures only", "attested_by": "Sponsor"}},
     sizes={"ENG": 18, "PRD": 9, "BUS": 6, "TEC": 6, "EXE": 5, "OPS": 7, "SEC": 4, "FIN": 3},

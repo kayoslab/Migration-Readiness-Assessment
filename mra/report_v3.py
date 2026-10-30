@@ -429,6 +429,15 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     calendar_rows = next((b.get("calendar", []) for b in decisions if b["id"] == "hosting"), [])
     reopen = plan.triggers(assessment, {b["id"]: b["options"] for b in decisions}, success, calendar_rows)
     roadmap_block["load"] = plan.load(steps)
+    from .investment import budget as phase_budget
+    show_amounts = (eng.config.get("report") or {}).get("show_amounts", True)
+    programme_budget = phase_budget(assessment, show_amounts)
+    for block in decisions:
+        if block["id"] == "architecture" and programme_budget and programme_budget.get("architecture"):
+            block["investment"] = {**programme_budget["architecture"], "show_amounts": show_amounts,
+                                   "estimators": sorted({e for k in ("arch_effort_person_months", "arch_external_cost",
+                                                                     "arch_duration_months")
+                                                         for e in (eng.facts[k].estimators if k in eng.facts else [])})}
     reg = risk_register(assessment)
     invited = eng.config.get("invited") or {}
     participation = [{"group": g, "n": int(n), "invited": invited.get(g),
@@ -474,6 +483,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         "roadmap": roadmap_block,
         "measures": success,
         "triggers": reopen,
+        "budget": programme_budget,
         "evidence": rows,
         "participation": participation,
         "risks": reg,

@@ -64,8 +64,15 @@ def _budget(assessment, d: str, dec: dict) -> str | None:
         if inv and inv.point and show:
             return f"First phase: €{inv.point / 1e3:,.0f}k one-off for automation."
     if d == "architecture" and dec["verdict"] not in ("insufficient_evidence", "stay_and_improve"):
-        return ("Investment not yet estimated: the technology lead and a second estimator provide it before "
-                "checkpoint C1.")
+        inv = dec.get("investment") or {}
+        if not inv.get("estimated"):
+            return ("Investment not yet estimated: the technology lead and a second estimator provide it before "
+                    "checkpoint C1.")
+        amount = (f"€{inv['cost'] / 1e3:,.0f}k (€{inv['cost_low'] / 1e3:,.0f}k–€{inv['cost_high'] / 1e3:,.0f}k), "
+                  if show else "")
+        when = "for decision at checkpoint C1" if dec["status"] == "prepare_first" else "from now"
+        return (f"Estimated cost of the first steps: {amount}about {inv['fte']:.0f} FTE for {inv['months']:.0f} months, "
+                f"{when}.")
     return None
 
 
@@ -121,7 +128,10 @@ def _money(assessment, decs: dict) -> list[str]:
             out.append("Right-sizing before the refresh lowers it by " + c["action"].split("about ")[1].split(" less")[0] + ".")
     arch = decs.get("architecture")
     if arch and arch["verdict"] not in ("insufficient_evidence", "stay_and_improve"):
-        out.append("The restructuring is not yet costed.")
+        inv = arch.get("investment") or {}
+        out.append(f"The restructuring's first steps cost about €{inv['cost'] / 1e3:,.0f}k "
+                   f"(€{inv['cost_low'] / 1e3:,.0f}k–€{inv['cost_high'] / 1e3:,.0f}k)." if inv.get("estimated") else
+                   "The restructuring is not yet costed.")
     return out
 
 

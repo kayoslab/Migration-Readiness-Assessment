@@ -230,6 +230,12 @@ addressed. Single-value cost inputs are now widened by their source grade, as th
 hosting case (b) pre-registers the premium its story implies (docs/calibration.md). The run-cost reconciliation
 blocks when an unallocated difference would change the hosting verdict.
 
+**Status:** Phase 3 done (WS6 without benefits, as decided). New fact-sheet inputs for the restructuring — effort,
+external cost and duration, each from two estimators — and an optional reference class (the organisation's typical
+past overrun), which raises the high end of effort, cost and duration estimates for both programmes. The report shows
+what the first steps take (TechCo: about 44 person-months, 4 FTE for 11 months, €467k, range €365k–€631k) and a
+budget by phase across both decisions; the decision page states it. None of it feeds the decision rules.
+
 | Phase | Workstreams | Outcome | Effort |
 |---|---|---|---|
 | **1. Do not mislead** | WS1, WS7, WS8, WS3 (coverage rule, lead-time exhibit) | Every contradiction surfaced; draft vs final; ties and pooled groups honest | ~5 days |

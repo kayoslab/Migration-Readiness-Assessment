@@ -84,10 +84,14 @@ fact_discipline:
     calculator_export: 0.20
     benchmark: 0.30
     estimate: 0.40
+  reference_class:                # the organisation's own track record caps optimism: the high estimate is raised to at
+    overrun_fact: past_programme_overrun_pct    # least likely × (1 + typical past overrun)
+    applies_to: [arch_effort_person_months, arch_external_cost, arch_duration_months, migration_cost, migration_months]
   widen_single_values:            # single values are ranges too: the grade's minimum width applies (no grade = estimate)
-    units: [EUR, FTE]
+    units: [EUR, FTE, person-months]
     facts: [rightsized_share_pct, toil_reduction_pct, infra_share_pct]
-  two_estimators_for: [hosting.economics, target_run_cost_increase_pct]   # model uses the union of both ranges
+  two_estimators_for: [hosting.economics, target_run_cost_increase_pct, arch_effort_person_months, arch_external_cost,
+                       arch_duration_months]   # model uses the union of both ranges
   estimator_disagreement_flag: 0.25
   second_attester_for: [components_distinct_availability, components_distinct_compliance, candidate_scope_in_main_deployable]
   cloud_prices_from_region_compliant_with: fact.hosting_constraint
@@ -361,7 +365,8 @@ tco:
     When hardware or contracts end before fact.migration_months, the moving option carries fact.bridge_cost.
   sampling: PERT on low/likely/high; migration_cost and dual_run_months right-skewed and correlated through a shared overrun factor
   common_random_numbers: [growth_pct_annual, peak_hours_per_year, fte_cost_annual, own_price_change_pct_annual, cloud_price_change_pct_annual]
-  correlated: [migration_cost, migration_months, dual_run_months]   # one shared overrun quantile per draw
+  correlated: [migration_cost, migration_months, dual_run_months,   # one shared overrun quantile per draw
+               arch_effort_person_months, arch_external_cost, arch_duration_months]
   commitments_cover_baseline_only: true
   sensitivity: [tornado, break_even_values, horizons_3_and_7]
 

@@ -126,7 +126,15 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
     root.mkdir(parents=True, exist_ok=True)
     ins = load_instrument(instrument_dir)
     facts = {**HEALTHY_FACTS, **HOSTING_FACTS, **scenario.facts}
-    fact_objs = {k: Fact(**(v if isinstance(v, dict) else {"value": v})) for k, v in facts.items() if v is not None}
+    def as_fact(v):
+        if not isinstance(v, dict):
+            return Fact(value=v)
+        if v.get("estimates"):                          # two estimators: the union, as the fact-sheet loader does
+            est = v["estimates"]
+            return Fact(low=min(x["low"] for x in est), likely=sum(x["likely"] for x in est) / len(est),
+                        high=max(x["high"] for x in est))
+        return Fact(**{k: x for k, x in v.items() if k in Fact.__dataclass_fields__})
+    fact_objs = {k: as_fact(v) for k, v in facts.items() if v is not None}
     current = {"architecture": derive_current_state(ins, fact_objs), "hosting": scenario.current_hosting}
 
     labels = {d: {oid: label for oid, label in ins.preference_options(d, current[d])} for d in ("architecture", "hosting")}

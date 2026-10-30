@@ -158,6 +158,9 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
     # ------------------------------------------------------------------ facts
     min_width = (rules.get("fact_discipline") or {}).get("min_range_width_by_grade", {})
     widen_cfg = (rules.get("fact_discipline") or {}).get("widen_single_values", {})
+    ref_class = (rules.get("fact_discipline") or {}).get("reference_class", {})
+    overrun_fact = eng.facts.get(ref_class.get("overrun_fact", ""))
+    overrun = float(overrun_fact.point) if overrun_fact is not None and overrun_fact.point is not None else 0.0
     correlated = set((rules.get("tco") or {}).get("correlated", []))
     shared_u = rng.random(B)                                     # one overrun quantile per draw for the group
     categories, fact_values, fact_ranges = {}, {}, {}
@@ -172,6 +175,8 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
             fact = Fact(low=float(fact.value), likely=float(fact.value), high=float(fact.value), grade=fact.grade)
         if fact.is_range:
             low, likely, high = widen(fact, min_width)
+            if fid in ref_class.get("applies_to", []) and overrun:      # the organisation's own track record
+                high = max(high, likely * (1 + overrun / 100))
             if ins.facts.at[fid, "unit"] == "%":
                 low, high = max(low, 0.0), min(high, 100.0)
             fact_ranges[fid] = (low, high)

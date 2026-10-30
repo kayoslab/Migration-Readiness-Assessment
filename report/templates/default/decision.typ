@@ -278,6 +278,24 @@
   ]
   #uncertainty(dec)
   #options(dec)
+  #if "investment" in dec [
+    == What it takes
+    #let inv = dec.investment
+    #if inv.estimated [
+      The first steps on the recommended path take about #fmt(inv.effort, d: 0) person-months over
+      #fmt(inv.months, d: 0) months (up to #fmt(inv.months_high, d: 0) at the high estimate) — about
+      #fmt(inv.fte, d: 0) FTE#if inv.show_amounts [, costing #text(weight: "semibold")[€#fmt(inv.cost / 1000, d: 0)k]
+      (90% range €#fmt(inv.cost_low / 1000, d: 0)k–€#fmt(inv.cost_high / 1000, d: 0)k) including external support].
+      #if inv.start > 0 [They start once the preconditions are in place, after checkpoint C1.]
+      #text(size: 8pt, fill: theme.muted)[Estimated independently by #(inv.estimators.join(" and ")); the model uses
+        both ranges#if inv.reference_class != none [, with the high end raised to at least the organisation's typical
+        past overrun of #fmt(inv.reference_class, d: 0)%]. The estimate informs the approval; it does not change the
+        recommendation.]
+    ] else [
+      Not yet estimated: #inv.missing.map(m => lower(m)).join("; "). The technology lead and a second, independent
+      estimator provide these before checkpoint C1.
+    ]
+  ]
 
   #v(3mm)
   #exhibit(dec.charts.probabilities, dec.insights.probabilities,
@@ -595,6 +613,24 @@ owners and mitigations come from the action library.
   #data-table(columns: (0.5fr, 0.8fr, 5fr), align: (left, right, left), header: ("", "Month", "Checkpoint"),
     ..data.roadmap.gates.enumerate().map(((i, g)) => ([#metadata(i)#label("checkpoint-" + str(i + 1))C#(i + 1)],
       str(g.month), g.label)).flatten())
+  #v(3mm)
+]
+
+#if data.at("budget", default: none) != none [
+  #anchor("budget")
+  == Budget by phase
+  Both decisions together, by months from the decision#if data.budget.show_amounts [ (likely values)].
+  #data-table(
+    columns: (3fr,) + data.budget.phases.map(_ => 1fr) + (1.1fr,),
+    align: (left,) + data.budget.phases.map(_ => right) + (right,),
+    header: ("",) + data.budget.phases.map(p => "Months " + p) + ("Total",),
+    ..data.budget.rows.map(r => (r.item,) + r.cells_text + (r.total_text,)).flatten(),
+    text(weight: "semibold")[Total], ..data.budget.totals_text.map(t => text(weight: "semibold", t)),
+    text(weight: "semibold", data.budget.total_text),
+  )
+  #v(2pt)
+  #text(size: 7.5pt, fill: theme.muted)[#for r in data.budget.rows.filter(r => r.range != none) [#r.item: 90% range
+    #r.range. ] One-off costs only; running costs are in the cost case. Hosting amounts follow the decision calendar.]
   #v(3mm)
 ]
 

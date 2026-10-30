@@ -361,3 +361,49 @@ contract_end_months:
   value: 36
   source: synthetic scenario
   attester: Fact-sheet owner
+arch_effort_person_months:
+  estimates:
+  - estimator: Technology lead
+    low: 30
+    likely: 40
+    high: 60
+    grade: estimate
+  - estimator: Principal engineer
+    low: 36
+    likely: 48
+    high: 72
+    grade: estimate
+  source: synthetic scenario
+  attester: Fact-sheet owner
+arch_external_cost:
+  estimates:
+  - estimator: Technology lead
+    low: 60000
+    likely: 90000
+    high: 150000
+    grade: estimate
+  - estimator: Principal engineer
+    low: 80000
+    likely: 110000
+    high: 160000
+    grade: quote
+  source: synthetic scenario
+  attester: Fact-sheet owner
+arch_duration_months:
+  estimates:
+  - estimator: Technology lead
+    low: 8
+    likely: 10
+    high: 14
+    grade: estimate
+  - estimator: Principal engineer
+    low: 9
+    likely: 12
+    high: 18
+    grade: estimate
+  source: synthetic scenario
+  attester: Fact-sheet owner
+past_programme_overrun_pct:
+  value: 40
+  source: synthetic scenario
+  attester: Fact-sheet owner

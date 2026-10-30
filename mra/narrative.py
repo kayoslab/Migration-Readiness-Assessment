@@ -111,6 +111,9 @@ def findings_payload(ctx: dict) -> dict:
         "decision_requested": (ctx.get("brief") or {}).get("requests", []),
         "decision_calendar": next((d.get("calendar", []) for d in ctx["decisions"] if d["id"] == "hosting"), []),
         "reopen_criteria": ctx.get("triggers", []),
+        "budget_by_phase": {k: (ctx.get("budget") or {}).get(k) for k in ("phases", "totals_text", "total_text")}
+        | {"rows": [{"item": r["item"], "cells": r["cells_text"], "total": r["total_text"], "range": r["range"]}
+                    for r in (ctx.get("budget") or {}).get("rows", [])]},
     }
 
 

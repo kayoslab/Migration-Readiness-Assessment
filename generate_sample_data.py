@@ -1,28 +1,43 @@
 """
-Generate Realistic Sample Data for Migration Readiness Assessment
+Generate realistic sample data for the Migration Readiness Assessment.
 
-Scenario: "TechCo" - Mid-size e-commerce company
-- 10 Engineers, 8 Product managers, 4 Business stakeholders, 4 Leadership
+Scenario: "TechCo" - mid-size e-commerce company
+- 18 Engineers, 10 Product managers, 8 Business stakeholders, 6 Leadership
 - Strong engineering culture but siloed teams
 - Business frustrated with delivery speed
 - Leadership supportive but lacks technical depth
 - Legacy monolith causing friction, some early modernisation work done
 
-This creates data that demonstrates:
-- Mix of RED/AMBER/GREEN domains
-- Clear alignment gaps between roles
-- Realistic qualitative feedback
-- Meaningful statistical patterns
+Unlike independent random answers, each simulated person has a consistent outlook:
+- a general optimism offset and a per-domain offset (so domain scales are internally consistent)
+- some respondents agree with everything (acquiescence), a few straight-line
+- ~6% of answers are skipped and ~2% are "Don't know"
+- free-text tone follows the person's own scores
+
+Answers are written as labels ("Agree"), as a Google Forms export would.
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from pathlib import Path
 
-np.random.seed(42)  # Reproducible results
+rng = np.random.default_rng(42)  # Reproducible results
+
+LABELS = {1: 'Strongly Disagree', 2: 'Disagree', 3: 'Neutral', 4: 'Agree', 5: 'Strongly Agree'}
+ROLE_COUNTS = {'Engineering': 18, 'Product': 10, 'Business': 8, 'Leadership': 6}
+
+PERSON_SD = 0.35        # general optimism / pessimism of a person
+PERSON_DOMAIN_SD = 0.35 # person-specific view of a domain
+ITEM_NOISE = 0.55       # item-level noise relative to the role's domain spread
+P_ACQUIESCENT = 0.10
+P_STRAIGHT_LINER = 0.04
+P_SKIP = 0.06
+P_DONT_KNOW = 0.02
+P_TEXT_ANSWER = 0.6
 
 # Load questionnaire to understand structure
-questionnaire = pd.read_csv('Questions/export.csv', index_col='ID')
+questionnaire = pd.read_csv("Questions/export.csv", index_col="ID")
+questionnaire["Question"] = questionnaire["Question"].fillna("")
 
 # =============================================================================
 # SCENARIO CONFIGURATION
@@ -173,166 +188,74 @@ QUALITATIVE_RESPONSES = {
 }
 
 
-def generate_score(base_mean, std, adjustment=0, min_val=1, max_val=5):
-    """Generate a Likert score with constraints."""
-    score = np.random.normal(base_mean + adjustment, std)
-    score = max(min_val, min(max_val, score))
-    return int(round(score))
+def simulate_person(role, quest_df):
+    """Return ({item_id: answer}, overall_optimism) for one respondent."""
+    optimism = rng.normal(0, PERSON_SD)
+    domain_view = {d: rng.normal(0, PERSON_DOMAIN_SD) for d in ROLE_PERCEPTIONS}
+    acquiescent = rng.random() < P_ACQUIESCENT
+    straight_line = rng.random() < P_STRAIGHT_LINER
+    straight_value = int(np.clip(round(3.5 + optimism), 1, 5))
+
+    answers, latent = {}, []
+    for q_id, q_row in quest_df.iterrows():
+        if q_row['Type'] != 'Quantitative' or not q_row[role]:
+            continue
+        domain = q_row['Category']
+        mean, sd = ROLE_PERCEPTIONS.get(domain, {}).get(role, (3.0, 0.8))
+        mu = mean + QUESTION_ADJUSTMENTS.get(q_id, {}).get(role, 0) + optimism + domain_view.get(domain, 0)
+        mu += 0.5 if acquiescent else 0
+        latent.append(mu)
+        if rng.random() < P_SKIP:
+            continue
+        if rng.random() < P_DONT_KNOW:
+            answers[q_id] = "Don't know"
+            continue
+        score = straight_value if straight_line else int(np.clip(round(rng.normal(mu, sd * ITEM_NOISE)), 1, 5))
+        answers[q_id] = LABELS[score]
+    return answers, float(np.mean(latent)) if latent else 3.0
 
 
-def generate_quantitative_responses(quest_df, n_respondents, role):
-    """Generate quantitative responses for a role."""
-
-    responses = []
-
-    for _ in range(n_respondents):
-        row = {}
-
-        for q_id in quest_df.index:
-            q_row = quest_df.loc[q_id]
-
-            # Check if this role should answer this question
-            if not q_row.get(role, False):
-                row[q_id] = 0  # Not applicable
-                continue
-
-            if q_row['Type'] != 'Quantitative':
-                continue
-
-            # Get base perception for this domain/role
-            domain = q_row['Category']
-            if domain in ROLE_PERCEPTIONS and role in ROLE_PERCEPTIONS[domain]:
-                base_mean, std = ROLE_PERCEPTIONS[domain][role]
-            else:
-                base_mean, std = 3.0, 0.8
-
-            # Apply question-specific adjustments
-            adjustment = QUESTION_ADJUSTMENTS.get(q_id, {}).get(role, 0)
-
-            # Generate score
-            row[q_id] = generate_score(base_mean, std, adjustment)
-
-        responses.append(row)
-
-    return responses
-
-
-def generate_qualitative_responses(quest_df, n_respondents, role):
-    """Generate qualitative responses for a role."""
-
-    responses = []
-    role_templates = QUALITATIVE_RESPONSES.get(role, QUALITATIVE_RESPONSES['Engineering'])
-
-    # Flatten all responses
-    all_responses = (
-        role_templates['positive'] +
-        role_templates['neutral'] +
-        role_templates['negative']
-    )
-
-    for resp_idx in range(n_respondents):
-        row = {}
-
-        # Determine sentiment bias for this respondent
-        raw_weights = {
-            'positive': 0.3 + np.random.uniform(-0.1, 0.1),
-            'neutral': 0.4 + np.random.uniform(-0.1, 0.1),
-            'negative': 0.3 + np.random.uniform(-0.1, 0.1),
-        }
-        # Normalize to sum to 1
-        total = sum(raw_weights.values())
-        sentiment_weights = {k: v/total for k, v in raw_weights.items()}
-
-        for q_id in quest_df.index:
-            q_row = quest_df.loc[q_id]
-
-            if not q_row.get(role, False):
-                row[q_id] = ''
-                continue
-
-            if q_row['Type'] != 'Qualitative':
-                continue
-
-            # Randomly select response based on sentiment weights
-            sentiment = np.random.choice(
-                ['positive', 'neutral', 'negative'],
-                p=[sentiment_weights['positive'],
-                   sentiment_weights['neutral'],
-                   sentiment_weights['negative']]
-            )
-
-            available = role_templates.get(sentiment, role_templates['neutral'])
-            if available:
-                row[q_id] = np.random.choice(available)
-            else:
-                row[q_id] = ''
-
-        responses.append(row)
-
-    return responses
+def simulate_text(role, quest_df, person_level):
+    """Free-text answers whose tone follows the person's own outlook."""
+    templates = QUALITATIVE_RESPONSES.get(role, QUALITATIVE_RESPONSES['Engineering'])
+    tilt = np.clip((person_level - 3.2) / 1.2, -1, 1)          # -1 pessimist .. +1 optimist
+    p = np.array([0.3 + 0.25 * tilt, 0.4, 0.3 - 0.25 * tilt])
+    p = p / p.sum()
+    answers = {}
+    for q_id, q_row in quest_df.iterrows():
+        if q_row['Type'] != 'Qualitative' or not q_row[role] or rng.random() > P_TEXT_ANSWER:
+            continue
+        tone = rng.choice(['positive', 'neutral', 'negative'], p=p)
+        options = templates.get(tone) or templates['neutral']
+        answers[q_id] = options[rng.integers(len(options))]
+    return answers
 
 
 def generate_role_data(quest_df, role, n_respondents):
-    """Generate complete dataset for a role."""
-
-    quant_responses = generate_quantitative_responses(quest_df, n_respondents, role)
-    qual_responses = generate_qualitative_responses(quest_df, n_respondents, role)
-
-    # Merge quantitative and qualitative
-    combined = []
+    rows = []
     for i in range(n_respondents):
-        row = {'Timestamp': f'2025-04-{20+i:02d} 10:{10+i:02d}:00'}
-        row.update(quant_responses[i])
-        row.update(qual_responses[i])
-        combined.append(row)
-
-    # Convert to DataFrame with question text as columns
-    df = pd.DataFrame(combined)
-
-    # Map question IDs back to question text for CSV
-    id_to_text = quest_df['Question'].to_dict()
-    df = df.rename(columns=id_to_text)
-
-    return df
+        quant, level = simulate_person(role, quest_df)
+        row = {'Timestamp': f'2026-10-{1 + i % 28:02d} 10:{i % 60:02d}:00'}
+        row.update(quant)
+        row.update(simulate_text(role, quest_df, level))
+        rows.append(row)
+    df = pd.DataFrame(rows)
+    applicable = [q for q in quest_df.index if quest_df.at[q, role] and quest_df.at[q, 'Question'].strip()]
+    df = df.reindex(columns=['Timestamp', *applicable])
+    return df.rename(columns=quest_df['Question'].to_dict())
 
 
 def main():
-    """Generate all sample data files."""
-
     print("Generating sample data for Migration Readiness Assessment...")
     print("Scenario: TechCo - E-commerce company with legacy platform\n")
-
-    # Configuration
-    role_counts = {
-        'Engineering': 10,
-        'Product': 8,
-        'Business': 4,
-        'Leadership': 4,
-    }
-
     output_dir = Path('Responses')
     output_dir.mkdir(exist_ok=True)
-
-    for role, n in role_counts.items():
-        print(f"Generating {n} {role} responses...")
+    for role, n in ROLE_COUNTS.items():
         df = generate_role_data(questionnaire, role, n)
-
         output_file = output_dir / f'{role}.csv'
-        df.to_csv(output_file, index=True)
-        print(f"  Saved to {output_file}")
-
-    print("\nSample data generation complete!")
-    print("\nScenario characteristics:")
-    print("  - Architecture & Technology: AMBER (3.2 avg) - some progress, gaps remain")
-    print("  - Team Capability: GREEN (3.6 avg) - strong engineering culture")
-    print("  - Governance & Delivery: RED/AMBER (2.9 avg) - process friction")
-    print("  - Integration & Data: RED (2.8 avg) - significant pain point")
-    print("  - Business Alignment: AMBER (3.4 avg) - improving but gaps")
-    print("  - Cultural Readiness: AMBER (3.4 avg) - mixed signals")
-    print("\nKey alignment gaps:")
-    print("  - Business vs Engineering on technical bottlenecks awareness")
-    print("  - Business vs Leadership on change readiness")
-    print("  - Product vs Engineering on delivery speed perceptions")
+        df.to_csv(output_file, index=False)
+        print(f"  {n:>3} {role:<12} -> {output_file}")
+    print("\nDone. Run `mra report` to analyse it.")
 
 
 if __name__ == '__main__':

@@ -16,7 +16,7 @@ import yaml
 ROLES = ["ENG", "PRD", "BUS", "TEC", "EXE", "OPS", "SEC", "FIN"]
 DONT_KNOW = "Don't know"
 TECHNICAL_BLOCKS = {"need", "locality", "capability", "fit"}   # weighted by involvement (CX02)
-SIGNAL_FAMILIES = ("tco_ratio", "payback_months", "tco_saving_fte")
+SIGNAL_FAMILIES = ("tco_ratio", "payback_months", "payback_after_cutover", "tco_saving_fte")
 
 
 @dataclass

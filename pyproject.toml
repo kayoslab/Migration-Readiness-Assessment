@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "jupyter", "ipykernel", "nbstripout", "nbconvert"]
+dev = ["pytest>=8", "jupyter", "ipykernel", "nbstripout", "nbconvert", "tabulate"]
 
 [project.scripts]
 mra = "mra.cli:main"

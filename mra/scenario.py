@@ -72,7 +72,8 @@ class Scenario:
     facts: dict = field(default_factory=dict)
     governance: dict = field(default_factory=dict)
     sizes: dict[str, int] = field(default_factory=dict)
-    noise: float = 0.5
+    noise: float = 0.5                  # spread of personal optimism between respondents
+    item_noise: float = 0.5             # spread of each single answer around the respondent's view
     system: str = "the Order Platform"
     current_hosting: str = "own_infrastructure"
     # per-respondent overrides: fn(role, index, rng, labels) -> {"S01": label, "S04[<row>]": label, ...}
@@ -88,7 +89,7 @@ def _area_key(ins: Instrument, item_id: str) -> list[str]:
     return [f"{it['block']}.{d}.{it['area']}" for d in decisions] + [f"{it['block']}.{it['area']}"]
 
 
-def _answer(ins: Instrument, q: dict, target: float | None, fixed: str | None, rng) -> str:
+def _answer(ins: Instrument, q: dict, target: float | None, fixed: str | None, rng, item_noise: float = 0.5) -> str:
     if fixed is not None:
         return fixed
     if q["format"] == "text":
@@ -105,12 +106,14 @@ def _answer(ins: Instrument, q: dict, target: float | None, fixed: str | None, r
         return choices[rng.integers(len(choices))]
     if target is None:
         target = 3.0
-    wanted = target + rng.normal(0, 0.5)
+    wanted = target + rng.normal(0, item_noise) if item_noise else target
     return min(scores, key=lambda label: (abs(scores[label] - wanted), rng.random()))
 
 
-def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int = 7) -> Path:
-    """Write the scenario as an engagement folder and return the path of its engagement.yaml."""
+def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int = 7, group_size: int | None = None) -> Path:
+    """Write the scenario as an engagement folder and return the path of its engagement.yaml.
+
+    `group_size` overrides every group's size (used by the simulator grid)."""
     rng = np.random.default_rng(seed)
     root.mkdir(parents=True, exist_ok=True)
     ins = load_instrument(instrument_dir)
@@ -120,7 +123,10 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
 
     labels = {d: {oid: label for oid, label in ins.preference_options(d, current[d])} for d in ("architecture", "hosting")}
     answers = {}
-    for role, n in {**DEFAULT_SIZES, **scenario.sizes}.items():
+    sizes = {**DEFAULT_SIZES, **scenario.sizes}
+    if group_size is not None:
+        sizes = {role: (group_size if n else 0) for role, n in sizes.items()}
+    for role, n in sizes.items():
         spec = ins.form_spec(role, scenario.system, current)
         people = []
         for index in range(n):
@@ -135,7 +141,8 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
                 if q["item_id"] == "G14" and fixed is None:
                     fixed = "No"
                 key = q["item_id"] if q["row"] is None else f"{q['item_id']}[{q['row']}]"
-                person[key] = _answer(ins, q, None if target is None else target + offset, fixed, rng)
+                person[key] = _answer(ins, q, None if target is None else target + offset, fixed, rng,
+                                      scenario.item_noise)
             if scenario.respondent_fn:
                 person.update(scenario.respondent_fn(role, index, rng, labels))
             people.append(person)

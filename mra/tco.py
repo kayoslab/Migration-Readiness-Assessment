@@ -164,6 +164,9 @@ def compute(facts: dict[str, np.ndarray], current: str, horizon_years: int = 5) 
         stays_ahead = np.flip(np.cumprod(np.flip(ahead, axis=1), axis=1), axis=1).astype(bool)
         first = np.where(stays_ahead.any(axis=1), stays_ahead.argmax(axis=1) + 1, np.inf)
         signals[f"payback_months.{option}"] = first.astype(float)
+        # the same, counted from cut-over: how long the new setup must run to recover the switching costs
+        cut = model.v("migration_months") if option not in ("improve_current",) else np.zeros(model.B)
+        signals[f"payback_after_cutover.{option}"] = np.maximum(first - cut, 0.0).astype(float)
         signals[f"tco_saving_fte.{option}"] = (tco[base] - tco[option]) / horizon_years / model.fte
     return signals, []
 

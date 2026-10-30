@@ -27,6 +27,10 @@ def main(argv: list[str] | None = None) -> int:
     dec.add_argument("--json", action="store_true", help="print the full result as JSON")
     dec.add_argument("--llm", action="store_true", help="also code free-text answers via the Vercel AI Gateway")
 
+    sim = sub.add_parser("simulate", help="v3: validity grid and threshold sweeps on synthetic engagements")
+    sim.add_argument("--quick", action="store_true", help="reduced grid (as run in CI)")
+    sim.add_argument("--out", default=None, help="output folder (default Output/sim)")
+
     chk = sub.add_parser("check-llm", help="verify the Vercel AI Gateway key and model with a one-line request")
     chk.add_argument("--config", default="assessment.yaml")
 
@@ -40,6 +44,15 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "decide":
         return _decide(args)
+
+    if args.command == "simulate":
+        from .sim import main as simulate, summary
+        results = simulate(quick=args.quick, out=args.out)
+        grid = results["grid"]
+        print(summary(grid, ["group_size"]).round(3).to_string())
+        wrong = (grid["result"] == "wrong").mean()
+        print(f"\nWrong-outcome rate: {wrong:.1%} over {len(grid)} runs")
+        return 1 if args.quick and wrong > 0.05 else 0
 
     config_path = Path(args.config).resolve()
     load_dotenv(config_path.parent / ".env")

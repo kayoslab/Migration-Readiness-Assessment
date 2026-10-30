@@ -49,11 +49,12 @@ v3 recommends a **path per decision** instead of scoring readiness for a path ch
 [`docs/phase-2-plan.md`](docs/phase-2-plan.md) and the instrument in [`instrument/`](instrument/README.md).
 Milestones M1 (instrument and data layer), M2 (architecture decision), M3 (hosting decision with a 5-year TCO
 model, `mra/tco.py`) and M4 (preferences, stakes, alignment and operating-model fit, `mra/stakes.py`) are
-implemented; calibration (M5) and the v3 report (M6) follow.
+implemented, and M5 calibrated it on 1,350 simulated engagements ([`docs/calibration.md`](docs/calibration.md)); the v3 report (M6) follows.
 
 ```bash
 mra validate                         # cross-check the instrument files
 mra decide path/to/engagement.yaml   # recommended path per decision, probability, preconditions, cost case, what would change it
+mra simulate [--quick]               # validity grid and threshold sweeps on synthetic engagements
 ```
 
 An engagement folder holds `engagement.yaml`, one form export per stakeholder group, `facts.yaml` and (after the

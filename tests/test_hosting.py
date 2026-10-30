@@ -13,70 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 INSTRUMENT = ROOT / "instrument"
 DRAWS = 300
 
-GOOD_OPS = {"capability.hosting.automation": 4.0, "capability.hosting.operations": 4.0,
-            "capability.hosting.cost_discipline": 3.5, "need.hosting.ops_burden": 1.5}
-STEADY = {"need.hosting.elasticity": 1.3, "need.hosting.capacity_lead_time": 1.5, "need.hosting.managed_services": 1.0}
-
-CASES = {
-    # (a) head of platform wants the cloud; load is steady, one machine would do, cloud ~3x, team against
-    "a_steady_load_one_machine": Scenario(
-        "a", {"hosting": "improve_current"},
-        targets={**STEADY, **GOOD_OPS, "capability.hosting.cloud_skills": 2.0},
-        facts={"peak_to_median_load": 1.3, "rightsized_share_pct": 30, "iac_pct": 70, "single_node_sufficient": "yes",
-               "cloud_compute_baseline_annual": {"low": 800000, "likely": 900000, "high": 1100000, "grade": "calculator_export"}}),
-    # (b) e-commerce with 15x seasonal peaks, hardware end of life in 9 months, little infrastructure as code
-    "b_peaks_eol_low_iac": Scenario(
-        "b", {"hosting": "move_to_cloud"},
-        targets={"need.hosting.elasticity": 4.8, "need.hosting.capacity_lead_time": 4.5,
-                 "capability.hosting.automation": 2.0, "capability.hosting.operations": 2.8,
-                 "capability.hosting.cloud_skills": 2.0},
-        facts={"peak_to_median_load": 15, "capacity_lead_time_weeks": 10, "iac_pct": 20, "need_share_pct": 75,
-               "hw_refresh_due_months": 9, "rightsized_share_pct": 95,
-               "hw_maintenance_annual": 180000, "dc_cost_annual": 240000, "dr_site_annual": 120000,
-               "hw_refresh_capex": 1200000, "residual_value": 300000,
-               "cloud_compute_baseline_annual": {"low": 220000, "likely": 250000, "high": 300000, "grade": "calculator_export"},
-               "cloud_peak_cost_annual": 150000, "migration_months": {"low": 12, "likely": 14, "high": 20, "grade": "estimate"}}),
-    # (c) SaaS already in the cloud, steady load, cloud bill several times colocation, three platform engineers
-    "c_saas_cloud_overpaying": Scenario(
-        "c", {"hosting": "repatriate"},
-        targets={**STEADY, "capability.hosting.automation": 4.2, "capability.hosting.onprem_ops": 1.2},
-        current_hosting="cloud",
-        facts={"peak_to_median_load": 1.4, "need_share_pct": 10, "rightsized_share_pct": 70, "infra_oncall_people": 3,
-               "target_model": "managed_dedicated", "ops_fte": 3, "infra_share_pct": 50,
-               "cloud_compute_baseline_annual": {"low": 550000, "likely": 600000, "high": 680000, "grade": "invoice"},
-               "cloud_committed_share_pct": 20, "cloud_ops_fte": 2,
-               "hw_maintenance_annual": 30000, "dc_cost_annual": 60000, "network_transit_annual": 15000,
-               "dr_site_annual": 25000, "licence_cost_annual": 10000, "hw_refresh_capex": 250000, "residual_value": 80000,
-               "migration_cost": {"low": 120000, "likely": 150000, "high": 250000, "grade": "estimate"},
-               "migration_months": {"low": 5, "likely": 6, "high": 9, "grade": "estimate"},
-               "sunk_commitment_cost": 0, "cloud_commitment_end_months": 0}),
-    # (d) regulated bank: in-country residency, mixed load, strong operations, cloud dearer
-    "d_regulated_strong_ops": Scenario(
-        "d", {"hosting": "stay_as_is"},
-        targets={"need.hosting.elasticity": 2.5, "need.hosting.capacity_lead_time": 2.0, **GOOD_OPS,
-                 "capability.hosting.onprem_ops": 4.5},
-        facts={"hosting_constraint": "in_country", "peak_to_median_load": 2.5, "iac_pct": 85, "infra_bus_factor": 5,
-               "rightsized_share_pct": 95}),
-    # (e) media company: global low-latency delivery for a small part of the estate, steady core
-    "e_global_reach_partial": Scenario(
-        "e", {"hosting": "hybrid"},
-        targets={**STEADY, **GOOD_OPS, "need.hosting.managed_services": 4.0},
-        # global delivery is bought as CDN/edge capacity: no compute moves, so no interconnect, little migration
-        facts={"regions_required": 4, "managed_services_required": 2, "need_share_pct": 10, "accepted_premium_pct": 15,
-               "rightsized_share_pct": 95, "peak_to_median_load": 1.5, "hybrid_interconnect_annual": 0,
-               "hybrid_overhead_fte": 0.2, "training_hiring_cost": 10000}),
-    # symmetry: no specific need, but the cloud is clearly cheaper and pays back quickly → cost-motivated move
-    "f_cloud_clearly_cheaper": Scenario(
-        "f", {"hosting": "move_to_cloud"},
-        targets={**STEADY, **GOOD_OPS, "capability.hosting.cloud_skills": 3.5},
-        facts={"ops_fte": 6, "infra_share_pct": 100, "hw_maintenance_annual": 200000, "dc_cost_annual": 260000,
-               "dr_site_annual": 140000, "hw_refresh_capex": 900000, "hw_refresh_due_months": 14, "rightsized_share_pct": 95,
-               "cloud_compute_baseline_annual": {"low": 180000, "likely": 200000, "high": 240000, "grade": "quote"},
-               "cloud_ops_fte": 2, "migration_cost": {"low": 150000, "likely": 180000, "high": 260000, "grade": "quote"},
-               "migration_months": {"low": 5, "likely": 6, "high": 9, "grade": "estimate"}}),
-}
-
-EXPECTED_STATUS = {"b_peaks_eol_low_iac": "prepare_first", "c_saas_cloud_overpaying": "prepare_first"}
+from mra.cases import GOOD_OPS, HOSTING_CASES as CASES, HOSTING_STATUS as EXPECTED_STATUS, STEADY
 
 
 @pytest.fixture(scope="module")

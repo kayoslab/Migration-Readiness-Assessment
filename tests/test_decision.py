@@ -14,75 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 INSTRUMENT = ROOT / "instrument"
 DRAWS = 300
 
-# ---------------------------------------------------------------------------------------- shared scenario parts
-STRONG_CAPABILITY = {
-    "capability.architecture.delivery_pipeline": 4.3, "capability.architecture.platform_basics": 4.5,
-    "capability.architecture.platform_distribution": 4.5, "capability.architecture.operations": 4.5,
-    "capability.architecture.data": 4.0, "fit.domain_ownership": 4.5, "fit.distributed_operations": 4.4,
-    "requirement.consistency_tolerance": 4.0,
-}
-STRONG_CAPABILITY_FACTS = {
-    "deploy_automation": "automatic_on_merge", "test_automation_pct": 88, "change_failure_pct": 6, "rollback_minutes": 5,
-    "platform_basics_count": 4, "provision_days": 0.5, "oncall_model": "owning_team", "module_single_owner_pct": 90,
-    "domain_map": "current", "degraded_mode_features": "yes", "acceptable_run_cost_increase_pct": 35,
-}
-HIGH_DIFFUSE_NEED = {"need.architecture.coupling": 4.5, "need.architecture.business_impact": 4.0,
-                     "need.architecture.cognitive_load": 4.0, "locality.concentration": 2.0}
-HIGH_DIFFUSE_NEED_FACTS = {"teams_per_deployable": 15, "cross_team_change_pct": 40, "blast_radius_pct": 30,
-                           "friction_concentration_index": 1.2}
-LOW_NEED = {"need.architecture.coupling": 1.5, "need.architecture.business_impact": 1.6,
-            "need.architecture.cognitive_load": 1.5, "locality.concentration": 2.0}
-LOW_NEED_FACTS = {"teams_per_deployable": 2, "cross_team_change_pct": 5, "blast_radius_pct": 8}
-
-CASES = {
-    # (a) 25 engineers, 3 teams, CAB approvals, manual QA, little contention
-    "a_small_team_process_waits": Scenario(
-        "a", {"architecture": "stay_and_improve"},
-        targets={**LOW_NEED, "capability.architecture.delivery_pipeline": 1.8},
-        labels={"AN01": "Approvals (e.g. change advisory board)"},
-        facts={**LOW_NEED_FACTS, "teams_per_deployable": 3, "deploy_automation": "manual_steps",
-               "rollback_minutes": 180, "test_automation_pct": 20, "change_failure_pct": 28}),
-    # (b) 15 teams on one deployable, strong platform, but 45% shared tables
-    "b_coupled_shared_data": Scenario(
-        "b", {"architecture": "modular_monolith"},
-        targets={**HIGH_DIFFUSE_NEED, **STRONG_CAPABILITY, "capability.architecture.data": 2.0},
-        labels={"AN01": "Waiting for a release window or release train"},
-        facts={**HIGH_DIFFUSE_NEED_FACTS, **STRONG_CAPABILITY_FACTS, "shared_tables_pct": 45,
-               "cross_module_transactions": 15}),
-    # (c) as (b) with separable data, self-service platform, team-owned on-call, cost within tolerance
-    "c_ready_to_decompose": Scenario(
-        "c", {"architecture": "broad_decomposition"},
-        targets={**HIGH_DIFFUSE_NEED, **STRONG_CAPABILITY},
-        labels={"AN01": "Coordinating with other teams' changes"},
-        facts={**HIGH_DIFFUSE_NEED_FACTS, **STRONG_CAPABILITY_FACTS, "shared_tables_pct": 12,
-               "cross_module_transactions": 2}),
-    # (d) payment component in PCI scope causing incidents; otherwise healthy
-    "d_pci_component": Scenario(
-        "d", {"architecture": "targeted_extraction"},
-        targets={"need.architecture.coupling": 2.6, "need.architecture.business_impact": 2.5,
-                 "capability.architecture.delivery_pipeline": 3.8, "capability.architecture.platform_basics": 4.0,
-                 "fit.distributed_operations": 3.6},
-        facts={"teams_per_deployable": 6, "cross_team_change_pct": 14, "components_distinct_compliance": 1,
-               "components_distinct_load": 1, "candidate_scope_in_main_deployable": "yes",
-               "candidate_incident_share_pct": 45, "candidate_scaling_cost_share_pct": 30,
-               "candidate_shared_tables_pct": 4, "rollback_minutes": 8, "platform_basics_count": 4}),
-    # (e) 8 engineers running 35 services that are mostly released together
-    "e_over_split": Scenario(
-        "e", {"architecture": "consolidate"},
-        targets={"need.architecture.coupling": 4.0},
-        facts={"deployables_in_scope": 35, "core_code_share_pct": 8, "services_per_team": 17,
-               "lockstep_deploy_pct": 60, "cross_service_change_pct": 45, "teams_per_deployable": 2},
-        sizes={"ENG": 8}),
-    # (g) head of platform wants change; the platform fits on one machine; an SLO tier exists but causes no pain
-    "g_enthusiasm_without_need": Scenario(
-        "g", {"architecture": "stay_and_improve"},
-        targets={**LOW_NEED, "need.architecture.business_impact": 4.2,           # leadership enthusiasm
-                 "capability.architecture.delivery_pipeline": 3.5},
-        facts={**LOW_NEED_FACTS, "single_node_sufficient": "yes", "components_distinct_load": 1,
-               "components_distinct_availability": 1, "candidate_incident_share_pct": 3,
-               "candidate_scope_in_main_deployable": "not_applicable", "candidate_scaling_cost_share_pct": 2,
-               "candidate_shared_tables_pct": 30}),
-}
+from mra.cases import (ARCHITECTURE_CASES as CASES, HIGH_DIFFUSE_NEED, HIGH_DIFFUSE_NEED_FACTS, LOW_NEED,
+                       LOW_NEED_FACTS, STRONG_CAPABILITY, STRONG_CAPABILITY_FACTS)
 
 
 @pytest.fixture(scope="module")

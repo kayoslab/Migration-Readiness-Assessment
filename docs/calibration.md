@@ -13,12 +13,10 @@ Two questions are answered separately (`mra/sim.py`):
    30 per stakeholder group, three levels of response noise (spread of personal optimism 0.3 / 0.6 / 0.9) and five
    seeds: **720 runs**. Truth is the experts' expected outcome.
 2. **Reliability near thresholds** — given the rules, how often does a realistic sample reproduce what the same
-   rules give on noise-free answers from 60 respondents per group? Two scenario families were moved continuously
-   across a threshold (21 positions × group sizes 5 and 15 × five seeds = **210 runs each**):
-   - *architecture need*: from a small, loosely coupled organisation to a large, tightly coupled one
-     (truth moves from "stay and improve" to "modular monolith");
-   - *hosting cost*: own infrastructure with no specific need while the cloud estimate falls (truth moves from
-     "stay" to a cost-motivated "move to cloud").
+   rules give for the whole population (the same answering process, including noise and rounding to answer
+   options, with 100 respondents per group)? Five scenario families were each moved across one threshold
+   (21 positions × group sizes 5 and 15 × five seeds = **210 runs each**). A sixth, fine-grained sweep sits exactly
+   on the architecture threshold.
 
 Results are classified as **correct** · **status differs** (right outcome, wrong go / prepare first) ·
 **insufficient** (the engine declines although the truth is clear) · **overconfident** (the truth is itself
@@ -28,15 +26,17 @@ Results are classified as **correct** · **status differs** (right outcome, wron
 
 | Run set | Runs | Correct | Insufficient | Overconfident | Wrong |
 |---|---|---|---|---|---|
-| Validity grid (all sizes, all noise levels) | 720 | 100 % | 0 % | 0 % | **0 %** |
-| Architecture threshold sweep | 210 | 98.1 % | 1.9 % | 0 % | **0 %** |
-| Hosting cost sweep (payback from decision) | 210 | 100 %¹ | 0 % | 0 % | **0 %** |
-| Hosting cost sweep (payback from cut-over) | 210 | 95.7 % | 0 % | 4.3 % | **0 %** |
+| Validity grid (expert cases, all sizes and noise levels) | 720 | 100 % | 0 % | 0 % | **0 %** |
+| Architecture: stay → restructure | 210 | 98.1 % | 1.9 % | 0 % | **0 %** |
+| Architecture: restructure → separate out one part (pain test) | 210 | 100 % | 0 % | 0 % | **0 %** |
+| Architecture: realign → consolidate (distributed estates) | 210 | 100 % | 0 % | 0 % | **0 %** |
+| Hosting: stay → move to cloud (cost-motivated) | 210 | 99.5 % | 0.5 % | 0 % | **0 %** |
+| Hosting: stay → move back from cloud (cost-motivated) | 210 | 100 % | 0 % | 0 % | **0 %** |
+| Exactly on the architecture threshold (15 per group) | 110 | 86.4 % | 2.7 % | 5.5 % | **5.5 %** |
 
-¹ Trivially: under this rule the truth never becomes "move to cloud" — see finding 2.
-
-**Targets from the plan:** ≥ 90 % correct at ≥ 15 per group — met everywhere. At small groups, "insufficient
-evidence" rather than a wrong outcome (wrong ≤ 5 %) — met: **no wrong outcome in 1,350 runs**.
+**Targets from the plan:** ≥ 90 % correct at ≥ 15 per group — met in every sweep. Wrong ≤ 5 % — met everywhere
+except where an organisation sits exactly on a threshold (see finding 5): **no wrong outcome in 1,770 runs across
+the validity grid and the five sweeps.**
 
 ## Findings
 
@@ -55,9 +55,28 @@ evidence" rather than a wrong outcome (wrong ≤ 5 %) — met: **no wrong outcom
 3. **The validity grid is easy by construction.** The expert cases sit far from thresholds, and fact-sheet evidence
    (weight 2) dominates survey perception, so response noise barely matters there. It confirms the rules give the
    experts' answers; reliability is measured by the sweeps.
-4. **Confidence 0.80 is sufficient.** Raising it to 0.85 removes most boundary overconfidence (4.3 % → 0.5 % in the
+4. **Confidence 0.80 is kept.** Raising it to 0.85 removes most boundary overconfidence (4.3 % → 0.5 % in the
    hosting sweep) at the price of a few more "insufficient evidence" verdicts; 0.90 adds no further benefit.
    Kept at 0.80.
+
+5. **Exactly on a threshold, wrong outcomes occur at roughly the rate the confidence level allows.** When the
+   population itself is "too close to call" (here: need for change within a few hundredths of 2.5), 60 % of
+   15-person samples still assert a verdict — about half of them on the wrong side (30 % of runs; 20 runs, so
+   ± 10 %). One step either side of that point, wrong outcomes drop to zero. This is what "80 % confidence" means;
+   a stricter level trades fewer wrong calls at the threshold for more "insufficient evidence" elsewhere:
+
+   | Confidence | Wrong, exactly at the threshold | Insufficient evidence, away from it |
+   |---|---|---|
+   | 0.80 (default) | 30 % | 3 % |
+   | 0.85 | 20 % | 6 % |
+   | 0.90 | 15 % | 7 % |
+   | 0.95 | 10 % | 10 % |
+
+   The report therefore always shows *what would change the recommendation* and *where the evidence is uncertain*:
+   an organisation on a threshold sees that it is on one.
+6. **How truth is defined matters.** An earlier version compared samples with noise-free answers; rounding noisy
+   views to answer options shifts averages by a few hundredths, enough to create spurious "wrong" outcomes at a
+   threshold. Truth is now the population outcome under the same answering process.
 
 ## Limits
 
@@ -65,5 +84,5 @@ evidence" rather than a wrong outcome (wrong ≤ 5 %) — met: **no wrong outcom
   acquiescence, misunderstanding) are not simulated beyond noise. The cognitive pretest (M7) addresses wording.
 - Fact-sheet values are taken as given (with their ranges); a deliberately skewed fact sheet is countered by the
   procedural safeguards in `decision_rules.yaml → fact_discipline`, not by the statistics.
-- Thresholds not crossed by a sweep (e.g. targeted extraction, consolidation, repatriation) are covered only by
-  the validity grid; further sweep families can be added in `mra/sim.py → FAMILIES`.
+- Each sweep crosses one threshold with the others held clearly on one side; interactions between thresholds
+  are covered by the validity grid. Further families can be added in `mra/sim.py → FAMILIES`.

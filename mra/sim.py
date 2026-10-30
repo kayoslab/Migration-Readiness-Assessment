@@ -5,9 +5,10 @@ Two questions, kept separate:
 1. Validity — `grid`: the expert walk-through cases (mra/cases.py) across group sizes, response noise and seeds.
    Truth is the experts' expected outcome.
 2. Reliability near thresholds — `sweep`: a scenario family moved continuously across a threshold. Truth at
-   each point is what the rules give on noise-free answers from many respondents; the question is how often a
-   realistic sample reproduces it, says "insufficient evidence", or gives a different (wrong) outcome. This
-   measures sampling behaviour, not whether the rules are right — the grid covers that.
+   each point is what the rules give for the whole population: the same answering process (including noise and
+   rounding to answer options) with 100 respondents per group. The question is how often a realistic sample
+   reproduces it, says "insufficient evidence", or gives a different (wrong) outcome. This measures sampling
+   behaviour, not whether the rules are right — the grid covers that.
 
 Each run stores its full outcome distribution, so other confidence levels can be evaluated afterwards
 (`at_confidence`) without re-running.
@@ -159,20 +160,59 @@ def hosting_cost_family(t: float) -> Scenario:
                                                              "high": baseline * 1.25, "grade": "calculator_export"}})
 
 
+def extraction_pain_family(t: float) -> Scenario:
+    """A component in its own compliance scope whose share of incidents rises from 0 % to 60 %: the pain test
+    (25 %) decides whether separating it out applies."""
+    from .cases import ARCHITECTURE_CASES
+    base = ARCHITECTURE_CASES["d_pci_component"]
+    targets = {**base.targets, "need.architecture.coupling": 3.1, "need.architecture.business_impact": 3.1}
+    # general need set clearly inside "restructure" so that the sweep crosses only the pain threshold
+    return Scenario(f"pain@{t:.2f}", {}, targets=targets, labels=dict(base.labels),
+                    facts={**base.facts, "teams_per_deployable": 7, "cross_team_change_pct": 22,
+                           "candidate_incident_share_pct": _lerp(0, 60, t),
+                           "candidate_scope_in_main_deployable": "no", "candidate_scaling_cost_share_pct": 5})
+
+
+def consolidation_family(t: float) -> Scenario:
+    """A distributed estate (four services per team) whose share of lockstep releases rises from 0 % to 60 %:
+    the truth moves from realigning services to consolidating them (trigger 30 %)."""
+    return Scenario(f"lockstep@{t:.2f}", {}, targets={"need.architecture.coupling": 3.8},
+                    facts={"deployables_in_scope": 24, "core_code_share_pct": 15, "services_per_team": 4,
+                           "lockstep_deploy_pct": _lerp(0, 60, t), "cross_service_change_pct": 20,
+                           "teams_per_deployable": 2, "cross_team_change_pct": 25, "blast_radius_pct": 30})
+
+
+def repatriation_family(t: float) -> Scenario:
+    """A SaaS company in the cloud with steady load, managed dedicated servers as the alternative; the cloud bill
+    rises until moving back pays off within the pre-registered criteria."""
+    from .cases import HOSTING_CASES
+    base = HOSTING_CASES["c_saas_cloud_overpaying"]
+    bill = _lerp(150000, 900000, t)
+    return Scenario(f"cloudbill@{t:.2f}", {}, targets=dict(base.targets), current_hosting="cloud",
+                    facts={**base.facts, "infra_oncall_people": 4,
+                           "cloud_compute_baseline_annual": {"low": bill * 0.92, "likely": bill, "high": bill * 1.1,
+                                                             "grade": "invoice"}})
+
+
 FAMILIES: dict[str, tuple[str, Callable[[float], Scenario]]] = {
     "architecture_need": ("architecture", architecture_need_family),
     "hosting_cost": ("hosting", hosting_cost_family),
+    "extraction_pain": ("architecture", extraction_pain_family),
+    "consolidation": ("architecture", consolidation_family),
+    "repatriation": ("hosting", repatriation_family),
 }
 
 
-def truth_of(family: str, t: float, draws: int = 200, instrument: str | Path = INSTRUMENT) -> tuple[str, str, str | None]:
-    """The rules' outcome on noise-free answers from many respondents (sampling error removed)."""
+def truth_of(family: str, t: float, draws: int = 200, instrument: str | Path = INSTRUMENT, noise: float = 0.6,
+             population: int = 100) -> tuple[str, str, str | None]:
+    """The rules' outcome for the population: the same answering process with many respondents per group, so
+    that only the sampling error of a realistic group size is left to measure."""
     from .assess import assess
     decision, make = FAMILIES[family]
-    scenario = _with(make(t), noise=0.0, item_noise=0.0)
+    scenario = _with(make(t), noise=noise)
     work = Path(tempfile.mkdtemp(prefix="mra-truth-"))
     try:
-        a = assess(build(scenario, work, instrument, seed=0, group_size=60), decisions=(decision,), draws=draws)
+        a = assess(build(scenario, work, instrument, seed=0, group_size=population), decisions=(decision,), draws=draws)
         r = a.results[decision]
         return r.verdict, r.status, r.leaning
     finally:
@@ -184,7 +224,7 @@ def sweep(family: str, ts=np.linspace(0, 1, 21), sizes=(5, 15), noise: float = 0
     decision, make = FAMILIES[family]
     jobs = []
     for t in ts:
-        truth, status, leaning = truth_of(family, float(t), instrument=instrument)
+        truth, status, leaning = truth_of(family, float(t), instrument=instrument, noise=noise)
         for n in sizes:
             for seed in seeds:
                 jobs.append((Run(family, decision, truth, status, n, noise, seed, float(t), str(instrument), leaning),

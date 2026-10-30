@@ -25,15 +25,17 @@ One report per assessment, ready for an executive audience:
 
 <table>
 <tr>
-<td width="50%"><img src="assets/report-executive-summary.png" alt="Executive summary page"></td>
-<td width="50%"><img src="assets/report-exhibit.png" alt="Exhibit with action title and interpretation"></td>
+<td width="50%"><img src="assets/report-decision-page.png" alt="Decision requested page"></td>
+<td width="50%"><img src="assets/report-exhibit.png" alt="Exhibit with action title, so what and caveat"></td>
 </tr>
 <tr>
-<td><em>Executive summary: a recommended path per decision, whether to proceed or prepare first, and why.</em></td>
-<td><em>Every exhibit states its insight, its role in the argument, and what it means for the decision — linked to the related findings, steps and risks.</em></td>
+<td><em>Page one asks for a decision: what to approve now and who leads it, what is not approved yet, the money, the open conditions, and when the decision is taken again.</em></td>
+<td><em>Every exhibit states its insight and its role in the argument; its “so what” links to the related findings, steps and risks, and caveats sit beside what they qualify.</em></td>
 </tr>
 </table>
 
+- **A decision request on page one** — per decision, what to approve now and who leads it, what is explicitly not
+  approved yet, the first-phase budget, the open conditions, and the checkpoints and dates at which it is decided again.
 - **A recommended path for each decision**, with the probability that it holds:
   - *Architecture* — keep and improve delivery practices · restructure within the current system (modular monolith)
     · separate out one or two specific parts · gradually split into services · realign or consolidate existing services.
@@ -41,14 +43,24 @@ One report per assessment, ready for an executive audience:
     · move back from the cloud.
 - **Why** — the evidence behind the verdict, and the single changes that would alter it
   ("splitting into services would apply if the need for change were at least 3.5; it is 3.3").
+- **Every option considered** — side by side, with what you would need to believe for each alternative to win, so
+  that a difference of opinion becomes a test of evidence.
 - **What must happen first** — preconditions (sponsor, funding, capacity, baselines, stop criteria) with their status,
   and technical hard stops such as releases that cannot be rolled back.
-- **The cost case** — five-year cost of every hosting option with ranges, payback and the inputs it depends on.
+- **The money** — five-year cost of every hosting option in euros with ranges, what doing nothing costs, worst / base
+  / best scenarios with break-even values, a decision calendar (hardware refresh, contract end), the estimated
+  investment for the recommended architecture path, and a budget by phase across both decisions.
 - **Organisational readiness** — how each stakeholder group rates capabilities, ways of working and alignment, where
-  groups disagree, and the weakest areas.
+  groups disagree, the weakest areas, where lead time actually goes, and delivery performance against the industry
+  benchmarks of DORA (Google Cloud's software-delivery research programme).
 - **Stakeholder perspectives** — preferences, how each option would affect people's roles, and where perception and
   measurement differ; reported for groups only, framed as input for planning and communication.
-- **Next steps** with owners, drawn from an editable action library.
+- **Qualifications where the sources disagree** — the fact sheet, governance answers, survey and free text are read
+  against each other; contradictions are printed beside the findings they affect, and serious ones keep the report a
+  draft.
+- **Risks, assumptions and dependencies**, a roadmap with checkpoints, success measures with baselines and targets,
+  and criteria agreed now for when each decision is reopened.
+- **Next steps** with named owners, drawn from an editable action library.
 - Optionally, an **analysis of free-text answers** and a written **executive narrative** (see [AI-assisted analysis](#ai-assisted-analysis)).
 
 ## Who it is for
@@ -73,9 +85,10 @@ mra report examples/techco/engagement.yaml             # → Output/techco-repor
 
 `examples/techco` is a synthetic company — one monolith shared by eight teams, its own bare-metal hosting, a technology
 lead who favours microservices and the cloud, and an operations team that favours keeping what it runs. The report
-recommends restructuring within the system (once baselines are measured) and right-sizing the current
-infrastructure rather than moving to the cloud. `mra decide examples/techco/engagement.yaml` prints the same verdict in
-the terminal.
+recommends preparing a restructuring within the system (about €470k once baselines are verified) and right-sizing
+the current infrastructure rather than moving to the cloud, and qualifies both: the delivery measures are not yet
+verified, the invoiced run cost is twice what the cost model accounts for, and too few Security and Finance
+respondents took part to count separately. `mra decide examples/techco/engagement.yaml` prints the same verdict in the terminal.
 
 ## How it decides
 
@@ -101,6 +114,10 @@ the terminal.
   recommendation to keep the current state.
 - **The rules are pre-registered.** Thresholds live in a YAML file that stakeholders sign off before results are
   seen. Any adjustment to the defaults is visible: the report shows what the unmodified rules would have said.
+- **The sources are read against each other.** Delivery measures the governance checklist says were never measured,
+  an invoiced run cost the cost model cannot account for, urgency in free text that the dates do not support, a
+  view the survey contradicts — each is printed beside the finding it qualifies. If one could change the verdict,
+  or the rules were not signed off in time, the report stays a draft.
 - **Keeping what you have needs no preconditions; changing it does.** This favours reversible choices, and it is stated
   openly so that both sides of the debate sign it knowingly.
 - **Personal stakes are measured, not judged.** Respondents state their preferred direction and how each option would
@@ -119,21 +136,26 @@ mra init engagements/acme        # a folder with annotated templates and a check
 
 1. **Scope.** In `engagement.yaml`, name the system and its current hosting, the sponsor of the change and the person
    who owns the fact sheet. These must be different people.
-2. **Agree the rules.** Review `decision_rules.yaml` with the stakeholders and record who signed it off — before any
-   results exist.
+2. **Agree the rules.** Review `decision_rules.yaml` with the stakeholders and record who signed it off and when —
+   before the fact sheet is frozen and before any results exist.
 3. **Collect the facts.** Fill in `facts.yaml`. Coupling metrics come from the repository:
    ```bash
    mra coupling path/to/repo --modules modules.yaml      # or --codeowners CODEOWNERS
    ```
-   Give cost inputs as low / likely / high estimates with their source, ideally from two independent estimators.
-   Record the date the sheet was frozen.
+   Give cost inputs as low / likely / high estimates with their source grade, from two independent estimators —
+   including the effort, external cost and duration of the first architecture steps. If you know how much comparable
+   past programmes overran, record it: it raises the high end of the effort, cost and duration estimates. Record the date
+   the sheet was frozen.
 4. **Run the survey.** `mra forms engagements/acme/engagement.yaml --out forms.gs` writes a Google Apps Script that
    creates one form per stakeholder group (paste it into script.google.com and run `createForms`). Send the forms with
    the participant information in [`instrument/participant-information.md`](instrument/participant-information.md),
    from a sender who is not an advocate of either side, and save each group's export as `Responses/<GROUP>.csv`.
 5. **Read the verdict.** `mra decide engagements/acme/engagement.yaml`
 6. **Attest the preconditions** for the recommended path in `governance.yaml`, each with an evidence reference.
-7. **Produce the report.** `mra report engagements/acme/engagement.yaml --output acme.pdf`
+7. **Produce the report.** `mra report engagements/acme/engagement.yaml --output acme.pdf` builds a draft and lists
+   any board-readiness check that fails.
+8. **Review and issue.** A second person works through the [quality review](docs/quality-review.md) and is named
+   under `report:` in `engagement.yaml`; `mra report … --final` then builds the final report, or refuses and says why.
 
 The tool checks the fact sheet as it goes — a sponsor attesting their own facts, hand-entered coupling metrics,
 implausibly wide estimates without justification, missing second attesters — and lists any findings in the report.
@@ -155,7 +177,9 @@ The report is typeset with [Typst](https://typst.app) and needs no separate inst
 - **Look and feel** — copy `report/templates/default/` and edit the `theme` at the top of `template.typ`: colours,
   fonts, and an optional logo. Fonts placed in a `fonts/` folder next to the template are picked up automatically.
 - **Report details** — organisation, title, "prepared for / by", date and classification are set per engagement under
-  `report:` in `engagement.yaml`.
+  `report:` in `engagement.yaml`, as are whether absolute euro amounts are shown and whether the stakeholder map is
+  included (off by default; discuss it with the sponsor first). The comparison group for the industry benchmark
+  (industry, organisation size) is set under `benchmark:`.
 - **Wording** — next steps come from [`instrument/recommendations.yaml`](instrument/recommendations.yaml) and the
   description of each path from [`instrument/outcomes.yaml`](instrument/outcomes.yaml); both can be rewritten in your
   own voice without touching the analysis.
@@ -215,7 +239,7 @@ pass, the decision rules were signed off before the facts were frozen, and a sec
 ├── mra/                 the analysis package and command line
 ├── report/templates/    report template (Typst) — copy to brand it
 ├── examples/techco/     a complete synthetic assessment
-├── docs/                design notes and the calibration report
+├── docs/                design notes, plans, the calibration report and the quality-review checklist
 ├── tests/               automated tests, including the expert walk-through cases
 └── Decision.ipynb       validation notebook
 ```
@@ -243,6 +267,9 @@ an issue before larger changes.
 - Groups smaller than five are not scored, and below about fifteen per group the evidence is indicative.
 - The questionnaire has been reviewed by experts and tested on synthetic data; a cognitive pretest with real
   respondents should precede its first use.
+- The business case is cost-only: the benefits of a change (faster delivery, fewer incidents) are not yet valued,
+  and will be added once a pilot provides data to calibrate them.
+- Industry benchmarks are what DORA's survey respondents report; the comparison with measured values is indicative.
 - Build-versus-buy (replacing parts with SaaS) is flagged but not yet evaluated as a decision.
 
 ## License

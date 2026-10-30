@@ -47,18 +47,19 @@ Requires Python ≥ 3.12. The PDF is compiled with the bundled Typst Python pack
 
 v3 recommends a **path per decision** instead of scoring readiness for a path chosen in advance — see
 [`docs/phase-2-plan.md`](docs/phase-2-plan.md) and the instrument in [`instrument/`](instrument/README.md).
-Milestones M1 (instrument and data layer) and M2 (architecture decision) are implemented; hosting (M3), stakes (M4),
-calibration (M5) and the v3 report (M6) follow.
+Milestones M1 (instrument and data layer), M2 (architecture decision) and M3 (hosting decision with a 5-year TCO
+model, `mra/tco.py`) are implemented; stakes (M4), calibration (M5) and the v3 report (M6) follow.
 
 ```bash
 mra validate                         # cross-check the instrument files
-mra decide path/to/engagement.yaml   # recommended architecture path, probability, preconditions, what would change it
+mra decide path/to/engagement.yaml   # recommended path per decision, probability, preconditions, cost case, what would change it
 ```
 
 An engagement folder holds `engagement.yaml`, one form export per stakeholder group, `facts.yaml` and (after the
 verdict) `governance.yaml`; formats are documented in [`mra/engagement.py`](mra/engagement.py).
 [`mra/scenario.py`](mra/scenario.py) builds synthetic engagements with a known correct outcome; the expert panel's
-walk-through cases in [`tests/test_decision.py`](tests/test_decision.py) run on every test run.
+walk-through cases in [`tests/test_decision.py`](tests/test_decision.py) and [`tests/test_hosting.py`](tests/test_hosting.py)
+run on every test run.
 
 ## Configuring an engagement (v2)
 

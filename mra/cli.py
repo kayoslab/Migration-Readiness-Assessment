@@ -99,6 +99,19 @@ def _decide(args) -> int:
         for w in r.what_would_change:
             ref = f" ({w['threshold_value']})" if w["threshold"] != w["threshold_value"] else ""
             print(f"  would become {w['outcome']} if {w['signal']} {w['op']} {w['threshold']}{ref} (now {w['current']})")
+        for e in r.excluded:
+            print(f"  excluded: {e}")
+        for n in r.notes:
+            print(f"  note: {n}")
+        if r.economics:
+            ratios = ", ".join(f"{o} {v:.2f}" for o, v in r.economics["ratio"].items())
+            print(f"  cost vs current (5-year NPV): {ratios}")
+            paid = {o: v for o, v in r.economics["payback_months"].items() if v is not None}
+            if paid:
+                print("  payback: " + ", ".join(f"{o} {v:.0f} months" for o, v in paid.items()))
+            drivers = [t["input"] for t in r.economics["tornado"][1:4]]
+            if drivers:
+                print(f"  most sensitive inputs ({r.economics['tornado_option']}): {', '.join(drivers)}")
         if r.shadow and r.shadow["verdict"] != r.verdict:
             print(f"  shadow verdict under default rules: {r.shadow['verdict']}")
     return 0

@@ -35,6 +35,30 @@ HEALTHY_FACTS = {
     "target_run_cost_increase_pct": {"low": 15, "likely": 25, "high": 40, "grade": "estimate"},
 }
 
+# A mid-size own estate (~0.5 M/yr) where a like-for-like cloud setup costs moderately more.
+HOSTING_FACTS = {
+    "fte_cost_annual": 100000, "growth_pct_annual": 5, "own_price_change_pct_annual": 3,
+    "cloud_price_change_pct_annual": 2, "discount_rate_pct": 6, "ops_fte": 4, "infra_share_pct": 60,
+    "hw_maintenance_annual": 60000, "dc_cost_annual": 80000, "network_transit_annual": 20000,
+    "dr_site_annual": 40000, "licence_cost_annual": 50000,
+    "hw_refresh_capex": 400000, "hw_refresh_due_months": 30, "residual_value": 120000,
+    "rightsized_share_pct": 90, "automation_investment": 50000, "toil_reduction_pct": 15,
+    "cloud_compute_baseline_annual": {"low": 260000, "likely": 300000, "high": 380000, "grade": "calculator_export"},
+    "cloud_committed_share_pct": 60, "cloud_commit_discount_pct": 35, "cloud_peak_cost_annual": 30000,
+    "cloud_egress_annual": 30000, "cloud_network_internal_annual": 25000, "cloud_support_tooling_annual": 30000,
+    "cloud_managed_annual": 20000, "cloud_dr_annual": 30000, "cloud_ops_fte": 3,
+    "migration_cost": {"low": 250000, "likely": 300000, "high": 500000, "grade": "estimate"},
+    "migration_months": {"low": 10, "likely": 12, "high": 18, "grade": "estimate"},
+    "dual_run_months": {"low": 2, "likely": 3, "high": 6, "grade": "estimate"},
+    "training_hiring_cost": 50000, "exit_cost": 100000, "bridge_cost": 80000,
+    "need_share_pct": 30, "hybrid_interconnect_annual": 30000, "hybrid_overhead_fte": 0.5,
+    "accepted_premium_pct": 0, "peak_hours_per_year": 200, "average_utilisation_pct": 40,
+    "peak_to_median_load": 1.8, "capacity_lead_time_weeks": 4, "infra_toil_pct": 12, "regions_required": 1,
+    "managed_services_required": 0, "hosting_constraint": "any",
+    "iac_pct": 60, "infra_bus_factor": 3, "dr_restore_tested_months": 4, "infra_oncall_people": 5,
+    "contract_end_months": 36,
+}
+
 ALL_YES = {f"GV{i:02d}": {"answer": "Yes", "evidence": "Reference document", "attested_by": "Sponsor"} for i in range(1, 13)}
 
 
@@ -83,7 +107,7 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
     rng = np.random.default_rng(seed)
     root.mkdir(parents=True, exist_ok=True)
     ins = load_instrument(instrument_dir)
-    facts = {**HEALTHY_FACTS, **scenario.facts}
+    facts = {**HEALTHY_FACTS, **HOSTING_FACTS, **scenario.facts}
     fact_objs = {k: Fact(**(v if isinstance(v, dict) else {"value": v})) for k, v in facts.items() if v is not None}
     current = {"architecture": derive_current_state(ins, fact_objs), "hosting": scenario.current_hosting}
 

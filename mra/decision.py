@@ -150,6 +150,7 @@ class DrawResult:
     unmet: list[str] = field(default_factory=list)
     interim: str | None = None
     unresolved_at: str | None = None
+    excluded: list[str] = field(default_factory=list)
 
 
 def _check_outcome(o: dict, ctx: Context, rules: dict):
@@ -166,6 +167,8 @@ def _check_outcome(o: dict, ctx: Context, rules: dict):
         r = evaluate(rules["hard_stops"][h]["when"], ctx)
         if r is None:
             return None, None, [], []
+        if r and rules["hard_stops"][h].get("permanent"):
+            return False, "excluded", [h], []
         if r:
             stops.append(h)
     unmet, reachable = [], True
@@ -184,13 +187,16 @@ def _check_outcome(o: dict, ctx: Context, rules: dict):
 
 def evaluate_draw(rules: dict, decision: str, ctx: Context) -> DrawResult:
     outcomes = rules["decisions"][decision]["outcomes"]
+    excluded = []
     for i, o in enumerate(outcomes):
         applies, status, stops, unmet = _check_outcome(o, ctx, rules)
         if applies is None:
-            return DrawResult("unresolved", "unresolved", unresolved_at=o["id"])
+            return DrawResult("unresolved", "unresolved", unresolved_at=o["id"], excluded=excluded)
+        if status == "excluded":
+            excluded.append(f"{o['id']} ({stops[0]})")
         if not applies:
             continue
-        result = DrawResult(o["id"], status, stops, unmet)
+        result = DrawResult(o["id"], status, stops, unmet, excluded=excluded)
         if status == "prepare_first":
             for later in outcomes[i + 1:]:
                 a, s, _, _ = _check_outcome(later, ctx, rules)
@@ -284,6 +290,9 @@ class DecisionResult:
     unresolved_share: float = 0.0
     unresolved_at: list[str] = field(default_factory=list)
     what_would_change: list[dict] = field(default_factory=list)
+    excluded: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+    economics: dict = field(default_factory=dict)
     gates: dict = field(default_factory=dict)
     shadow: dict | None = None
 
@@ -317,6 +326,7 @@ def decide(evidence, rules: dict, decision: str, confidence: float | None = None
     else:
         verdict = DecisionResult(decision, evidence.current_state[decision], "insufficient_evidence", "insufficient",
                                  round(p, 3), distribution, leading if p >= 0.5 and leading != "unresolved" else None)
+    verdict.excluded = [e for e, c in Counter(e for r in results for e in r.excluded).most_common() if c >= n / 2]
     verdict.unresolved_share = round(len(unresolved) / n, 3)
     verdict.unresolved_at = [k for k, _ in Counter(r.unresolved_at for r in unresolved).most_common(3)]
     target = verdict.verdict if verdict.verdict != "insufficient_evidence" else (verdict.leaning or "")

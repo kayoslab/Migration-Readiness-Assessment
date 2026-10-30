@@ -30,12 +30,17 @@ def count_band(spec: str, yes: int, answered: int, total_rows: int) -> float:
     return np.nan
 
 
-def pert(rng: np.random.Generator, low: float, likely: float, high: float, size: int) -> np.ndarray:
+def pert(rng: np.random.Generator, low: float, likely: float, high: float, size: int,
+         uniform: np.ndarray | None = None) -> np.ndarray:
+    """PERT draws; pass shared `uniform` quantiles to correlate several inputs (e.g. migration overruns)."""
     if high <= low:
         return np.full(size, likely, dtype=float)
     a = 1 + 4 * (likely - low) / (high - low)
     b = 1 + 4 * (high - likely) / (high - low)
-    return low + rng.beta(a, b, size) * (high - low)
+    if uniform is None:
+        return low + rng.beta(a, b, size) * (high - low)
+    from scipy.stats import beta
+    return low + beta.ppf(uniform, a, b) * (high - low)
 
 
 def widen(fact: Fact, min_width: dict[str, float]) -> tuple[float, float, float]:
@@ -66,6 +71,8 @@ class Evidence:
     item_groups: pd.DataFrame | None = None           # point estimate: item x role means and n
     missing_required: list[str] = field(default_factory=list)
     flags: dict = field(default_factory=dict)
+    fact_point: dict[str, float] = field(default_factory=dict)                  # numeric facts at their likely value
+    fact_ranges: dict[str, tuple[float, float]] = field(default_factory=dict)   # widened low/high of ranged facts
 
     @property
     def draws(self) -> int:
@@ -150,7 +157,9 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
 
     # ------------------------------------------------------------------ facts
     min_width = (rules.get("fact_discipline") or {}).get("min_range_width_by_grade", {})
-    categories, fact_values = {}, {}
+    correlated = set((rules.get("tco") or {}).get("correlated", []))
+    shared_u = rng.random(B)                                     # one overrun quantile per draw for the group
+    categories, fact_values, fact_ranges = {}, {}, {}
     for fid, fact in eng.facts.items():
         if fid not in ins.facts.index:
             continue
@@ -159,12 +168,22 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
             continue
         if fact.is_range:
             low, likely, high = widen(fact, min_width)
-            values = pert(rng, low, likely, high, B)
+            fact_ranges[fid] = (low, high)
+            values = pert(rng, low, likely, high, B, shared_u if fid in correlated else None)
             values[0] = likely
         else:
             values = np.full(B, np.nan if fact.value is None else float(fact.value))
         fact_values[fid] = values
         signals[f"fact.{fid}"] = values
+
+    # ------------------------------------------------------------------ hosting TCO (mra/tco.py)
+    tco_problems = []
+    hosting = rules.get("decisions", {}).get("hosting", {})
+    if any(f in fact_values for f in ("cloud_compute_baseline_annual", "hw_maintenance_annual")):
+        from .tco import compute as tco_compute
+        tco_signals, tco_problems = tco_compute(fact_values, eng.config.get("current_hosting", "own_infrastructure"),
+                                                hosting.get("horizon_years", 5))
+        signals.update(tco_signals)
 
     # ------------------------------------------------------------------ sub-areas: fact bands (weight 2) + survey (weight 1)
     def fact_band_array(fid: str) -> np.ndarray | None:
@@ -252,10 +271,11 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
     # track record (G14): ≥ 30% of informed respondents in any group report a failed programme
     g14 = single[(single["item_id"] == "G14") & ~single["dont_know"]]
     shares = g14.groupby("role")["label"].apply(lambda s: (s == "Yes").mean()) if len(g14) else []
-    flags = {"track_record_concern": bool(len(shares) and (shares >= 0.3).any())}
+    flags = {"track_record_concern": bool(len(shares) and (shares >= 0.3).any()), "tco_problems": tco_problems}
 
     return Evidence(signals, categories, eng.current_states(arch_state), divergences,
-                    pd.DataFrame(point_rows), missing, flags)
+                    pd.DataFrame(point_rows), missing, flags,
+                    {k: float(v[0]) for k, v in fact_values.items()}, fact_ranges)
 
 
 class _quiet:

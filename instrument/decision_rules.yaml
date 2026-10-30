@@ -42,7 +42,9 @@ semantics:
     the path to its outcome counts towards insufficient evidence.
   hard_stops: >-
     Blocking, not silent: an outcome excluded by a hard stop is reported as "prepare first: <outcome> (blocked by
-    <stop>)", and the next applicable outcome is shown as the interim step.
+    <stop>)", and the next applicable outcome is shown as the interim step. A `permanent` hard stop (e.g. a legal
+    prohibition) cannot be prepared for: the outcome is excluded, the next outcome is evaluated, and the exclusion
+    is reported.
   gates: >-
     Evaluated after the verdict from the attested governance checklist (governance.csv: Yes with evidence = pass,
     Partly = unresolved, No = fail), for the leading outcome and then down the rule order until an outcome passes;
@@ -164,6 +166,7 @@ hard_stops:
   hs_cloud_not_permitted:
     label: Regulation requires hosting on own premises
     when: {signal: fact.hosting_constraint, op: "==", value: "own_premises_only"}
+    permanent: true            # cannot be prepared for: the outcome is excluded (and reported), not deferred
 
 # =========================================================================================== gates (attested, post-verdict)
 gates:
@@ -292,28 +295,27 @@ decisions:
                 - {signal: tco_saving_fte.hybrid, op: ">=", value: 1.0}
         blocked_by: [hs_cloud_not_permitted]
         requires_capability:
-          - {signal: capability.hosting.automation, op: ">=", value: 3.0}
+          - {signal: capability.hosting.automation, op: ">=", value: 3.0, reach: 1.5}   # IaC is buildable in months
           - {signal: capability.hosting.onprem_ops, op: ">=", value: 3.0, only_if_current: [cloud]}
         requires_gates: [sponsor, funding, capacity, stop_criteria, compliance_hosting]
 
       - id: move_to_cloud
         only_if_current: [own_infrastructure, hybrid]
         when:
-          all:
-            - any:
-                - all:                                                                  # need-motivated
-                    - {signal: need_hosting_specific, op: ">=", value: 3.5}
-                    - {signal: fact.need_share_pct, op: ">=", value: 50}
-                    - {signal: tco_ratio.cloud, op: "<=", value: 1.0, premium: fact.accepted_premium_pct}
-                - all:                                                                  # cost-motivated (same test as repatriate)
-                    - {signal: tco_ratio.cloud, op: "<=", value: 0.85}
-                    - {signal: payback_months.cloud, op: "<=", value: 24}
-                    - {signal: tco_saving_fte.cloud, op: ">=", value: 1.0}
-            - {signal: tco_ratio.cloud, op: "<=", ref: tco_ratio.hybrid}
+          any:
+            - all:                                                                      # need-motivated: most of the estate has the need
+                - {signal: need_hosting_specific, op: ">=", value: 3.5}
+                - {signal: fact.need_share_pct, op: ">=", value: 50}
+                - {signal: tco_ratio.cloud, op: "<=", value: 1.0, premium: fact.accepted_premium_pct}
+            - all:                                                                      # cost-motivated (same test as repatriate)
+                - {signal: tco_ratio.cloud, op: "<=", value: 0.85}
+                - {signal: payback_months.cloud, op: "<=", value: 24}
+                - {signal: tco_saving_fte.cloud, op: ">=", value: 1.0}
+                - {signal: tco_ratio.cloud, op: "<=", ref: tco_ratio.hybrid}            # a partial move is not cheaper
         blocked_by: [hs_cloud_not_permitted]
         requires_capability:
-          - {signal: capability.hosting.automation, op: ">=", value: 3.0}
-          - {signal: capability.hosting.cloud_skills, op: ">=", value: 2.5}
+          - {signal: capability.hosting.automation, op: ">=", value: 3.0, reach: 1.5}   # IaC is buildable in months
+          - {signal: capability.hosting.cloud_skills, op: ">=", value: 2.5, reach: 1.5}
         requires_gates: [sponsor, funding, capacity, stop_criteria, compliance_hosting]
 
       - id: improve_current          # incl. right-sizing and, for cloud-current organisations, cloud optimisation
@@ -345,6 +347,7 @@ tco:
     When hardware or contracts end before fact.migration_months, the moving option carries fact.bridge_cost.
   sampling: PERT on low/likely/high; migration_cost and dual_run_months right-skewed and correlated through a shared overrun factor
   common_random_numbers: [growth_pct_annual, peak_hours_per_year, fte_cost_annual, own_price_change_pct_annual, cloud_price_change_pct_annual]
+  correlated: [migration_cost, migration_months, dual_run_months]   # one shared overrun quantile per draw
   commitments_cover_baseline_only: true
   sensitivity: [tornado, break_even_values, horizons_3_and_7]
 

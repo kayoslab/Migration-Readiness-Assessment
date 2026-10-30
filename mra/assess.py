@@ -9,7 +9,8 @@ from .axes import Evidence, build_evidence
 from .decision import DecisionResult, apply_gates, decide, with_rules
 from .engagement import Engagement, load_engagement
 
-IMPLEMENTED = ("architecture",)   # hosting arrives with the TCO model (M3)
+IMPLEMENTED = ("architecture", "hosting")
+OPTION_FOR = {"move_to_cloud": "cloud", "hybrid": "hybrid", "repatriate": "repatriate", "improve_current": "improve_current"}
 
 
 @dataclass
@@ -33,8 +34,47 @@ def assess(path: str | Path | Engagement, decisions=IMPLEMENTED, draws: int | No
             shadow_ev = build_evidence(shadow_eng, draws, seed)
             s = decide(shadow_ev, eng.default_rules, d)
             r.shadow = {"verdict": s.verdict, "status": s.status, "probability": s.probability}
+        if d == "hosting":
+            _hosting_notes(r, evidence, eng)
         results[d] = r
     facts = eng.instrument.facts
     relevant = [f for f in evidence.missing_required if facts.at[f, "decision"] in (*decisions, "both")]
-    problems = list(eng.problems) + [f"required fact missing: {f}" for f in relevant]
+    problems = list(eng.problems) + [f"required fact missing: {f}" for f in relevant] + \
+        list(evidence.flags.get("tco_problems", []))
     return Assessment(eng, evidence, results, problems)
+
+
+def _hosting_notes(r: DecisionResult, evidence: Evidence, eng: Engagement) -> None:
+    """Unmet specific need, cost sensitivity of the leading option, and horizons 3 / 5 / 7 years."""
+    from .decision import Context
+    from .tco import horizons, sensitivity
+    point = Context(evidence.at(0), eng.instrument.rules, evidence.current_state, "hosting")
+    need = point.get("need_hosting_specific")
+    current = eng.config.get("current_hosting", "own_infrastructure")
+    if need is not None and need >= 3.5 and r.verdict in ("stay_as_is", "improve_current"):
+        candidates = [o for o in ("hybrid", "cloud") if point.get(f"tco.{o}") is not None]
+        if candidates and point.get("tco.stay") is not None:
+            cheapest = min(candidates, key=lambda o: point.get(f"tco.{o}"))
+            extra = point.get(f"tco.{cheapest}") - point.get("tco.stay")
+            r.notes.append(f"A strong specific hosting need ({need:.1f}) is not met by this outcome. Meeting it with the "
+                           f"cheapest option ({cheapest}) would change the {eng.instrument.rules['decisions']['hosting'].get('horizon_years', 5)}-year "
+                           f"cost by {extra:+,.0f}.")
+    if point.get("tco.stay") is None:
+        return
+    options = [k.split(".", 1)[1] for k in evidence.signals if k.startswith("tco.")]
+    alternatives = [o for o in options if o not in ("stay", "improve_current")]
+    chosen = OPTION_FOR.get(r.verdict if r.verdict != "insufficient_evidence" else (r.leaning or ""))
+    # tornado for the verdict's option, or else for the strongest alternative to it
+    focus = chosen if chosen in alternatives else min(alternatives, key=lambda o: point.get(f"tco_ratio.{o}") or 9e9)
+    r.economics = {
+        "tco": {o: round(point.get(f"tco.{o}")) for o in options if point.get(f"tco.{o}") is not None},
+        "ratio": {o: round(point.get(f"tco_ratio.{o}"), 3) for o in options if point.get(f"tco_ratio.{o}") is not None},
+        "payback_months": {o: (None if point.get(f"payback_months.{o}") == float("inf") else point.get(f"payback_months.{o}"))
+                           for o in options if point.get(f"payback_months.{o}") is not None},   # None = never within horizon
+        "horizons": horizons(evidence.fact_point, current),
+        "tornado_option": focus,
+    }
+    facts = eng.instrument.facts
+    hosting_ranges = {k: v for k, v in evidence.fact_ranges.items() if facts.at[k, "decision"] == "hosting"}
+    tornado = sensitivity(evidence.fact_point, hosting_ranges, current, focus)
+    r.economics["tornado"] = tornado[:1] + [t for t in tornado[1:] if t["swing"] > 0.001][:8]

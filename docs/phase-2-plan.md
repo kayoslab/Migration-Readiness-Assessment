@@ -8,6 +8,16 @@ separately for each decision on the table: mainly **architecture** (keep ↔ mod
 personal interests, and follows rules agreed before results are seen. The v2 scoring code remains the engine
 underneath; Phase 2 builds on top of it.
 
+## Status
+
+| Milestone | State |
+|---|---|
+| M0 Design freeze | Approved (instrument v0.3, two review rounds) |
+| M1 Instrument & data layer | Done — `mra validate`, form spec, engagement loading |
+| M2 Architecture decision | Done — expert walk-through cases (a)–(g) pass for 10/10 seeds |
+| M3 Hosting decision | Done — 5-year TCO model; hosting cases (a)–(e) + symmetry case pass; near-threshold case gives "insufficient evidence", never a wrong outcome |
+| M4–M7 | Open |
+
 ## Agreed defaults
 
 | Topic | Decision |

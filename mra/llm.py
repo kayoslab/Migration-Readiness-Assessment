@@ -88,7 +88,8 @@ Return one entry per item_id given."""
 SYNTHESIS_INSTRUCTIONS = """You write the qualitative findings section of a management-consulting
 report on migration readiness. Use formal, concise British English in the register of a Big Four
 advisory report. Use ONLY the aggregated codes and numbered quotes provided; never invent facts,
-numbers or quotes. Attribute views to stakeholder groups, never to individuals.
+numbers or quotes. Attribute views to stakeholder groups, never to individuals. Express shares as percentages
+(e.g. "71% of Operations answers"), never as decimals.
 
 Return:
 - key_messages: 3–5 one-sentence messages, most decision-relevant first.
@@ -167,7 +168,9 @@ class Cache:
 
 async def _cached(client: LLMClient, cache: Cache, kind: str, instructions: str, payload: dict,
                   output_type: type[pydantic.BaseModel]) -> dict:
-    key = {"v": PROMPT_VERSION, "model": client.model, kind: payload}
+    # the instructions are part of the key: editing a prompt must never serve results of the old one
+    prompt = hashlib.sha256(instructions.encode()).hexdigest()[:12]
+    key = {"v": PROMPT_VERSION, "prompt": prompt, "model": client.model, kind: payload}
     result = cache.get(key)
     if result is None:
         result = await client.complete(instructions, payload, output_type)

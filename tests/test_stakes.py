@@ -152,3 +152,19 @@ def test_no_false_alarms_on_random_answers(tmp_path):
         flagged += sum(r["notable"] for r in a.stakes.stake_alignment)
         tests = len(a.stakes.stake_alignment)
     assert flagged <= 1, f"{flagged} false alarms in {5 * tests} group tests"
+
+
+def test_changing_the_prompt_invalidates_the_cache(tmp_path, monkeypatch):
+    from mra import llm
+    calls = []
+
+    async def fake_complete(self, instructions, payload, output_type):
+        calls.append(instructions)
+        return {"key_messages": [], "themes": []}
+
+    monkeypatch.setattr(llm.LLMClient, "complete", fake_complete)
+    client, cache = llm.LLMClient("m", "k"), llm.Cache(tmp_path)
+    llm.run_sync(llm._cached(client, cache, "synthesis", "Prompt A", {"x": 1}, llm.Synthesis))
+    llm.run_sync(llm._cached(client, cache, "synthesis", "Prompt A", {"x": 1}, llm.Synthesis))
+    llm.run_sync(llm._cached(client, cache, "synthesis", "Prompt B", {"x": 1}, llm.Synthesis))
+    assert calls == ["Prompt A", "Prompt B"]

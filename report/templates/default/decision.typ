@@ -227,7 +227,19 @@ plan how a decision is communicated and supported.
 ]
 #if data.text != none [
   == In respondents' own words
-  #for m in data.text.key_messages [- #m \ ]
+  #block(breakable: false, callout(title: "What respondents say")[
+    #for m in data.text.key_messages [- #m \ ]
+  ])
+  #for th in data.text.themes [
+    #v(2mm)
+    #block(sticky: true)[#text(weight: "semibold", fill: theme.primary, th.theme)]
+    #th.finding
+    #for q in th.quotes [
+      #block(inset: (left: 12pt, y: 4pt), stroke: (left: 1.5pt + theme.rule))[
+        #text(style: "italic")[“#q.text”] #h(4pt) #text(size: 8pt, fill: theme.muted)[— #q.role]
+      ]
+    ]
+  ]
 ]
 
 = Recommended next steps

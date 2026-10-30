@@ -248,9 +248,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         "rules": {"version": rules.get("version"), "signed_off_by": rules.get("signed_off_by"),
                   "confidence": rules.get("evidence", {}).get("confidence", 0.8),
                   "draws": ev.draws, "min_role_n": rules.get("evidence", {}).get("min_role_n", 5)},
-        "text": None if assessment.text is None else {
-            "model": assessment.text.model, "answers": int(len(assessment.text.coded)),
-            "key_messages": assessment.text.synthesis.get("key_messages", [])},
+        "text": None if assessment.text is None else _text_context(assessment.text),
     }
 
 
@@ -269,3 +267,17 @@ def build_report(assessment, output: Path, template: Path = TEMPLATE) -> Path:
     typst.compile(str(template / "decision.typ"), output=str(output), root=str(root), font_paths=fonts,
                   sys_inputs={"data": _rel(data, root)})
     return output
+
+
+def _text_context(text) -> dict:
+    quotes = {q["id"]: q for q in text.quotes}
+    themes = [{"theme": th["theme"], "finding": th["finding"],
+               "quotes": [{"role": quotes[i]["role"], "text": quotes[i]["text"]} for i in th.get("quote_ids", []) if i in quotes][:2]}
+              for th in text.synthesis.get("themes", [])]
+    models = {}
+    for role, row in text.by_role.iterrows():
+        shares = {c.replace("model_", ""): float(row[c]) for c in text.by_role.columns if c.startswith("model_")}
+        if shares:
+            models[role] = shares
+    return {"model": text.model, "answers": int(len(text.coded)), "key_messages": text.synthesis.get("key_messages", []),
+            "themes": themes, "mental_models": models}

@@ -17,7 +17,66 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 
 
+TEXT = {
+    "TEC": {
+        "S08": ["A proof of concept showing that one service cannot be deployed independently would change my mind.",
+                "If the cost of running many services clearly outweighed the delivery gains, I would reconsider.",
+                "Evidence that teams already deploy independently today would make me less keen to split."],
+        "S09": ["We will lose engineers who want to work with modern architectures, and features will keep slipping.",
+                "Coordination overhead will grow with every team we add; the release train will get slower.",
+                "Our competitors ship weekly; we ship monthly. Doing nothing means falling further behind."],
+        "AL02": ["Checkout and pricing: every change touches the same tables and needs three teams to agree.",
+                 "The order module: it is shared by everyone and nobody really owns it."],
+    },
+    "OPS": {
+        "S08": ["Show me that the current platform cannot handle the load. It can, with room to spare.",
+                "If the on-call burden of many services were properly staffed, I would be more open to it.",
+                "A cost comparison that includes our time, not just licences, might change my view."],
+        "S09": ["Nothing would break. The platform is stable; the problems are in how releases are approved.",
+                "We would keep running a reliable system at a fraction of what a cloud setup would cost.",
+                "Hardware gets old, but a planned refresh is cheaper than a migration."],
+    },
+    "ENG": {
+        "S08": ["If we enforced module boundaries first and still could not deliver faster, splitting would make sense.",
+                "Clear data ownership per team would change my view more than any new technology.",
+                "Seeing how much time we lose waiting for other teams' changes would settle it."],
+        "S09": ["The release train will keep getting slower as more teams pile onto the same codebase.",
+                "Shared tables will keep causing incidents nobody owns.",
+                "We will keep firefighting merge conflicts instead of building features."],
+        "AL02": ["The shared order tables: three teams write to them and every schema change is a negotiation.",
+                 "The pricing code, because nobody knows who owns it and changes break checkout.",
+                 "Release coordination: our changes wait for unrelated fixes from other teams."],
+    },
+    "PRD": {
+        "S08": ["If delivery dates stopped slipping because of other teams' changes, I would be happy to keep it.",
+                "Proof that a restructuring pays back within a year would convince me."],
+        "S09": ["Roadmap items will keep slipping and we will miss the peak season again.",
+                "Customers will keep waiting for features our competitors already have."],
+    },
+    "BUS": {
+        "S09": ["We cannot plan campaigns when release dates move every month.",
+                "Reporting will stay manual because the data is locked in the platform."],
+        "S10": ["Please explain the decision in terms of what changes for customers, not technology.",
+                "We need a timeline we can plan around, whatever the decision."],
+    },
+    "FIN": {
+        "S09": ["Running costs are predictable today; a move would make them less so.",
+                "The hardware refresh is due; we need a decision before committing that budget."],
+        "S10": ["Any business case must include the cost of running old and new side by side."],
+    },
+    "EXE": {
+        "S08": ["If the team could show faster delivery without a large programme, that would be the better option."],
+        "S09": ["We will keep missing commitments to the business, and that erodes trust in technology."],
+    },
+}
+
+
 def stakes(role, index, rng, labels):
+    answers = {k: v[index % len(v)] for k, v in TEXT.get(role, {}).items()}
+    return {**answers, **_stakes(role, index, rng, labels)}
+
+
+def _stakes(role, index, rng, labels):
     arch, host = labels["architecture"], labels["hosting"]
     split, keep, modular = arch["broad_decomposition"], arch["stay_and_improve"], arch["modular_monolith"]
     cloud, stay = host["move_to_cloud"], host["stay_as_is"]

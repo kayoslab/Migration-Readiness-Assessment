@@ -14,10 +14,10 @@ Status of the additions that bring the report to the standard of an advisory del
 | Benchmark against published bands | Done — see note under D |
 | Stakeholder map | Done |
 | Benefit side of the business case | Evaluated — **F**, needs new inputs and safeguards |
-| Sustainability (energy and carbon) | Evaluated — **G**, needs new inputs |
+| Sustainability (energy and carbon) | Dropped (2026-10-30) — not part of the architecture or hosting decision |
 
 Recommended order: **A, B, C** (no new inputs, high value) → **E** (no new inputs, but a sensitive exhibit) →
-**D** (needs a maintained reference table) → **F** (most valuable, most gameable) → **G**.
+**D** (needs a maintained reference table) → **F** (most valuable, most gameable).
 
 ---
 
@@ -167,26 +167,6 @@ organisational outcomes) and is the uncertain part.
 **Recommendation.** The most valuable remaining addition, but only with the safeguards. Build after A–E, starting with
 a design review of the default effect sizes and the "with and without benefits" presentation.
 
-## G. Sustainability (energy and carbon)
-
-**What.** Estimated energy use and emissions per hosting option over the horizon, reported next to cost — not as a
-decision criterion unless an engagement pre-registers one.
-
-**Inputs (new).** Current power draw or energy bill of own infrastructure; data-centre PUE; grid emission factor for
-the location; cloud provider's published emission data or a regional factor for the target region; growth from the
-existing facts.
-
-**Method.** kWh per option from power and utilisation (right-sizing reduces it), emissions = kWh × factor; cloud via
-provider-published factors or the same location method. Ranges sampled like costs.
-
-**Risks.** Cloud emission figures are reported inconsistently across providers (market- vs location-based); mixing
-them misleads. Mitigation: one method per report, stated; ranges wide by default; shown as indicative.
-
-**Effort.** Medium (≈ 1–2 days) including the input templates and a reference note on emission-factor sources.
-
-**Recommendation.** Build on demand — increasingly expected in EU engagements where sustainability reporting
-applies, but rarely decisive for the architecture or hosting question itself.
-
 ---
 
 ## Proposed sequence
@@ -195,7 +175,6 @@ applies, but rarely decisive for the architecture or hosting question itself.
 2. **E** (≈ half a day): stakeholder map with an engagement switch.
 3. **D** (≈ half a day): benchmark with a maintained, dated reference table.
 4. **F** (≈ 3–4 days): design review of benefit defaults and presentation first, then build.
-5. **G** (≈ 1–2 days): when an engagement asks for it.
 
 Each step is testable on generated answers: the simulator and the TechCo example cover A–E without new data; F and G
 need new synthetic inputs in the scenario builder.

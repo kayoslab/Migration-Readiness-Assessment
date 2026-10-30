@@ -20,6 +20,9 @@ capture employee attitudes require works-council consultation.
 >
 > It takes about {15} minutes. Thank you.
 
+*Set the minutes per group from the pretest's measured median (`mra pretest` gives a first estimate: about 20 minutes
+for Engineering, 10–15 for most other groups).*
+
 ## 2. Participant information
 
 **Who is asking and why.** The review is commissioned by {sponsor role} and run by {analyst / firm}. Its purpose

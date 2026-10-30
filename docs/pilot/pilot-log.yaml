@@ -1,0 +1,70 @@
+# Pilot log — one copy per pilot engagement, kept with the engagement (not in the client report).
+# What is recorded here is what later calibrates the instrument against real outcomes: questions that failed,
+# estimates against actuals, and whether the recommended path delivered at its checkpoints.
+
+engagement:
+  name: null
+  organisation_size: null          # employees
+  industry: null
+  analyst: null
+  started_on: null
+
+pretest:                           # docs/pilot/pretest-protocol.md
+  - round: 1
+    date: null
+    participants: []               # groups only, e.g. [ENG, OPS, BUS, FIN]
+    median_minutes: {}             # per group, measured, e.g. {ENG: 21, BUS: 12}
+    changes:                       # one entry per changed question
+      - item: null
+        problem: null              # comprehension | retrieval | judgement | response options | sensitivity | timing
+        severity: null             # serious | moderate | minor
+        change: null
+        retest: null               # round in which the change was re-tested, and the result
+
+rules:
+  signed_off_on: null
+  disputed:                        # thresholds or settings the signatories argued about, and what was agreed
+    - setting: null
+      positions: null
+      agreed: null
+
+fact_sheet:
+  frozen_on: null
+  hard_to_collect:                 # facts that took long, were guessed, or had no owner
+    - fact: null
+      days: null
+      note: null
+  estimator_disagreements: []      # facts where the two estimates differed by more than 25%
+
+survey:
+  open_from: null
+  open_to: null
+  invited: {}                      # per group
+  responded: {}                    # per group
+  median_minutes: {}               # from the form's timestamps where available
+  feedback: []                     # complaints or questions respondents raised
+
+report:
+  board_readiness_failures: []     # lines printed by `mra report` on the first draft, and how each was resolved
+  review_questions: []             # from the quality reviewer, the sponsor and (if used) `mra review`
+  sponsor_surprises: []            # anything the sponsor did not expect on reading the decision page
+
+decision:
+  taken_on: null
+  architecture: {recommended: null, decided: null, reason_if_different: null}
+  hosting: {recommended: null, decided: null, reason_if_different: null}
+
+checkpoints:                       # months 3, 6 and 12, and the dates in the decision calendar
+  - name: C1
+    date: null
+    preconditions_met: null
+    outcome: null                  # commit | re-scope | stop
+    measures: {}                   # success measure → value at this checkpoint
+    reopen_criterion_met: null
+    actual_cost_to_date: null      # against the budget by phase
+    actual_effort_person_months: null
+
+benefits_observed:                 # for the benefit model, parked until pilots provide data
+  cost_of_delay_per_week: null     # value of one week of earlier delivery for a typical roadmap item, if known
+  incident_cost: null              # cost of a production incident or an hour of downtime, if known
+  notes: null

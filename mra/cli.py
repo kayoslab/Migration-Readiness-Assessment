@@ -21,6 +21,9 @@ def main(argv: list[str] | None = None) -> int:
     rep.add_argument("--final", action="store_true",
                      help="refuse to build unless every blocking integrity check passes (otherwise a draft is built)")
 
+    pt = sub.add_parser("pretest", help="interviewer sheets for the cognitive pretest, one per group")
+    pt.add_argument("engagement")
+    pt.add_argument("--out", default="Output/pretest")
     rv = sub.add_parser("review", help="have a language model read the report as an executive (analyst only)")
     rv.add_argument("engagement")
     bm = sub.add_parser("benchmarks", help="show the age of the DORA benchmark table, or rebuild it")
@@ -72,6 +75,14 @@ def main(argv: list[str] | None = None) -> int:
         if bench and (warning := age_warning(bench)):
             print(f"Warning: {warning}")
         return 1 if errors else 0
+
+    if args.command == "pretest":
+        from .pretest import sheets
+        minutes = sheets(args.engagement, args.out)
+        print(f"Interviewer sheets written to {args.out}/ (estimated minutes per group, to be measured):")
+        for role, m in minutes.items():
+            print(f"  {role:4s} {m:5.1f}")
+        return 0
 
     if args.command == "review":
         from .review import review

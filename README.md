@@ -157,6 +157,10 @@ mra init engagements/acme        # a folder with annotated templates and a check
 8. **Review and issue.** A second person works through the [quality review](docs/quality-review.md) and is named
    under `report:` in `engagement.yaml`; `mra report … --final` then builds the final report, or refuses and says why.
 
+For a first engagement, the [pilot kit](docs/pilot/README.md) has a step-by-step guide with a timeline, a briefing
+for the data-protection officer and works council, a protocol for pretesting the survey (`mra pretest` writes the
+interviewer sheets), and a log that records what later calibrates the instrument.
+
 The tool checks the fact sheet as it goes — a sponsor attesting their own facts, hand-entered coupling metrics,
 implausibly wide estimates without justification, missing second attesters — and lists any findings in the report.
 
@@ -220,6 +224,7 @@ mra report engagements/acme/engagement.yaml --llm
 | `mra decide <engagement.yaml>` | Verdict per decision in the terminal (`--json` for everything) |
 | `mra report <engagement.yaml> [--llm] [--final]` | The report as PDF; `--final` refuses while a blocking issue remains (otherwise a draft is built) |
 | `mra validate` | Check the instrument files after editing them |
+| `mra pretest <engagement.yaml>` | Interviewer sheets for the cognitive pretest, one per group, with estimated times |
 | `mra review <engagement.yaml>` | A language model reads the report as an executive and lists what it leaves open (for the analyst; not run on client engagements) |
 | `mra benchmarks [--update]` | Show the age of the DORA benchmark table, or rebuild it from DORA's published data |
 | `mra simulate [--quick]` | Test the method on synthetic assessments |

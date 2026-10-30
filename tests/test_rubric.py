@@ -71,3 +71,14 @@ def test_review_refuses_client_engagements(tmp_path):
     path.write_text(yaml.safe_dump(cfg))
     with pytest.raises(PermissionError, match="not run on client engagements"):
         review(path, draws=30)
+
+
+def test_pretest_sheets(tmp_path):
+    import csv
+
+    from mra.pretest import sheets
+    root = build(TECHCO, tmp_path / "t", ROOT / "instrument", seed=11)
+    minutes = sheets(root if root.is_file() else root / "engagement.yaml", tmp_path / "sheets")
+    assert minutes["ENG"] > minutes["SEC"] > 0
+    rows = list(csv.DictReader((tmp_path / "sheets" / "BUS.csv").open()))
+    assert rows[0]["item"] == "CX01" and "seconds_measured" in rows[0]

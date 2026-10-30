@@ -154,8 +154,10 @@ if __name__ == "__main__":
                      "platform_lead": "Head of Platform", "hr": "HR business partner",
                      "fact_sheet_owner": "Head of Engineering"}
     # the engagement's own copy of the rules, signed off before the fact sheet was frozen (2026-10-01)
-    rules = (ROOT / "instrument" / "decision_rules.yaml").read_text().replace(
-        "signed_off_by: null", 'signed_off_by: "Executive Leadership Team (sample)"\nsigned_off_on: 2026-09-15', 1)
+    import re
+    rules = (ROOT / "instrument" / "decision_rules.yaml").read_text()
+    rules = re.sub(r"^signed_off_by: .*$", 'signed_off_by: "Executive Leadership Team (sample)"', rules, count=1, flags=re.M)
+    rules = re.sub(r"^signed_off_on: .*$", "signed_off_on: 2026-09-15", rules, count=1, flags=re.M)
     (path.parent / "decision_rules.yaml").write_text(rules)
     cfg["rules"] = "decision_rules.yaml"
     cfg["influence"] = {"EXE": "high", "TEC": "high", "FIN": "high", "PRD": "medium", "ENG": "medium",

@@ -70,10 +70,14 @@ def _hosting_notes(r: DecisionResult, evidence: Evidence, eng: Engagement) -> No
         candidates = [o for o in ("hybrid", "cloud") if point.get(f"tco.{o}") is not None]
         if candidates and point.get("tco.stay") is not None:
             cheapest = min(candidates, key=lambda o: point.get(f"tco.{o}"))
-            extra = point.get(f"tco.{cheapest}") - point.get("tco.stay")
-            r.notes.append(f"A strong specific hosting need ({need:.1f}) is not met by this outcome. Meeting it with the "
-                           f"cheapest option ({cheapest}) would change the {eng.instrument.rules['decisions']['hosting'].get('horizon_years', 5)}-year "
-                           f"cost by {extra:+,.0f}.")
+            base = point.get(f"tco.{r.verdict}") if r.verdict == "improve_current" else point.get("tco.stay")
+            extra = point.get(f"tco.{cheapest}") - base
+            words = {"hybrid": "running selected workloads in a public cloud", "cloud": "moving to the cloud"}
+            amount = f"€{abs(extra) / 1e3:,.0f}k" if abs(extra) < 1e6 else f"€{abs(extra) / 1e6:.2f}M"
+            r.notes.append(f"A strong specific hosting need ({need:.1f}) is not met by this outcome. Meeting it by "
+                           f"{words[cheapest]}, the cheapest way, would cost {amount} "
+                           f"{'more' if extra >= 0 else 'less'} over "
+                           f"{eng.instrument.rules['decisions']['hosting'].get('horizon_years', 5)} years.")
     if point.get("tco.stay") is None:
         return
     options = [k.split(".", 1)[1] for k in evidence.signals if k.startswith("tco.")]

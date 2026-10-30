@@ -101,6 +101,15 @@ def register(assessment) -> dict:
                                "Firm up the product's coverage and the cost estimates, then re-run the assessment.",
                                "sourcing", "evidence"))
 
+    from .integrity import run as run_integrity       # what keeps the report a draft is a risk to the decision
+    owners = {"run_cost_reconciliation": "Finance", "rules_signed_off": "Sponsor"}
+    for issue in run_integrity(assessment):
+        if issue.severity == "block":
+            risks.append(_risk(f"Basis of the decision: {issue.title[0].lower() + issue.title[1:]}", issue.message,
+                               "high", "high", owners.get(issue.id, "Sponsor"),
+                               "Resolve before the report is issued as final; see the next steps.",
+                               (issue.decisions or [None])[0], "governance"))
+
     if ev.flags.get("track_record_concern"):
         risks.append(_risk("Programme history: past large technology programmes overran or under-delivered",
                            "At least 30% of informed respondents in a group reported it.", "medium", "high", "Sponsor",

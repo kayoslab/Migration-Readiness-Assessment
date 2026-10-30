@@ -144,7 +144,16 @@ def evaluate(assessment, draws: int | None = None, seed: int = 42) -> list[dict]
         def shown(key, value):
             return f"{value:.0f}%" if key == "coverage" else f"{value:.2f}" if key == "ratio" else f"{value:.1f}"
         why, beliefs = [], []
+        shares = {"differentiation": float(commodity.mean()), "coverage": float(covered.mean()),
+                  "ratio": float(cheaper.mean())}
+        if verdict == "insufficient_evidence":            # say which condition is too close to call
+            for key, label, value, op, threshold, met in conditions:
+                if 0.1 < shares[key] < 0.9:
+                    why.append(f"{label}: {shown(key, value)} — {op} {shown(key, threshold)} in {shares[key]:.0%} of "
+                               "draws, so too close to call.")
         for key, label, value, op, threshold, met in conditions:
+            if verdict == "insufficient_evidence":
+                break
             line = f"{label}: {shown(key, value)} (to replace: {op} {shown(key, threshold)})."
             if verdict == "replace_with_product":
                 why.append(line)
@@ -155,6 +164,10 @@ def evaluate(assessment, draws: int | None = None, seed: int = 42) -> list[dict]
                 if not met:
                     beliefs.append(f"{label} would have to be {op} {shown(key, threshold)} "
                                    f"(currently {shown(key, value)}).")
+        if verdict == "keep_building" and status == "go" and point["ratio"] <= rw["cost_ratio_at_most"]:
+            extra = float(build[0] - buy[0])
+            why.append(f"Keeping it costs about €{extra / 1e3:,.0f}k more over five years than a product would — the price "
+                       "of keeping it in-house.")
         if verdict == "replace_with_product" and beliefs:
             beliefs = ["Keeping it would apply if any one of these held: " + "; ".join(
                 b[0].lower() + b[1:].rstrip(".") for b in beliefs) + "."]

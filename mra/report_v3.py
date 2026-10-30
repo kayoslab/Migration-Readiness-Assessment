@@ -143,7 +143,11 @@ def _sourcing_context(assessment, cdir: Path, root: Path, register) -> dict | No
                 seam_note += "."
         blocks.append({**{k: v for k, v in p.items() if k not in ("missing",)},
                        "label": labels.get(p["verdict"], p["verdict"]),
-                       "summary": ins.outcomes.get("sourcing", {}).get(p["verdict"], {}).get("summary", ""),
+                       "summary": ("Replacing it would otherwise apply, but it is ruled out until the hard stop below is "
+                                   "removed; keep developing it in-house." if p["status"] == "excluded" else
+                                   "The evidence does not reach the agreed confidence either way; the condition that is "
+                                   "too close to call is named below." if p["verdict"] == "insufficient_evidence" else
+                                   ins.outcomes.get("sourcing", {}).get(p["verdict"], {}).get("summary", "")),
                        "status_label": ("No change" if p["verdict"] == "keep_building" and p["status"] == "go"
                                         else SOURCING_STATUS.get(p["status"], p["status"])),
                        "tone": TONE.get(p["status"], "neutral"),
@@ -405,7 +409,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         arch = assessment.results.get("architecture")
         readiness["benchmark"] = {
             **bm, "chart": _rel(charts.benchmark_chart(bm["rows"], cdir / "benchmark.svg"), root),
-            "insight": register("readiness.benchmark", interpret.benchmark(bm, arch.verdict if arch else None), {
+            "insight": register("readiness.benchmark", interpret.benchmark(bm, (arch.verdict if arch.verdict != "insufficient_evidence" else arch.leaning) if arch else None), {
                 "segment": [bm["industry"], bm["organisation_size"]],
                 "measures": [{k: r[k] for k in ("label", "shown", "score", "industry_mean", "industry_sd",
                                                 "industry_typical", "position")} for r in bm["rows"]]})}
@@ -417,8 +421,11 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     rows, seen = [], set()
     composite = {"capability.architecture": "Capability (architecture, overall)",
                  "capability.hosting": "Capability (hosting, overall)"}
+    single_locality = sum(1 for k in ev.signals if k.startswith("locality.")) == 1
     for name, values in sorted(ev.signals.items()):
         head = name.split(".")[0]
+        if name == "locality" and single_locality:      # the axis is its only sub-area: show it once
+            continue
         if head in ("need", "capability", "fit", "requirement", "locality") and name.count(".") >= 1 or name == "locality":
             v = values[0]
             label = composite.get(name) or signal_label(name, ins)
@@ -493,6 +500,24 @@ def build_context(assessment, out: Path, root: Path) -> dict:
                                     "too few to count separately.",
                           "owner": f"Sponsor ({sponsor})" if sponsor and sponsor != "Sponsor" else "Sponsor",
                           "reason": "", "no": len(steps) + 1})
+    block_steps = {"run_cost_reconciliation": ("Allocate the difference between the invoiced run cost and what the cost "
+                                               "model accounts for — infrastructure cost or cost that remains in every "
+                                               "option — and re-run the assessment.", "Finance"),
+                   "rules_signed_off": ("Have the rule signatories confirm in writing that the rules were not changed "
+                                        "after the fact sheet was frozen, or re-run with the rules as they stood then.",
+                                        "Sponsor")}
+    for issue in issues:
+        if issue.severity == "block" and issue.id in block_steps:
+            action, owner = block_steps[issue.id]
+            named = people.get(owner.lower())
+            steps.append({"phase": "before_commitment", "phase_label": "Before committing budget or a timeline",
+                          "decision": (issue.decisions or [None])[0], "action": action,
+                          "owner": f"{owner} ({named})" if named and named != owner else owner, "reason": issue.title + "."})
+    from .recommend import load_library as _library
+    order = list((_library(ins.root) or {}).get("phases", {}))
+    steps.sort(key=lambda s: order.index(s["phase"]) if s["phase"] in order else len(order))
+    for n, s in enumerate(steps, 1):                    # numbered once every step is known, in reading order
+        s["no"] = n
     for issue in issues:                                # a step that rests on a contradicted input is rewritten
         if issue.step_rewrite:
             for s in steps:
@@ -609,6 +634,9 @@ def _apply_integrity(ctx: dict, issues) -> None:
 
     for dec in ctx["decisions"]:
         dec["caveats"] = [short(i) for i in caveats if dec["id"] in i.decisions]
+        if dec["verdict"] != "insufficient_evidence" and any(dec["id"] in i.decisions for i in blocks):
+            dec["status_label"], dec["tone"] = "On hold", "neutral"   # the evidence supports it; the basis is unsettled
+            dec["caveats"] = [short(i) for i in blocks if dec["id"] in i.decisions] + dec["caveats"]
     for e in ctx["exhibits"]:
         e["insight"]["caveats"] = [short(i) for i in caveats if e["insight"]["id"] in i.exhibits]
     affected = {f: i.title for i in caveats for f in i.facts}
@@ -667,9 +695,17 @@ def build_report(assessment, output: Path, template: Path = TEMPLATE, narrative:
     return output
 
 
+def _neutral(paragraph: str) -> str:
+    """Drop sentences that describe people's views as motives (the narrative writer's rule, applied to free text)."""
+    import re as _re
+    from .narrative import BANNED, _sentences
+    kept = [s for s in _sentences(paragraph) if not any(_re.search(rf"\b{w}\b", s, _re.I) for w in BANNED)]
+    return " ".join(kept)
+
+
 def _text_context(text) -> dict:
     quotes = {q["id"]: q for q in text.quotes}
-    themes = [{"theme": th["theme"], "finding": th["finding"],
+    themes = [{"theme": th["theme"], "finding": _neutral(th["finding"]),
                "quotes": [{"role": quotes[i]["role"], "text": quotes[i]["text"]} for i in th.get("quote_ids", []) if i in quotes][:2]}
               for th in text.synthesis.get("themes", [])]
     models = {}
@@ -677,5 +713,6 @@ def _text_context(text) -> dict:
         shares = {c.replace("model_", ""): float(row[c]) for c in text.by_role.columns if c.startswith("model_")}
         if shares:
             models[role] = shares
-    return {"model": text.model, "answers": int(len(text.coded)), "key_messages": text.synthesis.get("key_messages", []),
+    messages = [m for m in (_neutral(m) for m in text.synthesis.get("key_messages", [])) if m]
+    return {"model": text.model, "answers": int(len(text.coded)), "key_messages": messages,
             "themes": themes, "mental_models": models}

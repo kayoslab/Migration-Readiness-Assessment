@@ -1,0 +1,52 @@
+GV01:
+  answer: 'Yes'
+  evidence: Reference document
+  attested_by: Sponsor
+GV02:
+  answer: 'Yes'
+  evidence: Reference document
+  attested_by: Sponsor
+GV03:
+  answer: 'No'
+  evidence: ''
+  attested_by: CFO
+GV04:
+  answer: 'Yes'
+  evidence: Reference document
+  attested_by: Sponsor
+GV05:
+  answer: 'Yes'
+  evidence: Reference document
+  attested_by: Sponsor
+GV06:
+  answer: Partly
+  evidence: Lead time only
+  attested_by: CTO
+GV07:
+  answer: 'No'
+  evidence: ''
+  attested_by: Sponsor
+GV08:
+  answer: 'Yes'
+  evidence: Reference document
+  attested_by: Sponsor
+GV09:
+  answer: 'Yes'
+  evidence: Reference document
+  attested_by: Sponsor
+GV10:
+  answer: 'Yes'
+  evidence: Reference document
+  attested_by: Sponsor
+GV11:
+  answer: 'Yes'
+  evidence: Reference document
+  attested_by: Sponsor
+GV12:
+  answer: 'Yes'
+  evidence: Reference document
+  attested_by: Sponsor
+GV13:
+  answer: Partly
+  evidence: Export not yet tested
+  attested_by: Risk and compliance

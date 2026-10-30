@@ -41,7 +41,8 @@ def _belief(cond: dict, ctx: Context, ins) -> str | None:
     threshold = _threshold(cond, ctx)
     label = signal_label(cond["signal"], ins)
     if "ref" in cond:
-        target = f"{OPS.get(cond['op'], cond['op'])} {signal_label(cond['ref'], ins).lower()} ({fmt(threshold)})"
+        ref = signal_label(cond["ref"], ins).split(" — ")[0].split(" (")[0].lower()
+        target = f"{OPS.get(cond['op'], cond['op'])} the {ref} ({_shown(cond['ref'], threshold, ins)})"
     elif isinstance(threshold, bool):
         target = "true" if threshold else "false"
     else:

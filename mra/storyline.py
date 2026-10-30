@@ -116,7 +116,8 @@ class Findings:
         self.risks = ctx["risks"]["risks"]
         self.measures = ctx["measures"]
         self.stake_map = {r["group"]: r for r in ctx["stakes"].get("map", [])}
-        self.caveats = (ctx.get("integrity") or {}).get("caveats", [])
+        integrity = ctx.get("integrity") or {}
+        self.caveats = integrity.get("caveats", []) + integrity.get("blocks", [])   # a block qualifies findings too
 
     def caveated(self, issue_id: str) -> bool:
         return any(c["id"] == issue_id for c in self.caveats)
@@ -433,7 +434,7 @@ def _preferences(f: Findings, d: str) -> list[dict]:
         split = f", {len(tied)} {'is' if len(tied) == 1 else 'are'} split between it and another option" if tied else ""
         out = [T(f"Support is thin: {len(agree)} of {len(groups)} groups clearly prefer the recommended path{split}, and "
                  f"across respondents “{f.label(d, rival[0])}” is as popular ({_pct(rival[1])} against "
-                 f"{_pct(overall.get(v, 0))}). Explaining how the two differ is the core of the communication. ")]
+                 f"{_pct(overall.get(v, 0))}), a difference that needs explaining. ")]
     elif len(agree) * 2 > len(groups):
         out = [T(f"{len(agree)} of {len(groups)} groups already prefer the recommended path, so communication can build "
                  "on agreement. ")]

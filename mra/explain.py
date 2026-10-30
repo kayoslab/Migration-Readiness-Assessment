@@ -127,7 +127,9 @@ def uncertainty_sentence(u: dict, ins: Instrument) -> str:
     if u["unresolved"] >= 0.1:
         return f"{label}: cannot be evaluated in {u['unresolved']:.0%} of draws (missing or too few answers)."
     try:
-        threshold = fmt(float(u["threshold"]))
+        value = float(u["threshold"])
+        share = "share_of" in ins.rules.get("signals", {}).get(u["signal"], {})
+        threshold = f"{value:.0%}" if share else with_unit(u["signal"], value, ins)
     except (TypeError, ValueError):
         threshold = signal_label(str(u["threshold"]), ins).lower()
     return (f"{label}: too close to call — {OPS.get(u['op'], u['op'])} {threshold} in {u['share_true']:.0%} of draws, "

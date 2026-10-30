@@ -1,0 +1,45 @@
+system: the Policy Administration System
+current_hosting: own_infrastructure
+people:
+  sponsor: Chief Operating Officer
+  fact_sheet_owner: Head of IT Architecture
+  technology_lead: CIO
+fact_sheet_frozen_on: '2026-10-01'
+instrument: ../../instrument
+responses:
+  ENG: Responses/ENG.csv
+  PRD: Responses/PRD.csv
+  BUS: Responses/BUS.csv
+  TEC: Responses/TEC.csv
+  EXE: Responses/EXE.csv
+  OPS: Responses/OPS.csv
+  SEC: Responses/SEC.csv
+  FIN: Responses/FIN.csv
+facts: facts.yaml
+governance: governance.yaml
+sourcing:
+  candidates:
+    rating: Policy rating engine
+    claims: Claims portal
+    documents: Document management
+  facts: sourcing.yaml
+invited:
+  ENG: 35
+  PRD: 14
+  BUS: 18
+  TEC: 7
+  EXE: 8
+  OPS: 9
+  SEC: 6
+  FIN: 7
+report:
+  organisation: MidCorp Insurance
+  title: Architecture and Hosting Assessment
+  subtitle: Recommended direction for the Policy Administration System
+  prepared_for: Management Board
+  prepared_by: Internal Transformation Office
+  sample_data: true
+benchmark:
+  industry: insurance
+  organisation_size: fewer_than_5000
+rules: decision_rules.yaml

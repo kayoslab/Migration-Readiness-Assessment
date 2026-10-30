@@ -11,6 +11,12 @@ from __future__ import annotations
 from .recommend import FIRST_STEP_OWNER
 
 
+BLOCK_REASON = {
+    "run_cost_reconciliation": "the invoiced run cost is not yet reconciled with what the cost model accounts for",
+    "rules_signed_off": "the decision rules were not signed off before the facts were frozen",
+}
+
+
 def _named(role: str, people: dict) -> str:
     name = people.get(role.lower().replace(" ", "_"))
     return f"{role} ({name})" if name else role
@@ -34,11 +40,20 @@ def build(assessment, ctx: dict) -> dict:
         owner = _named(FIRST_STEP_OWNER.get(d, "Sponsor"), people)
         open_items = [g["label"] for g in dec.get("gates", []) if g["status"] != "pass"] + dec.get("hard_stops", []) + \
             [f"build {_lower(c)}" for c in dec.get("capabilities", [])]
+        blocked = [i for i in (ctx.get("integrity") or {}).get("blocks", []) if d in (i.get("decisions") or [])]
         if dec["verdict"] == "insufficient_evidence":
-            settle = [u["text"] for u in dec.get("uncertain", [])][:2]
+            inputs = [u["text"].split(":")[0] for u in dec.get("uncertain", [])][:3]
+            leaning = f" It leans towards “{dec['leaning_label']}”." if dec.get("leaning_label") else ""
             ask = ("Do not choose a path yet. Approve the work that settles the evidence"
-                   + (f": {_join([_lower(s.rstrip('.')) for s in settle])}" if settle else "") + ".")
+                   + (f" — firm up {_join([_lower(s) for s in inputs])} — and re-run the assessment by checkpoint C1 "
+                      "(month 3)" if inputs else "")
+                   + "." + leaning)
             not_yet = f"Any {d} programme, until the assessment is re-run."
+        elif blocked:
+            why = BLOCK_REASON.get(blocked[0]["id"], _lower(blocked[0]["title"]))
+            ask = (f"Do not approve a {d} path yet: the evidence supports “{dec['verdict_label']}” today, but "
+                   f"{why}, and that could change it.")
+            not_yet = f"Any {d} programme, until the issue is resolved and the assessment re-run."
         elif dec["status"] == "prepare_first":
             ask = (f"Approve the preparation for “{dec['verdict_label']}”, led by {owner}: "
                    f"{_join([_lower(i) for i in open_items])}. No programme budget yet; the time it takes must be "
@@ -55,8 +70,12 @@ def build(assessment, ctx: dict) -> dict:
         if alt:
             reopen = f"“{alt['alternative']}” is not pursued; it is reopened only under the agreed criteria."
             not_yet = f"{not_yet} {reopen}" if not_yet else reopen
-        requests.append({"decision": dec["title"], "path": dec["verdict_label"], "status": dec["status_label"],
-                         "tone": dec["tone"], "ask": ask, "not_yet": not_yet, "budget": _budget(assessment, d, dec)})
+        budget = _budget(assessment, d, dec)
+        if blocked and dec["verdict"] != "insufficient_evidence":
+            budget = f"Once approved — {budget[0].lower() + budget[1:]}" if budget else None
+        requests.append({"decision": dec["title"], "path": dec["verdict_label"],
+                         "status": "On hold" if blocked and dec["verdict"] != "insufficient_evidence" else dec["status_label"],
+                         "tone": "neutral" if blocked else dec["tone"], "ask": ask, "not_yet": not_yet, "budget": budget})
     requests += _sourcing_requests(assessment, ctx, people)
     return {"requests": requests, "scr": _scr(assessment, ctx, decs), "money": _money(assessment, decs) + _sourcing_money(ctx),
             "conditions": _conditions(ctx, decs), "again": _again(ctx, triggers)}
@@ -140,6 +159,9 @@ def _scr(assessment, ctx: dict, decs: dict) -> dict:
     lead = next((e["data"]["by_group"]["All respondents asked"] for e in ctx["exhibits"]
                  if e["insight"]["id"] == "architecture.leadtime"), None)
     cross = eng.facts.get("cross_team_change_pct")
+    if lead and lead.get("Waiting on process", 0) > lead.get("Coordination between teams", 0):
+        complication.append(f"Lead time goes mainly to waiting on approvals, testing or environments "
+                            f"({lead['Waiting on process']:.0%} of the answers), not to coordination between teams.")
     if lead and lead.get("Coordination between teams", 0) >= 0.5:
         complication.append(f"Changes wait on each other across teams: {lead['Coordination between teams']:.0%} of the "
                             "answers on lead time name coordination"
@@ -153,7 +175,10 @@ def _scr(assessment, ctx: dict, decs: dict) -> dict:
         complication.append("Groups disagree on the cause and the cure, including within leadership.")
     resolution = [f"{d['title']}: {_lower(d['verdict_label'])}"
                   + (" — once the preconditions are in place" if d["status"] == "prepare_first" else "") + "."
-                  for d in decs.values() if d["verdict"] != "insufficient_evidence"]
+                  if d["verdict"] != "insufficient_evidence" else
+                  f"{d['title']}: not yet decided" + (f"; the evidence leans towards {_lower(d['leaning_label'])}"
+                                                      if d.get("leaning_label") else "") + "."
+                  for d in decs.values()]
     parts = (ctx.get("sourcing") or {}).get("parts", [])
     replace = [p["name"].lower() + (" (after separating its data)" if p["status"] == "prepare_first" else "")
                for p in parts if p["verdict"] == "replace_with_product"]

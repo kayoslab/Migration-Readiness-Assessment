@@ -135,7 +135,7 @@ def analyse(eng, evidence, results: dict) -> StakesReport:
                 continue
             rep.preference_vs_evidence.append({
                 "decision": decision, "group": g, "most_preferred": top or leaders[0], "share": round(top_share, 2),
-                "tied": top is None, "evidence_path": evidence_path,
+                "tied": top is None, "evidence_path": evidence_path, "leaning": verdict == "insufficient_evidence",
                 "share_preferring_evidence_path": round(shares.get(evidence_path, 0.0), 2),
                 "differs": evidence_path not in leaders})
 
@@ -303,7 +303,8 @@ def _findings(rep: StakesReport, ins) -> list[str]:
         if p["differs"] and p["share"] >= 0.5:          # only clear majorities become written findings
             out.append(f"{p['group']}: the most preferred {p['decision']} direction "
                        f"(“{label[p['decision']].get(p['most_preferred'], p['most_preferred'])}”, {p['share']:.0%}) "
-                       f"differs from the path the evidence supports; {p['share_preferring_evidence_path']:.0%} prefer that path.")
+                       f"differs from the path the evidence {'leans towards' if p.get('leaning') else 'supports'}; "
+                       f"{p['share_preferring_evidence_path']:.0%} prefer that path.")
     for a in rep.stake_alignment:
         if a["notable"]:
             direction = "towards change" if a["share_preferring_change"] >= 0.5 else "towards the current setup"

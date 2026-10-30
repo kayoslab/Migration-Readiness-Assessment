@@ -50,9 +50,14 @@ def need_capability(need: np.ndarray, capability: np.ndarray, cuts=(2.5, 3.5), c
     n_lo, n_hi = np.nanpercentile(need, [5, 95])
     region = ("keep and improve practices" if n0 < cuts[0] else
               "restructure within the system" if n0 < cuts[1] or c0 < cap_cut else "decomposition possible")
-    strength = "low" if n0 < cuts[0] else "moderate" if n0 < cuts[1] else "high"
+    near = min(cuts, key=lambda c: abs(c - n0))
+    if abs(near - n0) < 0.1:                             # never round across a threshold
+        strength, shown = f"at the {near} threshold", f"{n0:.2f}"
+    else:
+        strength = "low" if n0 < cuts[0] else "moderate" if n0 < cuts[1] else "high"
+        shown = f"{n0:.1f}"
     cap_word = "strong" if c0 >= cap_cut else "adequate" if c0 >= 3.0 else "weak"
-    title = (f"Need for change is {strength} ({n0:.1f}), and the delivery capabilities a larger change relies on are "
+    title = (f"Need for change is {strength} ({shown}), and the delivery capabilities a larger change relies on are "
              f"{cap_word} (weakest {c0:.1f}): {region}")
     points = []
     crossed = [c for c in cuts if n_lo < c < n_hi]
@@ -271,11 +276,20 @@ def _join(words: list[str]) -> str:
 def lead_time(by_group: dict, cross_team_pct: float | None) -> dict:
     overall = by_group.get("All respondents asked") or next(iter(by_group.values()))
     top = max(overall, key=overall.get)
-    title = f"Lead time goes mainly to {top[0].lower() + top[1:]} ({_pct(overall[top])} of answers)"
-    if top != "Waiting on process":
-        title += f"; {_pct(overall.get('Waiting on process', 0))} name waiting on approvals, testing or environments"
+    if overall[top] >= 0.5:
+        title = f"Lead time goes mainly to {top[0].lower() + top[1:]} ({_pct(overall[top])} of answers)"
+        if top != "Waiting on process":
+            title += f"; {_pct(overall.get('Waiting on process', 0))} name waiting on approvals, testing or environments"
+    else:
+        title = (f"Lead time has no single dominant cause: {top[0].lower() + top[1:]} leads with {_pct(overall[top])} "
+                 "of answers")
     groups = [g for g in by_group if g != "All respondents asked"]
-    same = [g for g in groups if max(by_group[g], key=by_group[g].get) == top]
+
+    def unique_top(shares):
+        best = max(shares.values())
+        leaders = [k for k, x in shares.items() if abs(x - best) < 1e-9]
+        return leaders[0] if len(leaders) == 1 else None
+    same = [g for g in groups if unique_top(by_group[g]) == top]
     points = []
     if len(same) == len(groups) > 1:
         points.append(f"Every group asked gives the same answer ({', '.join(groups)}).")
@@ -288,7 +302,13 @@ def sourcing(parts: list[dict]) -> dict:
     decided = [p for p in parts if p.get("differentiation") is not None]
     replace = [p["name"] for p in decided if p["verdict"] == "replace_with_product"]
     keep = [p["name"] for p in decided if p["verdict"] == "keep_building"]
-    if replace and keep:
+    open_ = [p["name"] for p in parts if p["verdict"] == "insufficient_evidence"]
+    if open_ and (replace or keep):
+        settled = ([f"replace {_join_names(replace)}"] if replace else []) + \
+            ([f"keep building {_join_names(keep)}"] if keep else [])
+        title = (f"{'; '.join(settled)[0].upper() + '; '.join(settled)[1:]}; {_join_names(open_)} "
+                 f"{'is' if len(open_) == 1 else 'are'} not yet decided")
+    elif replace and keep:
         title = f"Replace {_join_names(replace)} with a product; keep building {_join_names(keep)}"
     elif replace:
         title = f"Every part assessed can be replaced with a product: {_join_names(replace)}"

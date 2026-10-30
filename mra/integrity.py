@@ -79,6 +79,10 @@ def _rules_signed_off(a, cfg) -> list[Issue]:
                       f"The decision rules (version {version}) are not recorded as signed off. The recommendation "
                       "follows them, so it cannot be relied on until the stakeholders who agreed the rules have "
                       "signed them off — before seeing these results.")]
+    if not on:
+        return [Issue("rules_signed_off", cfg["severity"], "Decision rules signed off without a date",
+                      f"The decision rules (version {version}) record who signed them off but not when, so it cannot be "
+                      "shown that they were agreed before the fact sheet was frozen and the results were seen.")]
     if on and frozen and on > frozen:
         return [Issue("rules_signed_off", cfg["severity"], "Decision rules signed off after the fact sheet was frozen",
                       f"The decision rules were signed off on {on:%d %B %Y}, after the fact sheet was frozen on "
@@ -162,7 +166,9 @@ def _run_cost_reconciliation(a, cfg) -> list[Issue]:
     if gap > 0 and verdict and verdict != "insufficient_evidence":
         as_infra = _point_hosting_verdict(a, {"unallocated_infra_annual": (_point(eng, "unallocated_infra_annual") or 0) + gap})
         as_common = _point_hosting_verdict(a, {"unallocated_common_annual": (_point(eng, "unallocated_common_annual") or 0) + gap})
-        changed = [w for w, v in (("if it is infrastructure cost", as_infra), ("if it remains in every option", as_common))
+        from .explain import outcome_label
+        changed = [f"to “{outcome_label(eng.instrument, 'hosting', v)}” {w}" for w, v in
+                   (("if it is infrastructure cost", as_infra), ("if it remains in every option", as_common))
                    if v and v != verdict]
         if changed:
             return [Issue("run_cost_reconciliation", "block", "Run cost not reconciled — the recommendation depends on it",

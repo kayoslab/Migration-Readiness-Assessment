@@ -189,7 +189,7 @@ def test_reopen_triggers_name_the_next_larger_step(techco, tmp_path):
     assert arch["alternative"].startswith("Gradually split") and arch["when"].startswith("checkpoint C3")
     assert "is still at or above 15%" in arch["conditions"][0] and "at least 3.5" in arch["conditions"][1]
     hosting = next(t for t in ctx["triggers"] if t["decision"] == "hosting")
-    assert hosting["when"] == "the hosting review (month 30)"
+    assert hosting["when"] == "the hosting review (month 27)"          # before the month-30 refresh is ordered
 
 
 def test_respondents_own_tests_are_attached(techco):

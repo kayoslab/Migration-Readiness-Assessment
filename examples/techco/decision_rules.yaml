@@ -12,8 +12,7 @@
 
 version: "0.3-draft"
 signed_off_by: "Executive Leadership Team (sample)"
-signed_off_on: 2026-09-15              # e.g. "CTO, CFO, Head of Product, Head of Platform team"
-signed_off_on: null              # date of sign-off; must be before the fact sheet is frozen (instrument/integrity.yaml)
+signed_off_on: 2026-09-15
 
 # =========================================================================================== semantics
 semantics:

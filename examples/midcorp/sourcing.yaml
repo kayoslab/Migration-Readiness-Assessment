@@ -1,0 +1,87 @@
+rating:
+  part_maintain_fte:
+    low: 5
+    likely: 6
+    high: 8
+    grade: estimate
+  part_run_cost_annual: &id001
+    value: 60000
+    grade: invoice
+  product_licence_annual:
+    value: 260000
+    grade: quote
+  product_integration_cost: &id002
+    low: 200000
+    likely: 250000
+    high: 350000
+    grade: estimate
+  product_remaining_fte: &id003
+    low: 0.3
+    likely: 0.5
+    high: 1.0
+    grade: estimate
+  product_switch_months: &id004
+    low: 6
+    likely: 9
+    high: 12
+    grade: estimate
+  product_exit_cost: &id005
+    value: 50000
+    grade: estimate
+  product_coverage_pct:
+    value: 60
+    grade: quote
+  product_data_export:
+    value: 'yes'
+  product_compliance:
+    value: 'yes'
+  part_shared_tables_pct:
+    value: 10
+claims:
+  part_maintain_fte:
+    low: 2.5
+    likely: 3
+    high: 4
+    grade: estimate
+  part_run_cost_annual: *id001
+  product_licence_annual:
+    value: 110000
+    grade: quote
+  product_integration_cost: *id002
+  product_remaining_fte: *id003
+  product_switch_months: *id004
+  product_exit_cost: *id005
+  product_coverage_pct:
+    value: 92
+    grade: quote
+  product_data_export:
+    value: 'no'
+  product_compliance:
+    value: 'yes'
+  part_shared_tables_pct:
+    value: 10
+documents:
+  part_maintain_fte:
+    low: 2
+    likely: 2.5
+    high: 3
+    grade: estimate
+  part_run_cost_annual: *id001
+  product_licence_annual:
+    value: 70000
+    grade: quote
+  product_integration_cost: *id002
+  product_remaining_fte: *id003
+  product_switch_months: *id004
+  product_exit_cost: *id005
+  product_coverage_pct:
+    low: 68
+    likely: 80
+    high: 90
+    grade: estimate
+  product_data_export:
+    value: 'yes'
+  product_compliance:
+    value: 'yes'
+  part_shared_tables_pct:
+    value: 10

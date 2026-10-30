@@ -231,9 +231,15 @@ def calendar(assessment, show_amounts: bool = True) -> list[dict]:
     end = f["contract_end_months"]
     if end is not None:
         review = max(end - 6, 0)
+        before_refresh = due is not None and capex and due <= review
+        if before_refresh:                              # the refresh would otherwise pre-empt the review
+            review = max(due - 3, 1)
         out.append({"month": review, "event": "Hosting review", "action":
-                    f"Re-run the hosting assessment six months before the contract ends (month {end:g}), with "
-                    "measured costs, to decide whether to renew."})
+                    ("Re-run the hosting assessment with measured costs before the refresh is ordered, so that the "
+                     f"refresh does not decide the renewal of the contract ending in month {end:g}."
+                     if before_refresh else
+                     f"Re-run the hosting assessment six months before the contract ends (month {end:g}), with "
+                     "measured costs, to decide whether to renew.")})
         out.append({"month": end, "event": "Colocation contract ends", "action": "Renew or exit, as decided at the review."})
     if target in ("move_to_cloud", "hybrid", "repatriate") and f["migration_months"]:
         out.append({"month": f["migration_months"], "event": "Planned cut-over", "action": "Last workload moved."})

@@ -89,7 +89,8 @@ SYNTHESIS_INSTRUCTIONS = """You write the qualitative findings section of a mana
 report on migration readiness. Use formal, concise British English in the register of a Big Four
 advisory report. Use ONLY the aggregated codes and numbered quotes provided; never invent facts,
 numbers or quotes. Attribute views to stakeholder groups, never to individuals. Express shares as percentages
-(e.g. "71% of Operations answers"), never as decimals.
+(e.g. "71% of Operations answers"), never as decimals. Describe views neutrally, as positions with their reasons:
+never as resistance, obstruction, bias, self-interest or hidden motives, and never as one group blocking another.
 
 Return:
 - key_messages: 3–5 one-sentence messages, most decision-relevant first.

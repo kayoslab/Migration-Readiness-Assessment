@@ -270,10 +270,10 @@
 ]
 
 #for dec in data.decisions.filter(d => d.id == "architecture") [
-  #text(size: 10pt)[Current state: #dec.current. Recommended: *#dec.verdict_label* — #dec.status_label.]
+  #text(size: 10pt)[Current state: #dec.current. #if dec.verdict == "insufficient_evidence" [No path is recommended yet: the evidence is insufficient#if dec.leaning_label != none [; it leans towards *#dec.leaning_label*].] else [Recommended: *#dec.verdict_label* — #dec.status_label.]]
   #caveat-box(dec.at("caveats", default: ()))
 
-  == Why this path
+  == #if dec.verdict == "insufficient_evidence" [Why it leans this way] else [Why this path]
   #if dec.why.len() == 0 [No single path reaches the agreed confidence.] else [
     #for w in dec.why [- #w \ ]
   ]
@@ -339,10 +339,10 @@
 ]
 
 #for dec in data.decisions.filter(d => d.id == "hosting") [
-  #text(size: 10pt)[Current state: #dec.current. Recommended: *#dec.verdict_label* — #dec.status_label.]
+  #text(size: 10pt)[Current state: #dec.current. #if dec.verdict == "insufficient_evidence" [No path is recommended yet: the evidence is insufficient#if dec.leaning_label != none [; it leans towards *#dec.leaning_label*].] else [Recommended: *#dec.verdict_label* — #dec.status_label.]]
   #caveat-box(dec.at("caveats", default: ()))
 
-  == Why this path
+  == #if dec.verdict == "insufficient_evidence" [Why it leans this way] else [Why this path]
   #if dec.why.len() == 0 [The current setup is kept because no alternative meets the agreed need or cost criteria.] else [
     #for w in dec.why [- #w \ ]
   ]
@@ -441,7 +441,7 @@
   #for p in data.sourcing.parts [
     #block(breakable: false)[
       #v(3mm)
-      #eyebrow[#p.name · #text(fill: theme.tone.at(p.tone), p.status_label)#if p.status != "insufficient" [ · #pct(p.probability) of draws]]
+      #eyebrow[#p.name · #text(fill: theme.tone.at(p.tone), p.status_label)#if p.status not in ("insufficient", "excluded") [ · #pct(p.probability) of draws]]
       #v(1pt)
       #text(size: 13pt, weight: "regular", fill: theme.primary, p.label)
       #v(1pt)
@@ -560,7 +560,7 @@ checked for the recommended path after the verdict.
 
 #for dec in data.decisions [
   == #dec.title
-  #if dec.gates.len() == 0 [The recommended path requires no programme preconditions.] else [
+  #if dec.verdict == "insufficient_evidence" [No path is recommended yet; its preconditions are checked once one is.] else if dec.gates.len() == 0 [The recommended path requires no programme preconditions.] else [
     #data-table(
       columns: (3.6fr, 1.2fr, 2.6fr),
       header: ("Precondition", "Status", "Note"),
@@ -770,8 +770,7 @@ group. Facts carry twice the weight of perceptions. Respondents are resampled wi
 ranges sampled #data.rules.draws times; a path is recommended only if it applies in at least
 #pct(data.rules.confidence) of these draws. Groups with fewer than #data.rules.min_role_n respondents are not scored.
 The decision rules (version #data.rules.version) were
-#if data.rules.signed_off_by == none [#text(fill: theme.status.RED)[not recorded as signed off]] else [signed off by #data.rules.signed_off_by]
-before results were seen.
+#if data.rules.signed_off_by == none [#text(fill: theme.status.RED)[not recorded as signed off].] else if data.integrity.blocks.any(b => b.id == "rules_signed_off") [signed off by #data.rules.signed_off_by, #text(fill: theme.status.RED)[but not before the fact sheet was frozen] (see the Important notice).] else [signed off by #data.rules.signed_off_by before results were seen.]
 
 #if "benchmark" in data.readiness [
   #let bm = data.readiness.benchmark

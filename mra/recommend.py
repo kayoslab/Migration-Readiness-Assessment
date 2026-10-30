@@ -98,7 +98,8 @@ def next_steps(assessment) -> list[dict]:
 
     div = lib.get("divergence")
     for d in assessment.evidence.divergences[:3]:
-        area = d["sub_area"].split(".")[-1].replace("_", " ")
+        from .explain import signal_label
+        area = signal_label(d["sub_area"], ins).lower()
         add("people", None, div["action"].format(area=area, survey=f"{d['survey']:.1f}", fact=f"{d['fact_band']:.1f}"),
             div["owner"])
 

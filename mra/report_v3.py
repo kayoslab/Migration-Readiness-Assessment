@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 
 from . import charts
+from . import interpret
 from .decision import Context, evaluate
 from .explain import (OPS, STATUS_WORDS, condition_label, flip_sentence, fmt, inputs_of, outcome_label,
                       signal_label, uncertainty_sentence)
@@ -91,6 +92,12 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     cdir = out / "charts"
     point = ev.at(0)
     decisions = []
+    exhibits = []                       # every exhibit's insight, with the data behind it (used by the narrative)
+
+    def register(eid: str, insight: dict, data) -> dict:
+        insight = {"id": eid, **insight, "interpretation": None}
+        exhibits.append({"insight": insight, "data": data})
+        return insight
     for d, r in assessment.results.items():
         order = [o["id"] for o in ins.rules["decisions"][d]["outcomes"]]
         labels = {o: outcome_label(ins, d, o) for o in order + ["insufficient_evidence", "unresolved"]}
@@ -123,11 +130,18 @@ def build_context(assessment, out: Path, root: Path) -> dict:
                 r.distribution, labels, r.verdict if r.verdict != "insufficient_evidence" else r.leaning,
                 ins.rules.get("evidence", {}).get("confidence", 0.8), cdir / f"{d}_probabilities.svg"), root)},
         }
+        block["insights"] = {"probabilities": register(f"{d}.probabilities", interpret.outcome_probabilities(
+            r.distribution, labels, r.verdict, r.leaning, ins.rules.get("evidence", {}).get("confidence", 0.8),
+            r.status, r.unresolved_share), {"distribution": {labels.get(k, k): round(v, 3) for k, v in r.distribution.items()}})}
         if d == "architecture" and "need.architecture" in ev.signals:
             floor = np.nanmin(np.stack([ev.signals.get(f"capability.architecture.{a}", np.full(ev.draws, np.nan))
                                         for a in ("delivery_pipeline", "platform_basics", "operations")]), axis=0)
             block["charts"]["map"] = _rel(charts.need_capability_map(ev.signals["need.architecture"], floor,
                                                                      cdir / "architecture_map.svg"), root)
+            need = ev.signals["need.architecture"]
+            block["insights"]["map"] = register("architecture.map", interpret.need_capability(need, floor), {
+                "need_point": round(float(need[0]), 2), "need_90pct": [round(float(x), 2) for x in np.nanpercentile(need, [5, 95])],
+                "weakest_capability_point": round(float(floor[0]), 2), "thresholds": {"need": [2.5, 3.5], "capability": 3.5}})
             block["fit"] = [{"outcome": labels.get(k.split(".", 1)[1]), "requirement": signal_label(c["signal"], ins),
                              "threshold": c["threshold"], "current": c["current"], "met": c["met"]}
                             for k, conds in (assessment.stakes.fit if assessment.stakes else {}).items()
@@ -140,9 +154,20 @@ def build_context(assessment, out: Path, root: Path) -> dict:
                 v = ev.signals[f"tco_ratio.{o}"]
                 ranges[o] = (float(np.nanpercentile(v, 5)), float(v[0]), float(np.nanpercentile(v, 95)))
             block["charts"]["tco"] = _rel(charts.tco_chart(ranges, words, cdir / "hosting_tco.svg"), root)
+            paybacks = {o: point.get(f"payback_after_cutover.{o}") for o in ranges
+                        if point.get(f"payback_after_cutover.{o}") not in (None, float("inf"))}
+            block["insights"]["tco"] = register("hosting.tco", interpret.tco(ranges, words, paybacks), {
+                words.get(o, o): {"cost_ratio": round(v[1], 2), "range_90pct": [round(v[0], 2), round(v[2], 2)],
+                                  "payback_months_after_cutover": paybacks.get(o)} for o, v in ranges.items()})
             if len(r.economics.get("tornado", [])) > 1:
                 block["charts"]["tornado"] = _rel(charts.tornado_chart(
                     r.economics["tornado"], lambda f: signal_label(f"fact.{f}", ins), cdir / "hosting_tornado.svg"), root)
+                option_word = words.get(r.economics.get("tornado_option"), "")
+                block["insights"]["tornado"] = register("hosting.tornado", interpret.tornado(
+                    r.economics["tornado"], lambda f: signal_label(f"fact.{f}", ins), option_word), {
+                    "option": option_word, "base_ratio": round(r.economics["tornado"][0]["base"], 2),
+                    "inputs": [{"input": signal_label(f"fact.{t['input']}", ins), "low": round(t["low"], 2),
+                                "high": round(t["high"], 2)} for t in r.economics["tornado"][1:6]]})
             block["economics"] = [{"option": words.get(o, o), "ratio": round(ranges[o][1], 2),
                                    "range": f"{ranges[o][0]:.2f}–{ranges[o][2]:.2f}",
                                    "payback": (None if point.get(f"payback_after_cutover.{o}") in (None, float("inf"))
@@ -159,29 +184,45 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         for d, prefs in st.preferences.items():
             order = [o["id"] for o in ins.rules["decisions"][d]["outcomes"]]
             labels = {o: outcome_label(ins, d, o) for o in order}
+            verdict = assessment.results[d].verdict if d in assessment.results else None
             if prefs["by_group"]:
-                stakes["charts"].append({"title": f"Preferred {d} direction by group",
+                stakes["charts"].append({"source": f"Preferred {d} direction, share of each group's respondents.",
                                          "path": _rel(charts.preference_chart(prefs["by_group"], order, labels,
-                                                                              cdir / f"{d}_preferences.svg"), root)})
+                                                                              cdir / f"{d}_preferences.svg"), root),
+                                         "insight": register(f"{d}.preferences", interpret.preferences(
+                                             prefs["by_group"], labels, verdict),
+                                             {g: {labels.get(o, o): v for o, v in sh.items()} for g, sh in prefs["by_group"].items()})})
             if st.stakes_by_option.get(d):
-                stakes["charts"].append({"title": f"Expected effect of each {d} option on respondents' own roles and skills",
+                stakes["charts"].append({"source": f"Expected effect of each {d} option on respondents' own roles and "
+                                                   "skills (\u22121 harms \u2026 +1 helps).",
                                          "path": _rel(charts.stakes_heatmap(st.stakes_by_option[d], order, labels,
-                                                                            cdir / f"{d}_stakes.svg"), root)})
+                                                                            cdir / f"{d}_stakes.svg"), root),
+                                         "insight": register(f"{d}.stakes", interpret.stakes(st.stakes_by_option[d], labels),
+                                             {g: {labels.get(o, o): v for o, v in row.items()} for g, row in st.stakes_by_option[d].items()})})
     divergence = [{"label": signal_label(d["sub_area"], ins), "fact": d["fact_band"], "survey": d["survey"]}
                   for d in ev.divergences]
     if divergence:
         stakes["divergence_chart"] = _rel(charts.divergence_chart(divergence, cdir / "divergence.svg"), root)
+        stakes["divergence_insight"] = register("people.divergence", interpret.divergence(divergence), divergence)
 
     # ---------------------------------------------------------------- organisational readiness by group
     from .readiness import analyse as analyse_readiness
     min_n = ins.rules.get("evidence", {}).get("min_role_n", 5)
     rd = analyse_readiness(eng, min_n)
     readiness = {"differences": [], "weakest": rd.weakest, "charts": {}}
+    readiness["insights"] = {}
     if not rd.matrix.empty:
         readiness["charts"]["matrix"] = _rel(charts.group_matrix_heatmap(rd.matrix, rd.counts, min_n,
                                                                          cdir / "readiness_matrix.svg"), root)
+        counted = rd.matrix.where(rd.counts >= min_n)
+        readiness["insights"]["matrix"] = register("readiness.matrix", interpret.readiness_matrix(rd.matrix, rd.counts, min_n), {
+            "area_means": counted.mean(axis=1).dropna().round(2).to_dict(),
+            "spread_between_groups": (counted.max(axis=1) - counted.min(axis=1)).dropna().round(2).to_dict()})
     if rd.weakest:
         readiness["charts"]["weakest"] = _rel(charts.score_distribution_chart(rd.weakest, cdir / "readiness_weakest.svg"), root)
+        readiness["insights"]["weakest"] = register("readiness.weakest", interpret.weakest(rd.weakest), [
+            {"statement": w["text"], "score": w["score"], "share_low": round(w["low"], 2), "share_high": round(w["high"], 2)}
+            for w in rd.weakest[:6]])
     readiness["differences"] = [{"sub_area": d["sub_area"], "high": f"{d['high'][0]} ({d['high'][1]})",
                                  "low": f"{d['low'][0]} ({d['low'][1]})", "spread": d["spread"], "effect": d["effect"],
                                  "significant": d["significant"]} for d in rd.differences[:8]]
@@ -239,6 +280,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         "decisions": decisions,
         "stakes": stakes,
         "readiness": readiness,
+        "exhibits": exhibits,
         "steps": next_steps(assessment),
         "evidence": rows,
         "participation": [{"group": g, "n": int(n)} for g, n in sizes.items()],
@@ -267,6 +309,8 @@ def build_report(assessment, output: Path, template: Path = TEMPLATE, narrative:
         assessment.narrative = n
         if not n.rejected:
             context["narrative"] = {"executive": n.executive, "chapters": n.chapters}
+        for e in context["exhibits"]:                  # exhibit interpretations stand on their own checks
+            e["insight"]["interpretation"] = n.exhibits.get(e["insight"]["id"])
     data = out / "report.json"
     data.write_text(json.dumps(context, indent=1, ensure_ascii=False, default=str))
     output.parent.mkdir(parents=True, exist_ok=True)

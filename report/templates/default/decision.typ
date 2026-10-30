@@ -19,6 +19,26 @@
   text(weight: "semibold", size: 8.5pt, upper(s))
 }
 
+// An exhibit in advisory style: number, action title (the insight), chart, source, and "so what".
+#let exhibit-counter = counter("exhibit")
+#let exhibit(path, insight, source: none) = {
+  exhibit-counter.step()
+  block(width: 100%, breakable: false, above: 6mm)[
+    #eyebrow[Exhibit #context exhibit-counter.display()]
+    #v(1pt)
+    #text(size: 10.5pt, weight: "semibold", fill: theme.primary, insight.title)
+    #v(4pt)
+    #image(path, width: 100%)
+    #if source != none [#v(-2pt) #text(size: 7pt, fill: theme.muted, source)]
+    #block(width: 100%, inset: (left: 10pt, y: 5pt), stroke: (left: 2pt + theme.accent), above: 3mm, below: 5mm)[
+      #text(size: 8pt, weight: "semibold", fill: theme.accent, tracking: 0.06em)[SO WHAT]
+      #v(1pt)
+      #set text(size: 9pt)
+      #if insight.interpretation != none [#insight.interpretation] else [#insight.points.join(" ")]
+    ]
+  ]
+}
+
 #let uncertainty(dec) = if dec.uncertain.len() > 0 [
   == Where the evidence is uncertain
   #for u in dec.uncertain [
@@ -102,12 +122,12 @@
   #uncertainty(dec)
 
   #v(3mm)
-  #figure-block(dec.charts.probabilities, caption: "Exhibit 1 — How often each path applies across bootstrap draws",
-    source: "Respondents resampled within group; fact-sheet ranges sampled. The verdict requires " + pct(data.rules.confidence) + ".")
+  #exhibit(dec.charts.probabilities, dec.insights.probabilities,
+    source: "Share of bootstrap draws in which each path applies. Respondents resampled within group; fact-sheet ranges sampled. The verdict requires " + pct(data.rules.confidence) + ".")
   #if "map" in dec.charts [
     #v(3mm)
-    #figure-block(dec.charts.map, caption: "Exhibit 2 — Need for change against the weakest capability",
-      source: "Each dot is one bootstrap draw; the large dot is the point estimate.")
+    #exhibit(dec.charts.map, dec.insights.map,
+      source: "Need for change against the weakest capability. Each dot is one bootstrap draw; the large dot is the point estimate.")
   ]
   #if "fit" in dec and dec.fit.len() > 0 [
     == Operating-model fit
@@ -161,14 +181,17 @@
     #text(size: 7.5pt, fill: theme.muted)[Five-year net present value relative to the current setup; "saving / year"
       in fully loaded salaries. All inputs from the fact sheet with their ranges.]
     #v(3mm)
-    #figure-block(dec.charts.tco, caption: "Exhibit 3 — Cost of each option relative to the current setup")
+    #exhibit(dec.charts.tco, dec.insights.tco,
+      source: "Five-year net present value relative to the current setup; dot = likely value, line = 90% range.")
     #if "tornado" in dec.charts [
       #v(3mm)
-      #figure-block(dec.charts.tornado, caption: "Exhibit 4 — Inputs that move the cost case most (" + dec.tornado_option + ")")
+      #exhibit(dec.charts.tornado, dec.insights.tornado,
+        source: "Cost ratio of " + dec.tornado_option + " with each input at its low and high estimate, all others at their likely value.")
     ]
   ]
   #v(3mm)
-  #figure-block(dec.charts.probabilities, caption: "Exhibit 5 — How often each hosting path applies across draws")
+  #exhibit(dec.charts.probabilities, dec.insights.probabilities,
+    source: "Share of bootstrap draws in which each hosting path applies.")
 ]
 
 = Organisational readiness
@@ -184,8 +207,8 @@ means more ready. Each group answers only the questions it can judge, so cells a
 
 #if "matrix" in data.readiness.charts [
   #v(3mm)
-  #figure-block(data.readiness.charts.matrix, caption: "Exhibit 6 — Readiness as seen by each stakeholder group",
-    source: "Mean of each group's own respondents (1–5). Hatched: fewer respondents than the minimum; shown, not counted.")
+  #exhibit(data.readiness.charts.matrix, data.readiness.insights.matrix,
+    source: "Readiness as seen by each group: mean of the group's own respondents (1–5). Hatched: fewer respondents than the minimum; shown, not counted.")
 ]
 
 #if data.readiness.differences.len() > 0 [
@@ -204,8 +227,8 @@ means more ready. Each group answers only the questions it can judge, so cells a
 
 #if "weakest" in data.readiness.charts [
   == Weakest areas
-  #figure-block(data.readiness.charts.weakest, caption: "Exhibit 7 — Lowest-scoring statements and how answers were distributed",
-    source: "Group-weighted score (1–5) on the right; bars show the share of answers scoring low, middle and high.")
+  #exhibit(data.readiness.charts.weakest, data.readiness.insights.weakest,
+    source: "Lowest-scoring statements: group-weighted score (1–5) on the right; bars show the share of answers scoring low, middle and high.")
 ]
 
 = Preconditions
@@ -244,14 +267,14 @@ plan how a decision is communicated and supported.
 ]
 #for n in data.stakes.suppressed [#text(size: 7.5pt, fill: theme.muted, n)]
 #for c in data.stakes.charts [
-  #v(3mm)
-  #figure-block(c.path, caption: c.title)
+  #exhibit(c.path, c.insight, source: c.source)
 ]
 #if "divergence_chart" in data.stakes [
   == Perception and measurement
   Where respondents' perception differs from the measured value by more than one point, the difference itself is a
   finding worth discussing.
-  #figure-block(data.stakes.divergence_chart, caption: "Measured value against perception")
+  #exhibit(data.stakes.divergence_chart, data.stakes.divergence_insight,
+    source: "Measured value (fact sheet) against perception (survey), where they differ by more than one point.")
 ]
 #if data.text != none [
   == In respondents' own words

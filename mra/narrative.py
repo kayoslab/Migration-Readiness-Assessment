@@ -29,7 +29,10 @@ communication, never as motives or bias. Attribute views to groups, never to ind
 Return:
 - executive: 2 to 4 short paragraphs telling one coherent story — the situation, what the evidence says for each
   decision and why, what must happen first, and what it means for the people involved.
-- chapters: one short paragraph (2–3 sentences) introducing each of: architecture, hosting, readiness, people."""
+- chapters: one short paragraph (2–3 sentences) introducing each of: architecture, hosting, readiness, people.
+- exhibits: for every exhibit in "exhibits", an interpretation of 2–3 sentences: what the exhibit shows (using its
+  title, observations and data), why it matters for the decision, and what the reader should take from it. Do not
+  repeat the title verbatim. Return the exhibit's id unchanged."""
 
 BANNED = ("bias", "biased", "self-interest", "motivated", "agenda", "resist", "resistance", "obstruct", "blame")
 RECOMMEND = re.compile(r"\b(recommend|should|must|advise|propose|best option|the right path)\w*", re.I)
@@ -43,9 +46,15 @@ class Chapters(pydantic.BaseModel):
     people: str
 
 
+class ExhibitText(pydantic.BaseModel):
+    id: str
+    interpretation: str
+
+
 class NarrativeOut(pydantic.BaseModel):
     executive: list[str]
     chapters: Chapters
+    exhibits: list[ExhibitText]
 
 
 @dataclass
@@ -54,6 +63,7 @@ class Narrative:
     chapters: dict[str, str]
     dropped: list[str] = field(default_factory=list)
     rejected: str | None = None
+    exhibits: dict[str, str] = field(default_factory=dict)
 
 
 def findings_payload(ctx: dict) -> dict:
@@ -76,6 +86,8 @@ def findings_payload(ctx: dict) -> dict:
         "stakeholder_findings": ctx["stakes"]["findings"],
         "free_text": (ctx.get("text") or {}).get("key_messages", []),
         "next_steps": [{"phase": s["phase_label"], "action": s["action"]} for s in ctx["steps"]][:10],
+        "exhibits": [{"id": e["insight"]["id"], "title": e["insight"]["title"], "observations": e["insight"]["points"],
+                      "data": e["data"]} for e in ctx.get("exhibits", [])],
     }
 
 
@@ -142,13 +154,20 @@ def validate(out: dict, payload: dict, all_paths: set[str]) -> Narrative:
 
     executive = [p for p in (clean(p) for p in out.get("executive", [])) if p]
     chapters = {k: clean(v) for k, v in (out.get("chapters") or {}).items()}
+    known = {e["id"] for e in payload.get("exhibits", [])}
+    exhibits = {}
+    for e in out.get("exhibits") or []:
+        if e["id"] in known:
+            text = clean(e["interpretation"])
+            if len(_sentences(text)) >= 2:          # a single surviving sentence reads worse than the computed text
+                exhibits[e["id"]] = text
     story = " ".join(executive).lower()
     for d in payload["decisions"]:
         if d["status"] == "prepare_first" and not re.search(r"precondition|before committing|first", story):
-            return Narrative([], {}, dropped, f"{d['title']}: narrative omits that preconditions come first")
+            return Narrative([], {}, dropped, f"{d['title']}: narrative omits that preconditions come first", exhibits)
         if d["status"] == "insufficient" and not re.search(r"insufficient|not yet|uncertain|too close", story):
-            return Narrative([], {}, dropped, f"{d['title']}: narrative omits that the evidence is insufficient")
-    return Narrative(executive, chapters, dropped)
+            return Narrative([], {}, dropped, f"{d['title']}: narrative omits that the evidence is insufficient", exhibits)
+    return Narrative(executive, chapters, dropped, exhibits=exhibits)
 
 
 def write(ctx: dict, eng) -> Narrative:

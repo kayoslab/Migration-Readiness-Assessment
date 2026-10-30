@@ -46,3 +46,14 @@ def test_stakes_vocabulary_is_dropped():
 def test_missing_precondition_rejects_the_narrative():
     out = {"executive": ["Restructure within the current system (modular monolith) immediately."], "chapters": {}}
     assert validate(out, PAYLOAD, PATHS).rejected
+
+
+def test_exhibit_interpretations_are_checked():
+    payload = {**PAYLOAD, "exhibits": [{"id": "hosting.tco", "title": "t", "observations": [], "data": {"Move to cloud": 2.6}}]}
+    good = {"executive": ["Preconditions first."], "chapters": {},
+            "exhibits": [{"id": "hosting.tco", "interpretation": "Moving to the cloud would cost 2.6 times today. "
+                                                                 "The cost case therefore points away from a move."}]}
+    assert "hosting.tco" in validate(good, payload, PATHS).exhibits
+    bad = {"executive": ["Preconditions first."], "chapters": {},
+           "exhibits": [{"id": "hosting.tco", "interpretation": "The cloud would save 40%. It is cheaper."}]}
+    assert "hosting.tco" not in validate(bad, payload, PATHS).exhibits      # one sentence left: computed text is used

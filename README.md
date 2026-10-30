@@ -8,342 +8,163 @@ A diagnostic framework for engineering leaders and CTOs evaluating whether their
 
 This tool exists because migration failures are rarely technical. They're organisational. Teams misaligned on priorities. Leadership unaware of technical debt. Business stakeholders and engineers living in different realities. These gaps don't surface in architecture diagrams—they surface six months into a failed transformation when it's too late to course-correct.
 
-**Run this assessment before you commit.** Surface the misalignments, quantify the risks, and make the investment decision with data instead of gut feel. Sometimes the answer is "not yet." Sometimes it's "never." That's valuable information too.
+**Run this assessment before you commit.** Surface the misalignments, quantify the risks, and make the investment decision with evidence instead of gut feel. Sometimes the answer is "not yet." Sometimes it's "never." That's valuable information too.
 
 The tool:
-- Collects structured feedback from multiple stakeholder groups (Engineering, Product, Business, Leadership)
-- Analyses responses across 6 readiness domains and 12 cross-cutting themes
-- Applies statistical validation to identify significant findings
-- Generates risk indicators using RAG (Red/Amber/Green) classification
-- Extracts qualitative themes using NLP techniques (LDA topic modelling, sentiment analysis)
+- Collects structured feedback from stakeholder groups (Engineering, Product, Business, Leadership)
+- Scores 6 readiness domains and 12 cross-cutting themes **from each group's own perspective**, then combines them so that every group counts equally, whatever its headcount
+- Quantifies uncertainty with a stratified bootstrap and only asserts a status when the evidence supports it
+- Checks whether each domain behaves as a coherent scale (Cronbach's α) and flags when it does not
+- Tests where stakeholder groups genuinely disagree, and separates that from sampling noise
+- Optionally codes free-text answers with an LLM through the [Vercel AI Gateway](https://vercel.com/docs/ai-gateway)
+- Produces a client-ready **PDF report** (Typst, brandable) and a **validation notebook** that exposes every number behind it
 
-## Assessment Framework
+> **Status — v2, phase 1.** This release fixes the calculation errors found in a statistical review of v1 (see [What changed in v2](#what-changed-in-v2)) and introduces the report pipeline. The questionnaire itself is unchanged and still measures *readiness to execute* a change rather than *whether* the change is warranted; the redesign is described in the [roadmap](#roadmap).
 
-### Readiness Domains
-
-| Domain | Focus Area |
-|--------|------------|
-| **Architecture & Technology** | System modularity, API maturity, technical debt, documentation |
-| **Team Capability** | Skills, autonomy, collaboration, knowledge distribution |
-| **Governance & Delivery** | CI/CD maturity, ownership clarity, release processes |
-| **Integration & Data Readiness** | API patterns, data governance, event-driven capabilities |
-| **Business Alignment & Strategy** | Executive sponsorship, ROI clarity, roadmap alignment |
-| **Cultural Readiness** | Change appetite, psychological safety, cross-functional trust |
-
-### Cross-Cutting Themes
-
-The questionnaire maps to themes that span multiple domains:
-
-- Technical Confidence
-- Clear Ownership
-- Composable Integration
-- Legacy Constraints
-- Delivery Friction
-- Autonomy & Empowerment
-- Readiness for Change
-- Cross-Functional Alignment
-- Platform vs. Feature Tension
-- Data Trust & Stewardship
-- Strategic Sponsorship
-- Testing & Quality
-
-### Stakeholder Roles
-
-Different roles receive targeted questions relevant to their perspective:
-
-| Role | Focus |
-|------|-------|
-| **Engineering** | Architecture, technical debt, team capabilities, delivery practices |
-| **Product** | Delivery velocity, team autonomy, business alignment |
-| **Business** | Strategy alignment, data access, platform value perception |
-| **Leadership** | Sponsorship, organisational alignment, change readiness |
-
-## Project Structure
-
-```
-Migration-Readiness-Assessment/
-├── Questions/
-│   └── export.csv              # Questionnaire definition (150 quantitative + 119 qualitative)
-├── Responses/
-│   ├── Business.csv            # Business stakeholder responses
-│   ├── Engineering.csv         # Engineering team responses
-│   ├── Leadership.csv          # Leadership responses
-│   └── Product.csv             # Product team responses
-├── Output/
-│   ├── analysis_results.txt    # AI-generated theme analysis
-│   ├── combined_qualitative.csv
-│   ├── combined_quantitative.csv
-│   └── ldavis_prepared_10.html # Interactive topic visualisation
-├── Validation.ipynb            # Main analysis notebook
-├── generate_sample_data.py     # Script to generate realistic sample data
-├── requirements.txt
-└── env                         # Environment variable template
-```
-
-## Installation
+## Quick start
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/Migration-Readiness-Assessment.git
+git clone https://github.com/kayoslab/Migration-Readiness-Assessment.git
 cd Migration-Readiness-Assessment
 
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv venv && uv pip install -e '.[dev]'      # or: python -m venv .venv && pip install -e '.[dev]'
+nbstripout --install                        # keeps notebook outputs out of git
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Download NLTK data (required for sentiment analysis)
-python -c "import nltk; nltk.download('vader_lexicon'); nltk.download('stopwords')"
+mra report                                  # → Output/report.pdf
 ```
 
-## Configuration
+Requires Python ≥ 3.12. The PDF is compiled with the bundled Typst Python package; no separate Typst or LaTeX installation is needed.
 
-Copy the environment template and add your OpenAI API key (optional, for AI-assisted qualitative analysis):
+| Command | What it does |
+|---|---|
+| `mra report` | Analyse `Responses/`, print the verdict, write `Output/report.pdf` |
+| `mra report --llm` | Also code free-text answers via the Vercel AI Gateway |
+| `mra check-llm` | One-line request to verify the gateway key and model |
+| `python generate_sample_data.py` | Regenerate the synthetic sample data |
+| `jupyter lab Validation.ipynb` | Inspect every intermediate result, sensitivity checks, v1 comparison |
+
+## Configuring an engagement
+
+Everything engagement-specific lives in [`assessment.yaml`](assessment.yaml): organisation name and report metadata, response files per stakeholder group, answer labels, and the **decision rules**.
+
+**Agree the decision rules with stakeholders before anyone sees results**, and record who signed them off (`decision_rules.signed_off_by`). This is what turns the assessment into a neutral referee rather than a tool that can be read to suit whichever side someone is on. The report shows the rules in its appendix and flags when sign-off was not recorded.
+
+| Rule | Default | Meaning |
+|---|---|---|
+| `red_below` / `green_from` | 3.0 / 4.0 | Status thresholds for a domain index |
+| `proceed_from` | 3.5 | Every domain must clear this for "Proceed" |
+| `confidence` | 0.80 | Bootstrap probability required before a status or verdict is asserted |
+| `role_weights` | equal | Weight of each stakeholder group in a domain index |
+| `essential_roles` | all | Groups that must be represented for any verdict |
+| `role_veto_domains` | Business Alignment, Culture | A strongly negative group here blocks "Proceed" |
+| `min_role_n` / `min_role_items` | 5 / 3 | Minimum respondents and statements for a group's score to count |
+| `strong_evidence_role_n` | 15 | Below this per essential group, findings are labelled *indicative* |
+
+### Responses
+
+One CSV per stakeholder group (as exported from Google Forms or similar), with the question text as column headers. Answers may be labels (`Agree`) or numbers (`4`). Blank cells are missing, never zero; `Don't know` is recorded separately. Statements are matched to [`Questions/export.csv`](Questions/export.csv) by text; each statement's role flags define who was asked it.
+
+### Free-text analysis (optional)
 
 ```bash
-cp env .env
-# Edit .env and add: OPENAI_API_KEY=your-key-here
+cp .env.example .env        # then set AI_GATEWAY_API_KEY
+mra check-llm
+mra report --llm
 ```
 
-## Running the Analysis
+Uses Vercel's [AI SDK for Python](https://vercel.com/docs/ai-gateway/sdks-and-apis/ai-sdk-python) (`ai`) through the AI Gateway. The default model is `anthropic/claude-opus-5.5`; set `llm.model` in `assessment.yaml` or `MRA_LLM_MODEL` to use any model the gateway offers (a smaller model such as `anthropic/claude-haiku-5.5` is plenty for coding).
 
-Open `Validation.ipynb` in Jupyter Lab or VS Code:
+Each respondent's answers are coded against a fixed codebook — sentiment, stance on the change, themes, motives — and validated against a schema. A final call writes the qualitative findings using only those codes and verbatim quotes. Groups are compared by share of their answers, not volume. E-mail addresses, phone numbers, URLs and any `llm.redact_terms` are removed before sending. Results are cached in `Output/llm_cache/`, so re-runs cost nothing.
 
-```bash
-jupyter lab Validation.ipynb
+### Branding the report
+
+The report template lives in [`report/templates/default/`](report/templates/default/). To match an organisation's identity, copy the folder, edit the `theme` dictionary at the top of `template.typ` (colours, fonts, logo) and point `report.template` in `assessment.yaml` at the copy. Fonts placed in a `fonts/` folder next to the template are picked up automatically. `main.typ` holds the report structure and reads all content from the generated `Output/build/report.json`.
+
+## Methodology
+
+### Scoring
+
+1. **Person score** — mean of a respondent's answers in a domain, if they answered ≥ 60% of the statements addressed to them.
+2. **Group score** — mean of person scores within a stakeholder group (only that group's respondents).
+3. **Domain index** — weighted mean of group scores; each group counts equally by default, so a large Engineering team cannot outvote four executives.
+4. **Uncertainty** — respondents are resampled within each group (2,000 times); the report shows 95% ranges and the probability of each status.
+5. **Status** — RED / AMBER / GREEN from the point estimate, marked *uncertain* when the bootstrap puts less than the agreed confidence on it.
+
+### Verdict
+
+| Verdict | Rule |
+|---|---|
+| **Insufficient evidence** | An essential group has fewer than `min_role_n` respondents |
+| **Not ready** | Any domain is RED with ≥ `confidence` probability, or any essential group is RED on a veto domain |
+| **Proceed** | Every domain clears `proceed_from` with ≥ `confidence` probability and no group scores any domain RED |
+| **Proceed with conditions** | Otherwise; the report lists the conditions |
+
+### Other analyses
+
+- **Reliability** — Cronbach's α per group × domain (pairwise covariance, robust to scattered missing answers). Below 0.70 the statements do not behave as one scale.
+- **Role differences** — Kruskal–Wallis across groups per domain, effect size ε², Benjamini–Hochberg adjusted.
+- **Statement-level gaps** — permutation test on the largest difference between group means, FDR-adjusted; only groups meeting the minimum size are compared.
+
+### What is deliberately *not* done
+
+v1 reported several statistics that do not support a decision; v2 removes them: one-sample t-tests of every statement against "neutral", post-hoc power from observed effects, a "readiness %" (which scored an all-neutral organisation at 60%), "within-team variance" charts, hard-coded impact/feasibility weights, LDA topic models and VADER sentiment on a few dozen answers.
+
+## What changed in v2
+
+An independent statistical review re-ran the v1 notebook and found, among others:
+
+| v1 issue | Effect | v2 |
+|---|---|---|
+| Group scores filtered statements by role but **not respondents** | Every group's score was in fact everyone's average; Cultural Readiness showed 3.4 for all four groups (actual range 2.8–3.8) | Respondents filtered by group |
+| Missing answers stored as 0 | Inconsistent averaging across cells | Missing is missing |
+| Three different RAG rule sets | Same data, different colours | One rule set, from `assessment.yaml` |
+| Readiness % = mean/5 | Neutral everywhere = 60% = CONDITIONAL GO | Removed; verdict uses probabilities |
+| Go/No-Go | All Business answering "strongly disagree" still gave CONDITIONAL GO | Any dissenting group now changes the verdict |
+| Alignment gaps = max−min of means | ~40% of flagged gaps expected by chance | Permutation tests with FDR control |
+
+The notebook's section 7 shows v1 and v2 group scores side by side.
+
+## Roadmap
+
+Expert reviews (organisational change, architecture, statistics) agreed that the questionnaire presupposes the migration: it can say "ready" or "not ready" but never "stay", "fix delivery practices first" or "modularise in place". Planned phases:
+
+1. **Decision model** — separate *Need* (is there architectural pain?) from *Capability* (can we operate the target?), add pass/fail *Gates* (sponsor, funding incl. dual-running, protected capacity, stop criteria) and *Alignment & stakes* (stated preference and personal stake per respondent). Evaluate bundled decisions separately, e.g. architecture style vs. hosting (bare metal ↔ cloud). Outcomes include *stay and improve*, *modular monolith*, *targeted extraction*, *broad decomposition*, *consolidate*.
+2. **Mindset & operating-model fit** — scenario-based items on domain ownership, decentralised decisions, tolerance for eventual consistency and product-vs-project funding, measured as fit to each outcome rather than a maturity grade.
+3. **Instrument** — a technical fact sheet (DORA metrics, change coupling, shared-table ratio, run cost) alongside a shorter survey (~40 items per person, core items asked of every group, reverse-keyed items, "don't know").
+4. **Validation** — scenario grid with known correct outcomes and misclassification rates.
+
+## Project structure
+
+```
+├── assessment.yaml              # engagement configuration and decision rules
+├── Questions/export.csv         # questionnaire (statements, domains, themes, role targeting)
+├── Responses/*.csv              # one export per stakeholder group (sample data included)
+├── mra/                         # analysis package
+│   ├── data.py                  #   loading into long format
+│   ├── scoring.py               #   scores, bootstrap, reliability, differences, verdict
+│   ├── llm.py                   #   free-text coding via Vercel AI Gateway
+│   ├── charts.py                #   report exhibits
+│   ├── report.py                #   narrative + Typst compilation
+│   └── cli.py                   #   `mra` command
+├── report/templates/default/    # Typst template (template.typ = branding, main.typ = structure)
+├── Validation.ipynb             # validation & exploration notebook
+├── generate_sample_data.py      # synthetic "TechCo" scenario
+└── tests/                       # regression tests incl. every v1 issue above
 ```
 
-The notebook executes the following pipeline:
+## Sample data
 
-### 1. Data Import & Preprocessing
-- Loads questionnaire definitions and role-based responses
-- Maps Likert scale responses (Strongly Disagree=1 to Strongly Agree=5)
-- Separates quantitative and qualitative data streams
-
-### 2. Quantitative Analysis
-
-**Domain Scoring**
-- Calculates average scores per domain (excluding non-responses)
-- Identifies role-based perception variance
-- Highlights domains with scores below confidence threshold (default: 3.0)
-
-**Critical Question Weighting**
-- Questions marked as "Critical" receive additional analysis
-- Risk flags applied: Critical Risk (<2.5), At Risk (<3.0), No Risk (>=3.0)
-
-**Statistical Validation**
-- One-sample t-tests against neutral midpoint (3.0)
-- Identifies statistically insignificant results (p > 0.05)
-- Power analysis calculates required sample sizes for underpowered tests
-
-**RAG Classification**
-- Overall readiness score aggregated across all domains/roles
-- Red: <3.0, Amber: 3.0-3.9, Green: >=4.0
-
-### 3. Qualitative Analysis
-
-**Topic Modelling (LDA)**
-- Extracts latent topics from free-text responses
-- Uses both Gensim and sklearn implementations
-- Generates interactive visualisation (pyLDAvis)
-
-**Sentiment Analysis (VADER)**
-- Analyses emotional tone of qualitative responses
-- Calculates positive, neutral, negative, and compound scores
-- Aggregates by role to identify sentiment differences
-
-**AI-Assisted Theme Extraction** (Optional)
-- Uploads combined responses to OpenAI
-- Extracts cross-role themes with supporting evidence
-- Correlates with LDA topics
-
-## Output Interpretation
-
-### Domain Heatmap
-Visual representation of scores by role and domain. High variance between roles indicates misalignment that should be addressed before migration.
-
-### Risk Clusters
-- **Red Clusters**: Domains where multiple roles score <3.0 - significant concerns
-- **Amber Clusters**: Domains scoring 3.0-3.9 - areas requiring attention
-
-### Critical Questions Report
-Lists specific questions where critical items scored poorly - these represent the highest-risk areas for migration success.
-
-### Statistical Significance Report
-Questions that lack statistical significance may indicate:
-- Insufficient sample size
-- High response variance
-- Questions that should be investigated further
-
-### Topic Analysis
-LDA topics reveal recurring themes in qualitative feedback. Example topics from the sample data:
-- Business/tech alignment challenges
-- Change management concerns
-- Technical constraints and planning cycles
-- Modernisation opportunities and team alignment
-
-## Methodology Notes
-
-### Scoring Approach
-- Likert scale (1-5) provides ordinal data
-- Mean calculations assume interval properties (standard practice for 5+ point scales)
-- Zero values (non-responses) are excluded from calculations
-
-### Statistical Considerations
-- Small sample sizes (n<30) limit statistical power
-- Power analysis helps determine if additional responses are needed
-- High variance within roles may indicate subgroup differences worth exploring
-
-### Qualitative Validity
-- VADER sentiment is optimised for social media; business language may be under-detected
-- LDA requires tuning number of topics (default: 5-10)
-- Human review recommended for actionable insights
-
-## Customisation
-
-### Adjusting Thresholds
-
-In `Validation.ipynb`, modify these variables:
-
-```python
-threshold_confidence_low = 3      # Below this triggers low-confidence flag
-threshold_risk_critical = 2.5     # Below this triggers critical risk
-threshold_risk_average = 3        # Below this triggers at-risk
-rag_score_low = 3                 # Red threshold
-rag_score_average = 3.9           # Amber threshold
-threshold_statistical_significance = 0.05
-```
-
-### Adding Questions
-
-Edit `Questions/export.csv` with columns:
-- `ID`: Unique question identifier
-- `Question`: Question text
-- `Category`: Domain name
-- `Critical`: TRUE/FALSE
-- `Engineering`, `Product`, `Business`, `Leadership`: TRUE/FALSE for role targeting
-- `Type`: "Quantitative" or "Qualitative"
-- `Theme`: Optional cross-cutting theme
-- `Weight`: Score multiplier (default: 1)
-
-## Example Use Cases
-
-1. **Pre-Migration Assessment**: Run before committing to a platform modernisation to identify blockers
-2. **Stakeholder Alignment**: Surface perception gaps between technical and business teams
-3. **Progress Tracking**: Re-run quarterly to measure improvement in readiness areas
-4. **Investment Justification**: Provide data-driven evidence for platform investment decisions
-
-## Statistical Methodology
-
-The analysis uses rigorous statistical methods appropriate for survey data:
-
-### Corrections Applied
-
-| Feature | Standard Approach | This Implementation |
-|---------|-------------------|---------------------|
-| Power analysis | Two-sample formula | One-sample t-test formula (correct for this use case) |
-| Target power | Varies | 0.80 (scientific convention) |
-| Confidence intervals | z = 1.96 (assumes large N) | t-distribution (accounts for small samples) |
-| Effect sizes | Often omitted | Cohen's d reported for all tests |
-| Multiple comparisons | Often ignored | Benjamini-Hochberg FDR correction |
-| Non-parametric tests | Often omitted | Wilcoxon signed-rank as alternative |
-
-### Executive Decision Support
-
-The notebook includes four analysis tools specifically designed for investment decisions:
-
-1. **Executive Scorecard** - Single-view dashboard with:
-   - Overall readiness percentage
-   - RAG status per domain (weighted by critical questions)
-   - Top risks and strengths at a glance
-   - Summary counts (RED/AMBER/GREEN domains)
-
-2. **Alignment Gap Analysis** - Identifies perception differences between stakeholder groups:
-   - Questions where roles disagree by >1.0 points
-   - Heatmap visualisation of role perceptions
-   - Priority flags for critical misalignments
-
-3. **Investment Prioritisation Matrix** - 2x2 matrix mapping domains by:
-   - Readiness gap (how much work needed)
-   - Business impact (how critical for migration)
-   - Quadrants: Fix First, Quick Wins, Plan Carefully, Monitor
-
-4. **Actionable Recommendations** - Concrete action plan including:
-   - Phased recommendations (Immediate / Short-term / Medium-term / Long-term)
-   - Domain-specific actions based on RAG status
-   - Budget-level guidance (Low/Medium/High)
-   - Go/No-Go recommendation with criteria
-
-### Key Statistical Outputs
-
-1. **Statistical Significance Analysis**
-   - One-sample t-tests against neutral (3.0)
-   - Wilcoxon signed-rank tests (non-parametric alternative)
-   - Effect size calculation (Cohen's d) with interpretation
-   - FDR-corrected p-values for multiple testing
-   - Practical significance assessment (mean difference > 0.5)
-
-2. **Power Analysis** (Cell 52)
-   - Achieved power with current sample sizes
-   - Required sample sizes for 80% power
-   - Identifies underpowered tests needing more responses
-
-3. **Confidence Intervals** (Cell 42)
-   - t-distribution critical values (not z = 1.96)
-   - Bootstrap CIs for robustness
-   - Visual comparison against neutral reference line
-
-### Interpreting Results
-
-- **Statistically significant**: p < 0.05 after FDR correction
-- **Practically significant**: Mean differs from neutral by >= 0.5 points
-- **Effect sizes**: negligible (<0.2), small (0.2-0.5), medium (0.5-0.8), large (>0.8)
-- **Adequately powered**: Achieved power >= 0.80
-
-## Sample Data Scenario
-
-The included sample data represents a fictional company "TechCo" - a mid-size e-commerce company evaluating migration from a legacy monolithic platform. The scenario demonstrates:
-
-**Company Profile:**
-- 10 Engineers, 8 Product managers, 4 Business stakeholders, 4 Leadership
-- Strong engineering culture but siloed teams
-- Business frustrated with delivery speed
-- Leadership supportive but lacks technical depth
-- Legacy monolith causing friction, some early modernisation work done
-
-**Expected Results:**
-| Domain | Expected Score | RAG Status | Notes |
-|--------|---------------|------------|-------|
-| Architecture & Technology | ~3.2 | AMBER | Some progress, gaps remain |
-| Team Capability | ~3.6 | GREEN | Strong engineering culture |
-| Governance & Delivery | ~2.9 | RED/AMBER | Process friction |
-| Integration & Data Readiness | ~2.8 | RED | Significant pain point |
-| Business Alignment & Strategy | ~3.4 | AMBER | Improving but gaps |
-| Cultural Readiness | ~3.4 | AMBER | Mixed signals |
-
-**Key Alignment Gaps Demonstrated:**
-- Business vs Engineering on technical bottleneck awareness
-- Business vs Leadership on change readiness
-- Product vs Engineering on delivery speed perceptions
-
-To regenerate sample data: `python3 generate_sample_data.py`
+The included responses describe a fictional mid-size e-commerce company ("TechCo"): 18 engineers, 10 product managers, 8 business stakeholders and 6 leaders. Each simulated person has a consistent outlook, some agree with everything, ~8% of statements are skipped and free-text tone follows each person's scores. On this data the assessment returns **Not ready (indicative)**, driven by Integration & Data Readiness, with large perception differences between Leadership and Product on Business Alignment.
 
 ## Limitations
 
-- Sample data is synthetic/illustrative (regenerate with `generate_sample_data.py`)
-- Requires honest, representative responses from stakeholders
-- Cultural factors may affect response patterns across organisations
-- Statistical methods assume normally distributed responses (improved module offers non-parametric alternatives)
+- Measures perceived readiness to execute, not whether the change is warranted (see roadmap).
+- Survey answers are subject to social desirability and acquiescence, especially in small groups where anonymity is limited.
+- With fewer than ~15 respondents per group, findings are indicative; below 5, a group is not scored.
 
 ## License
 
-MIT License - See LICENSE file for details.
-
-## Contributing
-
-Contributions welcome. Please open an issue to discuss proposed changes before submitting PRs.
+MIT
 
 ---
 

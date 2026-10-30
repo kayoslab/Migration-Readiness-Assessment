@@ -172,6 +172,20 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     if divergence:
         stakes["divergence_chart"] = _rel(charts.divergence_chart(divergence, cdir / "divergence.svg"), root)
 
+    # ---------------------------------------------------------------- organisational readiness by group
+    from .readiness import analyse as analyse_readiness
+    min_n = ins.rules.get("evidence", {}).get("min_role_n", 5)
+    rd = analyse_readiness(eng, min_n)
+    readiness = {"differences": [], "weakest": rd.weakest, "charts": {}}
+    if not rd.matrix.empty:
+        readiness["charts"]["matrix"] = _rel(charts.group_matrix_heatmap(rd.matrix, rd.counts, min_n,
+                                                                         cdir / "readiness_matrix.svg"), root)
+    if rd.weakest:
+        readiness["charts"]["weakest"] = _rel(charts.score_distribution_chart(rd.weakest, cdir / "readiness_weakest.svg"), root)
+    readiness["differences"] = [{"sub_area": d["sub_area"], "high": f"{d['high'][0]} ({d['high'][1]})",
+                                 "low": f"{d['low'][0]} ({d['low'][1]})", "spread": d["spread"], "effect": d["effect"],
+                                 "significant": d["significant"]} for d in rd.differences[:8]]
+
     # ---------------------------------------------------------------- evidence appendix
     rows = []
     for name, values in sorted(ev.signals.items()):
@@ -197,6 +211,17 @@ def build_context(assessment, out: Path, root: Path) -> dict:
                 if b["interim_label"]:
                     sentence += f"; meanwhile, “{b['interim_label']}”"
             key.append(sentence + ".")
+    if not rd.matrix.empty:
+        counted = rd.matrix.where(rd.counts >= min_n)
+        area_scores = counted.mean(axis=1).dropna().sort_values()
+        weak = [f"{name.split(': ', 1)[-1]} ({v:.1f})" for name, v in area_scores.head(2).items()]
+        if weak:
+            key.append(f"The weakest areas of readiness are {' and '.join(weak)}.")
+    strong_diff = [d for d in rd.differences if d["significant"] and d["effect"] == "large"]
+    if strong_diff:
+        d = strong_diff[0]
+        key.append(f"Groups see \u201c{d['sub_area'].split(': ', 1)[-1]}\u201d very differently "
+                   f"({d['high'][0]} {d['high'][1]:.1f} vs {d['low'][0]} {d['low'][1]:.1f}).")
     if st and st.findings:
         key.append(f"{len(st.findings)} findings on stakeholder perspectives should inform how the decision is communicated.")
 
@@ -213,6 +238,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         "key_messages": key,
         "decisions": decisions,
         "stakes": stakes,
+        "readiness": readiness,
         "steps": next_steps(assessment),
         "evidence": rows,
         "participation": [{"group": g, "n": int(n)} for g, n in sizes.items()],

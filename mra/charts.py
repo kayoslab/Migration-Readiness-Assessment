@@ -355,3 +355,60 @@ def stakes_heatmap(by_group: dict, order: list[str], labels: dict, path: Path) -
     for s in ax.spines.values():
         s.set_visible(False)
     return _save(fig, path)
+
+
+def group_matrix_heatmap(matrix: pd.DataFrame, counts: pd.DataFrame, min_n: int, path: Path) -> Path:
+    """Each group's view of each sub-area (1–5); cells with fewer than `min_n` respondents are hatched."""
+    apply_style()
+    fig, ax = plt.subplots(figsize=(WIDTH, 0.3 * len(matrix) + 1.0))
+    values = matrix.to_numpy(dtype=float)
+    shown = np.where(counts.to_numpy() >= min_n, values, np.nan)
+    ax.imshow(shown, cmap=DIVERGING, vmin=1, vmax=5, aspect="auto")
+    for i in range(values.shape[0]):
+        for j in range(values.shape[1]):
+            v, n = values[i, j], counts.iat[i, j]
+            if np.isnan(v):
+                continue
+            if n < min_n:
+                ax.add_patch(plt.Rectangle((j - 0.5, i - 0.5), 1, 1, fill=False, hatch="////", edgecolor=RULE, lw=0))
+                ax.text(j, i, f"n={n}", ha="center", va="center", fontsize=6.5, color=INK_MUTED, style="italic")
+            else:
+                ax.text(j, i, f"{v:.1f}", ha="center", va="center", fontsize=7.5,
+                        color=SURFACE if v < 1.8 or v > 4.2 else INK)
+    ax.set_xticks(range(matrix.shape[1]), matrix.columns, fontsize=8)
+    ax.xaxis.tick_top()
+    ax.set_yticks(range(matrix.shape[0]), [_wrap(s, 48) for s in matrix.index], fontsize=7)
+    ax.tick_params(length=0)
+    for s in ax.spines.values():
+        s.set_visible(False)
+    ax.set_xticks(np.arange(-0.5, matrix.shape[1]), minor=True)
+    ax.set_yticks(np.arange(-0.5, matrix.shape[0]), minor=True)
+    ax.grid(which="minor", color=SURFACE, lw=1.5)
+    ax.tick_params(which="minor", length=0)
+    return _save(fig, path)
+
+
+def score_distribution_chart(items: list[dict], path: Path) -> Path:
+    """Weakest statements: share of answers scoring low (1–2), middle (3) and high (4–5), split around the middle."""
+    apply_style()
+    data = items[::-1]
+    labels = [_wrap(it["text"], 72) for it in data]
+    lines = max(label.count("\n") + 1 for label in labels)
+    fig, ax = plt.subplots(figsize=(WIDTH, (0.2 + 0.16 * lines) * len(data) + 0.9))
+    y = np.arange(len(data))
+    for yi, it in zip(y, data):
+        left = -(it["low"] + it["mid"] / 2)
+        for share, colour, label in ((it["low"], LIKERT[0], "Low (1–2)"), (it["mid"], LIKERT[2], "Middle (3)"),
+                                     (it["high"], LIKERT[4], "High (4–5)")):
+            ax.barh(yi, share, left=left, color=colour, height=0.6, edgecolor=SURFACE, lw=1,
+                    label=label if yi == 0 else None)
+            left += share
+        ax.text(1.02, yi, f"{it['score']:.1f}", va="center", fontsize=8, transform=ax.get_yaxis_transform())
+    ax.axvline(0, color=INK_MUTED, lw=0.8)
+    ax.set_yticks(y, labels, fontsize=7)
+    ax.set_xlim(-1, 1)
+    ax.set_xticks([-1, -0.5, 0, 0.5, 1], ["100%", "50%", "0", "50%", "100%"])
+    ax.tick_params(axis="y", length=0)
+    ax.spines["left"].set_visible(False)
+    ax.legend(ncol=3, loc="lower center", bbox_to_anchor=(0.35, 1.0), fontsize=7, handlelength=1)
+    return _save(fig, path)

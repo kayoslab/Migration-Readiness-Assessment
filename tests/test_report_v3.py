@@ -47,3 +47,13 @@ def test_plain_language_no_raw_signal_names(techco, tmp_path):
 def test_pdf_builds(techco, tmp_path):
     pdf = build_report(techco, tmp_path / "techco.pdf")
     assert pdf.stat().st_size > 100_000
+
+
+def test_one_document_includes_readiness_by_group(techco, tmp_path):
+    ctx = build_context(techco, ROOT / "Output" / "build-test-ctx", ROOT)
+    assert ctx["readiness"]["differences"] and ctx["readiness"]["weakest"]
+    assert any(m.startswith("The weakest areas of readiness are") for m in ctx["key_messages"])
+    big = [d for d in ctx["readiness"]["differences"] if d["significant"]]
+    assert big and big[0]["sub_area"] == "Alignment: reasons explained"
+    import shutil
+    shutil.rmtree(ROOT / "Output" / "build-test-ctx", ignore_errors=True)

@@ -13,8 +13,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="mra", description="Migration Readiness Assessment")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    rep = sub.add_parser("report", help="analyse responses and build the PDF report")
-    rep.add_argument("--config", default="assessment.yaml")
+    rep = sub.add_parser("report", help="build the PDF report (v3 engagement, or v2 with --config)")
+    rep.add_argument("engagement", nargs="?", help="v3 engagement.yaml: the combined decision and readiness report")
+    rep.add_argument("--config", default="assessment.yaml", help="v2 only: assessment.yaml of a v2 survey")
     rep.add_argument("--output", help="PDF path (default: report.output in the config)")
     rep.add_argument("--llm", action="store_true", help="analyse free-text answers with the configured LLM")
 
@@ -61,6 +62,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1 if errors else 0
 
     if args.command == "decide":
+        return _decide(args)
+
+    if args.command == "report" and args.engagement:
+        args.pdf = args.output or str(Path("Output") / f"{Path(args.engagement).resolve().parent.name}-report.pdf")
+        args.draws, args.json = None, False
         return _decide(args)
 
     if args.command == "init":

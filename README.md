@@ -37,7 +37,7 @@ Requires Python ≥ 3.12. The PDF is compiled with the bundled Typst Python pack
 
 | Command | What it does |
 |---|---|
-| `mra report` | Analyse `Responses/`, print the verdict, write `Output/report.pdf` |
+| `mra report` | v2 (legacy): analyse a v2 survey (`assessment.yaml`), write `Output/report.pdf`. For v3 engagements use `mra report <engagement.yaml>` |
 | `mra report --llm` | Also code free-text answers via the Vercel AI Gateway |
 | `mra check-llm` | One-line request to verify the gateway key and model |
 | `python generate_sample_data.py` | Regenerate the synthetic sample data |
@@ -54,7 +54,10 @@ implemented, M5 calibrated it on 1,350 simulated engagements ([`docs/calibration
 ```bash
 mra validate                         # cross-check the instrument files
 mra decide path/to/engagement.yaml   # recommended path per decision, probability, preconditions, cost case, what would change it
-mra decide examples/techco/engagement.yaml --pdf Output/techco.pdf   # the v3 report for the synthetic TechCo example
+mra report examples/techco/engagement.yaml   # one document: recommended paths, readiness by group, preconditions, people, next steps
+mra init engagements/acme                    # blank engagement with annotated templates
+mra coupling <repo> --modules modules.yaml   # scripted coupling facts from git history
+mra forms engagements/acme/engagement.yaml --out forms.gs   # Google Apps Script that creates the survey forms
 mra simulate [--quick]               # validity grid and threshold sweeps on synthetic engagements
 ```
 

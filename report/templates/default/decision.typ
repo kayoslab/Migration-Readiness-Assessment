@@ -153,6 +153,38 @@
   #figure-block(dec.charts.probabilities, caption: "Exhibit 5 — How often each hosting path applies across draws")
 ]
 
+= Organisational readiness
+
+Whatever path is chosen, it depends on how ready each part of the organisation is. This chapter shows how each
+stakeholder group rates the capabilities, ways of working, alignment and governance it can judge; higher always
+means more ready. Each group answers only the questions it can judge, so cells are empty where a group was not asked.
+
+#if "matrix" in data.readiness.charts [
+  #v(3mm)
+  #figure-block(data.readiness.charts.matrix, caption: "Exhibit 6 — Readiness as seen by each stakeholder group",
+    source: "Mean of each group's own respondents (1–5). Hatched: fewer respondents than the minimum; shown, not counted.")
+]
+
+#if data.readiness.differences.len() > 0 [
+  == Where groups see things differently
+  #data-table(
+    columns: (3fr, 1.3fr, 1.3fr, 0.7fr, 1.2fr),
+    align: (left, left, left, right, left),
+    header: ("Area", "Most positive", "Most negative", "Spread", "Difference"),
+    ..data.readiness.differences.map(d => (d.sub_area, d.high, d.low, fmt(d.spread, d: 1),
+      if d.significant { strong(d.effect) } else { text(fill: theme.muted, d.effect + ", not significant") })).flatten(),
+  )
+  #v(2pt)
+  #text(size: 7.5pt, fill: theme.muted)[Kruskal–Wallis test across groups on respondents' scores, effect size ε²,
+    false-discovery-rate adjusted (q < 0.05).]
+]
+
+#if "weakest" in data.readiness.charts [
+  == Weakest areas
+  #figure-block(data.readiness.charts.weakest, caption: "Exhibit 7 — Lowest-scoring statements and how answers were distributed",
+    source: "Group-weighted score (1–5) on the right; bars show the share of answers scoring low, middle and high.")
+]
+
 = Preconditions
 
 Preconditions are attested with evidence by the sponsor, Finance, the technology lead and risk and compliance, and

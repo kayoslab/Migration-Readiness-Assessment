@@ -412,3 +412,36 @@ def score_distribution_chart(items: list[dict], path: Path) -> Path:
     ax.spines["left"].set_visible(False)
     ax.legend(ncol=3, loc="lower center", bbox_to_anchor=(0.35, 1.0), fontsize=7, handlelength=1)
     return _save(fig, path)
+
+
+def roadmap_chart(roadmap: dict, path: Path) -> Path:
+    """Indicative sequencing: one lane per workstream, review points as vertical rules, migration with its high estimate."""
+    apply_style()
+    lanes: dict[str, dict] = {}
+    for b in roadmap["bars"]:
+        lane = lanes.setdefault(b["workstream"], {"start": b["start"], "end": b["end"], "high": b["end_high"], "n": 0})
+        lane["start"], lane["end"] = min(lane["start"], b["start"]), max(lane["end"], b["end"])
+        lane["high"] = max(filter(None, [lane["high"], b["end_high"]]), default=None)
+        lane["n"] += 1
+    names = list(lanes)[::-1]
+    horizon = roadmap["horizon"]
+    fig, ax = plt.subplots(figsize=(WIDTH, 0.42 * len(names) + 1.0))
+    for yi, name in enumerate(names):
+        lane = lanes[name]
+        ax.barh(yi, lane["end"] - lane["start"], left=lane["start"], height=0.5, color=ACCENT)
+        if lane["high"] and lane["high"] > lane["end"]:
+            ax.barh(yi, lane["high"] - lane["end"], left=lane["end"], height=0.5, color=SURFACE, edgecolor=ACCENT,
+                    hatch="////", lw=0.8)
+        count = f"{lane['n']} action{'s' if lane['n'] > 1 else ''}" if "migration" not in name.lower() else "likely – high estimate"
+        ax.text((lane["high"] or lane["end"]) + 0.2, yi, count, va="center", fontsize=7.5, color=INK_MUTED)
+    for i, g in enumerate(roadmap["gates"], 1):
+        ax.axvline(g["month"], color=INK_MUTED, lw=0.8, ls="--")
+        ax.text(g["month"], len(names) - 0.25, f"R{i}", ha="center", va="bottom", fontsize=7.5, color=INK_MUTED)
+    ax.set_yticks(range(len(names)), [_wrap(n, 32) for n in names])
+    ax.tick_params(axis="y", length=0)
+    ax.spines["left"].set_visible(False)
+    ax.set_xlim(0, horizon + 3)
+    ax.set_ylim(-0.6, len(names) + 0.1)
+    ax.set_xticks(range(0, horizon + 1, 3))
+    ax.set_xlabel("Months from the decision (indicative)")
+    return _save(fig, path)

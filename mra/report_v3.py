@@ -267,6 +267,18 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     if st and st.findings:
         key.append(f"{len(st.findings)} findings on stakeholder perspectives should inform how the decision is communicated.")
 
+    # ---------------------------------------------------------------- roadmap, success measures, scenarios
+    from . import plan
+    steps = next_steps(assessment)
+    rm = plan.roadmap(assessment, steps)
+    roadmap_block = {"gates": rm["gates"],
+                     "chart": _rel(charts.roadmap_chart(rm, cdir / "roadmap.svg"), root) if rm["bars"] else None,
+                     "insight": register("plan.roadmap", interpret.roadmap(rm), rm) if rm["bars"] else None}
+    success = plan.measures(assessment)
+    for block in decisions:
+        if block["id"] == "hosting":
+            block["scenarios"] = plan.scenarios(assessment)
+
     # ---------------------------------------------------------------- options, risks, basis of preparation
     from .appraisal import appraise
     from .risks import register as risk_register
@@ -313,7 +325,9 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         "stakes": stakes,
         "readiness": readiness,
         "exhibits": exhibits,
-        "steps": next_steps(assessment),
+        "steps": steps,
+        "roadmap": roadmap_block,
+        "measures": success,
         "evidence": rows,
         "participation": participation,
         "risks": reg,

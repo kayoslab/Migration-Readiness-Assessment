@@ -231,6 +231,19 @@
     #v(3mm)
     #exhibit(dec.charts.tco, dec.insights.tco,
       source: "Five-year net present value relative to the current setup; dot = likely value, line = 90% range.")
+    #if "scenarios" in dec and dec.scenarios.len() > 0 [
+      == Scenarios
+      #data-table(
+        columns: (2.2fr, 1fr, 1fr, 1fr),
+        align: (left, right, right, right),
+        header: ("Option", "Conservative", "Base", "Favourable"),
+        ..dec.scenarios.rows.map(r => (r.option, fmt(r.conservative) + "×", fmt(r.base) + "×", fmt(r.favourable) + "×")).flatten(),
+      )
+      #v(2pt)
+      #text(size: 7.5pt, fill: theme.muted)[Five-year cost relative to today's setup as it is. Conservative and favourable
+        put every estimate at the end of its range that hurts or helps the option — bounds, not forecasts.]
+      #for b in dec.scenarios.breakeven [- #b.sentence \ ]
+    ]
     #if "tornado" in dec.charts [
       #v(3mm)
       #exhibit(dec.charts.tornado, dec.insights.tornado,
@@ -372,6 +385,29 @@ owners and mitigations come from the action library.
 ]
 
 = Recommended next steps
+
+#if data.roadmap.chart != none [
+  #exhibit(data.roadmap.chart, data.roadmap.insight,
+    source: "Indicative sequencing from the next steps below; hatched = high estimate of the migration duration.")
+  #v(2mm)
+  #data-table(columns: (0.5fr, 0.8fr, 5fr), align: (left, right, left), header: ("", "Month", "Review point"),
+    ..data.roadmap.gates.enumerate().map(((i, g)) => ("R" + str(i + 1), str(g.month), g.label)).flatten())
+  #v(3mm)
+]
+
+#if data.measures.len() > 0 [
+  == Success measures
+  The measures by which the decision should be judged at each review point. Proposed targets move one performance
+  band; targets agreed with the sponsor replace them.
+  #data-table(
+    columns: (0.9fr, 3.4fr, 0.9fr, 1.3fr, 1.4fr),
+    align: (left, left, right, left, left),
+    header: ("Decision", "Measure", "Today", "Target", "Basis"),
+    ..data.measures.map(m => (m.decision, text(size: 8.5pt, m.measure), m.baseline, m.target,
+      text(size: 8pt, fill: theme.muted, m.basis))).flatten(),
+  )
+  #v(3mm)
+]
 
 #let phases = data.steps.map(s => s.phase_label).dedup()
 #for ph in phases [

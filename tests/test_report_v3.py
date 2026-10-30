@@ -86,3 +86,30 @@ def test_basis_of_preparation(techco, tmp_path):
     assert any(t["term"] == "Hard stop" for t in ctx["glossary"])
     import shutil
     shutil.rmtree(ROOT / "Output" / "build-test-basis", ignore_errors=True)
+
+
+def test_roadmap_measures_scenarios(techco):
+    from mra import plan
+    from mra.recommend import next_steps
+    rm = plan.roadmap(techco, next_steps(techco))
+    before = [b for b in rm["bars"] if b["workstream"].startswith("Before committing")]
+    assert before and all(b["start"] == 0 and b["end"] == 3 for b in before)
+    assert [g["month"] for g in rm["gates"]] == [3, 6, 12]
+    m = plan.measures(techco)
+    assert any(x["measure"].startswith("Merged changes") and x["target"] == "below 15%" for x in m)
+    sc = plan.scenarios(techco)
+    cloud = next(r for r in sc["rows"] if r["option"] == "Move to cloud")
+    assert cloud["favourable"] <= cloud["base"] <= cloud["conservative"]
+    assert all(b["value"] is None for b in sc["breakeven"])       # nothing alone makes a move pay off at TechCo
+
+
+def test_break_even_found_when_reachable(techco):
+    from mra import plan
+    cur = techco.engagement.config.get("current_hosting", "own_infrastructure")
+    base = {**techco.evidence.fact_point, "dc_cost_annual": 1_000_000, "ops_fte": 8}   # an expensive data centre
+    found = plan._break_even("cloud", "cloud_compute_baseline_annual", 400_000, 900_000, base, cur,
+                             techco.engagement.instrument)
+    assert found["value"] is not None and found["value"] < base["cloud_compute_baseline_annual"]
+    ratio = plan._ratio({**base, "cloud_compute_baseline_annual": found["value"]}, cur, "cloud", "improve_current")
+    assert abs(ratio - 0.85) < 0.01
+    assert "only if" in found["sentence"] and "below" in found["sentence"]

@@ -179,3 +179,16 @@ def stakes(by_group: dict, labels: dict) -> dict:
              f"{g_hi} expects most from “{labels.get(o_hi, o_hi)}” ({v_hi:+.1f})")
     return {"title": title, "points": ["These expectations do not affect the recommendation; they indicate where a "
                                        "role plan and targeted communication are needed."]}
+
+
+def roadmap(rm: dict) -> dict:
+    migration = next((b for b in rm["bars"] if b["workstream"] == "Hosting migration"), None)
+    now = sum(1 for b in rm["bars"] if b["start"] == 0)
+    title = (f"{now} action{'s' if now != 1 else ''} come before any commitment; the first review after three months "
+             "decides whether to commit, re-scope or stop")
+    points = ["The sequence is indicative: each phase starts only when the review before it has been passed."]
+    if migration:
+        high = f"–{migration['end_high']:.0f}" if migration["end_high"] else ""
+        points.append(f"The hosting migration would end between month {migration['end']:.0f}{high} on the fact sheet's "
+                      "estimates.")
+    return {"title": title, "points": points}

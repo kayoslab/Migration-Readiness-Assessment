@@ -8,6 +8,7 @@
 architecture:
   stay_and_improve:
     appraisal: {programme: none, reversibility: high, time_to_value: weeks}   # judgement; adjust per engagement
+    measures: [lead_time_hours, deploys_per_week, change_failure_pct]   # success measures; targets proposed from the fact bands unless agreed
     label: Keep the current architecture and improve delivery practices
     preference_label: Keep the current structure and improve how we work with it
     offered_when_current: [single_deployable, distributed]
@@ -26,6 +27,7 @@ architecture:
 
   modular_monolith:
     appraisal: {programme: medium, reversibility: high, time_to_value: months}   # judgement; adjust per engagement
+    measures: [cross_team_change_pct, shared_tables_pct, module_single_owner_pct]   # success measures; targets proposed from the fact bands unless agreed
     label: Restructure within the current system (modular monolith)
     preference_label: Reorganise the current system internally into clearly separated parts, still released as one
     offered_when_current: [single_deployable]
@@ -41,6 +43,7 @@ architecture:
 
   targeted_extraction:
     appraisal: {programme: medium, reversibility: medium, time_to_value: months}   # judgement; adjust per engagement
+    measures: [candidate_incident_share_pct, candidate_shared_tables_pct, lead_time_hours]   # success measures; targets proposed from the fact bands unless agreed
     label: Separate out one or two specific parts
     preference_label:
       single_deployable: Separate out one or two specific parts
@@ -58,6 +61,7 @@ architecture:
 
   broad_decomposition:
     appraisal: {programme: large, reversibility: low, time_to_value: years}   # judgement; adjust per engagement
+    measures: [deploys_per_week, cross_team_change_pct, change_failure_pct]   # success measures; targets proposed from the fact bands unless agreed
     label: Gradually split into independently deployable services
     preference_label: Gradually split into many separately released parts
     offered_when_current: [single_deployable]
@@ -73,6 +77,7 @@ architecture:
 
   realign_services:
     appraisal: {programme: medium, reversibility: medium, time_to_value: months}   # judgement; adjust per engagement
+    measures: [cross_service_change_pct, lockstep_deploy_pct, module_single_owner_pct]   # success measures; targets proposed from the fact bands unless agreed
     label: Realign existing services with team and domain boundaries
     preference_label: Redraw the boundaries of our existing services
     offered_when_current: [distributed]
@@ -87,6 +92,7 @@ architecture:
 
   consolidate:
     appraisal: {programme: medium, reversibility: medium, time_to_value: months}   # judgement; adjust per engagement
+    measures: [lockstep_deploy_pct, services_per_team, cross_service_change_pct]   # success measures; targets proposed from the fact bands unless agreed
     label: Consolidate over-split services
     preference_label: Merge closely linked services back together
     offered_when_current: [distributed]
@@ -103,6 +109,7 @@ architecture:
 hosting:
   stay_as_is:
     appraisal: {programme: none, reversibility: high, time_to_value: immediate}   # judgement; adjust per engagement
+    measures: [infra_toil_pct, capacity_lead_time_weeks]   # success measures; targets proposed from the fact bands unless agreed
     label: Keep the current infrastructure
     preference_label: Keep the current infrastructure without major changes
     offered_when_current: [own_infrastructure, cloud, hybrid]
@@ -115,6 +122,7 @@ hosting:
 
   improve_current:
     appraisal: {programme: small, reversibility: high, time_to_value: months}   # judgement; adjust per engagement
+    measures: [infra_toil_pct, infra_bus_factor, iac_pct]   # success measures; targets proposed from the fact bands unless agreed
     label: Improve, right-size and automate the current infrastructure
     preference_label: Improve and automate what we run today, and adjust its size to actual need
     offered_when_current: [own_infrastructure, cloud, hybrid]
@@ -130,6 +138,7 @@ hosting:
 
   hybrid:
     appraisal: {programme: medium, reversibility: medium, time_to_value: months}   # judgement; adjust per engagement
+    measures: [capacity_lead_time_weeks, infra_toil_pct]   # success measures; targets proposed from the fact bands unless agreed
     label: Run selected workloads in a public cloud
     preference_label:
       own_infrastructure: Move some workloads to a public cloud and keep the rest
@@ -147,6 +156,7 @@ hosting:
 
   move_to_cloud:
     appraisal: {programme: large, reversibility: low, time_to_value: a year or more}   # judgement; adjust per engagement
+    measures: [capacity_lead_time_weeks, infra_toil_pct, iac_pct]   # success measures; targets proposed from the fact bands unless agreed
     label: Move most workloads to a public cloud
     preference_label: Move most workloads to a public cloud
     offered_when_current: [own_infrastructure, hybrid]
@@ -161,6 +171,7 @@ hosting:
 
   repatriate:
     appraisal: {programme: large, reversibility: low, time_to_value: a year or more}   # judgement; adjust per engagement
+    measures: [infra_bus_factor, dr_restore_tested_months, infra_toil_pct]   # success measures; targets proposed from the fact bands unless agreed
     label: Move workloads back from the public cloud
     preference_label: Move workloads back from the public cloud to our own infrastructure
     offered_when_current: [cloud, hybrid]

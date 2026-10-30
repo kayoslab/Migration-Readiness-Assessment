@@ -200,6 +200,12 @@ def build_context(assessment, out: Path, root: Path) -> dict:
                                                                             cdir / f"{d}_stakes.svg"), root),
                                          "insight": register(f"{d}.stakes", interpret.stakes(st.stakes_by_option[d], labels),
                                              {g: {labels.get(o, o): v for o, v in row.items()} for g, row in st.stakes_by_option[d].items()})})
+    from .stakeholders import stakeholder_map
+    smap = stakeholder_map(assessment)
+    if smap:
+        stakes["map"] = smap
+        stakes["map_chart"] = _rel(charts.stakeholder_chart(smap, cdir / "stakeholder_map.svg"), root)
+        stakes["map_insight"] = register("people.map", interpret.stakeholder_map(smap), smap)
     divergence = [{"label": signal_label(d["sub_area"], ins), "fact": d["fact_band"], "survey": d["survey"]}
                   for d in ev.divergences]
     if divergence:

@@ -13,6 +13,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.ticker  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
@@ -444,4 +445,32 @@ def roadmap_chart(roadmap: dict, path: Path) -> Path:
     ax.set_ylim(-0.6, len(names) + 0.1)
     ax.set_xticks(range(0, horizon + 1, 3))
     ax.set_xlabel("Months from the decision (indicative)")
+    return _save(fig, path)
+
+
+def stakeholder_chart(rows: list[dict], path: Path) -> Path:
+    """Support for the recommended paths (x) against influence (y); quadrant names are approaches, not verdicts."""
+    apply_style()
+    level = {"low": 1, "medium": 2, "high": 3}
+    fig, ax = plt.subplots(figsize=(WIDTH, 3.2))
+    ax.axvline(0.5, color=RULE, lw=0.8)
+    ax.axhline(2.5, color=RULE, lw=0.8)
+    for x, y, text, ha in [(0.02, 3.45, "Engage closely", "left"), (0.98, 3.45, "Involve as sponsors", "right"),
+                           (0.02, 0.55, "Inform and listen", "left"), (0.98, 0.55, "Keep informed and involved", "right")]:
+        ax.text(x, y, text, fontsize=7.5, color=INK_MUTED, ha=ha, va="center")
+    for lvl in (1, 2, 3):                                 # spread groups that sit close together on one level
+        same = sorted((r for r in rows if level[r["influence"]] == lvl), key=lambda r: r["support"])
+        offsets, run = [], 0
+        for i, r in enumerate(same):
+            run = run + 1 if i and r["support"] - same[i - 1]["support"] < 0.1 else 0
+            offsets.append((0, 0.22, -0.22, 0.44)[run % 4])
+        for r, dy in zip(same, offsets):
+            ax.scatter(r["support"], lvl + dy, s=60, color=ACCENT, edgecolor=SURFACE, lw=1.5, zorder=3, clip_on=False)
+            ax.text(r["support"] + 0.025, lvl + dy, r["group"], fontsize=8, color=INK, va="center")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0.3, 3.7)
+    ax.set_yticks([1, 2, 3], ["Low", "Medium", "High"])
+    ax.set_ylabel("Influence on the decision")
+    ax.xaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
+    ax.set_xlabel("Respondents preferring the recommended path (or its interim step), averaged over decisions")
     return _save(fig, path)

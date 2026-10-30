@@ -32,3 +32,13 @@ report:
   prepared_for: Executive Leadership Team
   prepared_by: Platform Advisory
   sample_data: true
+  stakeholder_map: true
+influence:
+  EXE: high
+  TEC: high
+  FIN: high
+  PRD: medium
+  ENG: medium
+  OPS: medium
+  BUS: medium
+  SEC: medium

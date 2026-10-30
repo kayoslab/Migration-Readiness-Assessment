@@ -330,12 +330,31 @@ plan how a decision is communicated and supported.
 #for c in data.stakes.charts [
   #exhibit(c.path, c.insight, source: c.source)
 ]
+#if "map" in data.stakes [
+  #block(breakable: false)[
+    == Stakeholder map
+    Where each group stands on the recommended path, and how much influence it has on the decision. The map plans
+    engagement; it never weights anyone's answers.
+    #exhibit(data.stakes.map_chart, data.stakes.map_insight,
+      source: "Support: share of the group preferring the recommended path or its interim step. Influence: agreed with the sponsor, or a stated default.")
+  ]
+  #v(2mm)
+  #data-table(
+    columns: (1fr, 1fr, 1.2fr, 1.2fr, 2fr),
+    align: (left, right, left, right, left),
+    header: ("Group", "Support", "Influence", "Role concern", "Approach"),
+    ..data.stakes.map.map(r => (r.group, pct(r.support), r.influence + if r.influence_source == "default" [ (default)] else [],
+      if r.concern == none [–] else [#pct(r.concern)], r.approach)).flatten(),
+  )
+]
 #if "divergence_chart" in data.stakes [
-  == Perception and measurement
-  Where respondents' perception differs from the measured value by more than one point, the difference itself is a
-  finding worth discussing.
-  #exhibit(data.stakes.divergence_chart, data.stakes.divergence_insight,
-    source: "Measured value (fact sheet) against perception (survey), where they differ by more than one point.")
+  #block(breakable: false)[
+    == Perception and measurement
+    Where respondents' perception differs from the measured value by more than one point, the difference itself is a
+    finding worth discussing.
+    #exhibit(data.stakes.divergence_chart, data.stakes.divergence_insight,
+      source: "Measured value (fact sheet) against perception (survey), where they differ by more than one point.")
+  ]
 ]
 #if data.text != none [
   == In respondents' own words

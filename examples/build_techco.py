@@ -129,6 +129,8 @@ if __name__ == "__main__":
     cfg["invited"] = {"ENG": 22, "PRD": 11, "BUS": 9, "TEC": 6, "EXE": 6, "OPS": 8, "SEC": 6, "FIN": 4}
     cfg["report"] = {"organisation": "TechCo", "title": "Architecture and Hosting Assessment",
                      "subtitle": "Recommended direction for the Order Platform", "prepared_for": "Executive Leadership Team",
-                     "prepared_by": "Platform Advisory", "sample_data": True}
+                     "prepared_by": "Platform Advisory", "sample_data": True, "stakeholder_map": True}
+    cfg["influence"] = {"EXE": "high", "TEC": "high", "FIN": "high", "PRD": "medium", "ENG": "medium",
+                        "OPS": "medium", "BUS": "medium", "SEC": "medium"}
     path.write_text(yaml.safe_dump(cfg, sort_keys=False))
     print(f"Wrote {path}")

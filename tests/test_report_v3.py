@@ -113,3 +113,28 @@ def test_break_even_found_when_reachable(techco):
     ratio = plan._ratio({**base, "cloud_compute_baseline_annual": found["value"]}, cur, "cloud", "improve_current")
     assert abs(ratio - 0.85) < 0.01
     assert "only if" in found["sentence"] and "below" in found["sentence"]
+
+
+def test_stakeholder_map(techco):
+    from mra.stakeholders import stakeholder_map
+    report = techco.engagement.config.setdefault("report", {})
+    before = report.get("stakeholder_map")
+    report["stakeholder_map"] = True
+    try:
+        rows = {r["group"]: r for r in stakeholder_map(techco)}
+    finally:
+        report["stakeholder_map"] = before
+    assert "Other groups" not in rows and "All respondents" not in rows
+    assert rows["TEC"]["approach"] == "Engage closely" and rows["EXE"]["approach"] == "Involve as sponsors"
+    assert all(0 <= r["support"] <= 1 for r in rows.values())
+
+
+def test_stakeholder_map_off_by_default(techco):
+    from mra.stakeholders import stakeholder_map
+    report = techco.engagement.config.setdefault("report", {})
+    before = report.get("stakeholder_map")
+    report["stakeholder_map"] = False
+    try:
+        assert stakeholder_map(techco) == []
+    finally:
+        report["stakeholder_map"] = before

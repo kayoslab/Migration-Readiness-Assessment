@@ -192,3 +192,25 @@ def roadmap(rm: dict) -> dict:
         points.append(f"The hosting migration would end between month {migration['end']:.0f}{high} on the fact sheet's "
                       "estimates.")
     return {"title": title, "points": points}
+
+
+def stakeholder_map(rows: list[dict]) -> dict:
+    engage = [r for r in rows if r["approach"] == "Engage closely"]
+    sponsors = [r["group"] for r in rows if r["approach"] == "Involve as sponsors"]
+    if len(engage) == 1:
+        title = (f"{engage[0]['group']} has high influence, but only {_pct(engage[0]['support'])} of its respondents prefer "
+                 "the recommended path: engage before the decision is announced")
+    elif engage:
+        title = (f"{', '.join(r['group'] for r in engage)} have high influence, but fewer than half of their respondents "
+                 "prefer the recommended path: engage before the decision is announced")
+    else:
+        title = "Every high-influence group mostly supports the recommended path"
+    points = []
+    if sponsors:
+        points.append(f"{', '.join(sponsors)} can act as sponsors of the recommended path.")
+    worried = [r["group"] for r in rows if (r["concern"] or 0) >= 0.4]
+    if worried:
+        points.append(f"Role concern is high in {', '.join(worried)}; address it alongside the communication plan.")
+    if any(r["influence_source"] == "default" for r in rows):
+        points.append("Influence ratings marked as default are assumptions; agree them with the sponsor.")
+    return {"title": title, "points": points}

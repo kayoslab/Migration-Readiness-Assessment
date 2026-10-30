@@ -11,7 +11,8 @@ import numpy as np
 
 from . import charts
 from .decision import Context, evaluate
-from .explain import OPS, STATUS_WORDS, condition_label, flip_sentence, fmt, outcome_label, signal_label
+from .explain import (OPS, STATUS_WORDS, condition_label, flip_sentence, fmt, inputs_of, outcome_label,
+                      signal_label, uncertainty_sentence)
 from .recommend import next_steps
 
 TEMPLATE = Path(__file__).resolve().parents[1] / "report" / "templates" / "default"
@@ -115,6 +116,9 @@ def build_context(assessment, out: Path, root: Path) -> dict:
             "notes": r.notes,
             "shadow_label": labels.get(r.shadow["verdict"]) if r.shadow and r.shadow["verdict"] != r.verdict else None,
             "unresolved_share": r.unresolved_share,
+            "uncertain": [{"text": uncertainty_sentence(x, ins),
+                           "facts": [ins.facts.at[f, "label"] for f in inputs_of(x["signal"], ins)["facts"]][:4],
+                           "items": len(inputs_of(x["signal"], ins)["items"])} for x in r.uncertain_inputs],
             "charts": {"probabilities": _rel(charts.outcome_probability_chart(
                 r.distribution, labels, r.verdict if r.verdict != "insufficient_evidence" else r.leaning,
                 ins.rules.get("evidence", {}).get("confidence", 0.8), cdir / f"{d}_probabilities.svg"), root)},

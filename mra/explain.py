@@ -83,3 +83,49 @@ def condition_label(name: str, ins: Instrument) -> str:
         inner = [signal_label(s.strip(), ins) for s in name[4:-1].split(",")]
         return " or ".join(inner)
     return signal_label(name, ins)
+
+
+def inputs_of(signal: str, ins: Instrument) -> dict[str, list[str]]:
+    """The fact-sheet entries and survey items that feed a signal (for 'collect this to resolve it')."""
+    p = signal.split(".")
+    if p[0] == "fact":
+        return {"facts": [p[1]], "items": []}
+    if p[0] == "item":
+        return {"facts": [], "items": [p[1]]}
+    areas = ins.rules.get("axes", {})
+    if p[0] in ("need", "capability") and len(p) >= 2:
+        decision = p[1]
+        wanted = [p[2]] if len(p) == 3 else areas.get(f"{p[0]}.{decision}", {}).get("areas")
+        block = p[0]
+    elif p[0] in ("fit", "requirement", "locality"):
+        decision, block = "architecture", p[0]
+        wanted = [p[1]] if len(p) == 2 else areas.get("locality.architecture", {}).get("areas")
+    elif p[0] in ("tco_ratio", "payback_months", "payback_after_cutover", "tco_saving_fte"):
+        facts = ins.facts[(ins.facts["decision"] == "hosting") & (ins.facts["axis"] == "economics") & (ins.facts["range"] == "true")]
+        return {"facts": list(facts.index), "items": []}
+    else:
+        spec = ins.rules.get("signals", {}).get(signal, {})
+        members = spec.get("max_of", []) + spec.get("min_of", [])
+        out = {"facts": [], "items": [spec["item"]] if "item" in spec else []}
+        for m in members:
+            sub = inputs_of(m, ins)
+            out["facts"] += sub["facts"]; out["items"] += sub["items"]
+        return out
+    f = ins.facts
+    facts = f[(f["axis"] == block) & (f["decision"] == decision) & ((wanted is None) | f["area"].isin(wanted or []))]
+    it = ins.items
+    items = it[(it["block"] == block) & (it["decision"].isin([decision, "both"])) & (it["scored"] == "true")
+               & ((wanted is None) | it["area"].isin(wanted or []))]
+    return {"facts": list(facts.index), "items": list(items.index)}
+
+
+def uncertainty_sentence(u: dict, ins: Instrument) -> str:
+    label = signal_label(u["signal"], ins)
+    if u["unresolved"] >= 0.1:
+        return f"{label}: cannot be evaluated in {u['unresolved']:.0%} of draws (missing or too few answers)."
+    try:
+        threshold = fmt(float(u["threshold"]))
+    except (TypeError, ValueError):
+        threshold = signal_label(str(u["threshold"]), ins).lower()
+    return (f"{label}: too close to call — {OPS.get(u['op'], u['op'])} {threshold} in {u['share_true']:.0%} of draws, "
+            f"not in the rest.")

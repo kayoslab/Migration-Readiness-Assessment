@@ -57,7 +57,9 @@ def next_steps(assessment) -> list[dict]:
                 add("capability", decision, c["action"], c["owner"],
                     f"Needed for “{path}”: {condition_label(name, ins)}.")
         if r.verdict == "insufficient_evidence":
-            inputs = ", ".join(r.unresolved_at) or "the inputs listed in the appendix"
+            from .explain import signal_label
+            inputs = "; ".join(signal_label(x["signal"], ins) for x in r.uncertain_inputs[:3]) \
+                or "the inputs listed in the appendix"
             e = lib.get("evidence", {}).get("insufficient")
             if e:
                 add("evidence", decision, e["action"].format(inputs=inputs), e["owner"])

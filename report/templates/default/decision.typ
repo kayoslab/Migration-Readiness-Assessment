@@ -19,6 +19,13 @@
   text(weight: "semibold", size: 8.5pt, upper(s))
 }
 
+#let uncertainty(dec) = if dec.uncertain.len() > 0 [
+  == Where the evidence is uncertain
+  #for u in dec.uncertain [
+    - #u.text #if u.facts.len() > 0 [#text(fill: theme.muted)[Firm up: #u.facts.join("; ")#if u.items > 0 [; or more survey responses]].] \
+  ]
+]
+
 #show: mra-report.with(engagement: e)
 
 #page(header: none)[
@@ -79,6 +86,7 @@
   #if dec.flips.len() == 0 [No single change to one input would switch the recommendation.] else [
     #for f in dec.flips [- #f \ ]
   ]
+  #uncertainty(dec)
 
   #v(3mm)
   #figure-block(dec.charts.probabilities, caption: "Exhibit 1 — How often each path applies across bootstrap draws",
@@ -120,6 +128,7 @@
   #if dec.flips.len() == 0 [No single change to one input would switch the recommendation.] else [
     #for f in dec.flips [- #f \ ]
   ]
+  #uncertainty(dec)
 
   #if "economics" in dec [
     == Cost case

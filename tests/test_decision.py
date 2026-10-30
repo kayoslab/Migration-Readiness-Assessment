@@ -151,3 +151,20 @@ def test_blank_engagement_from_init_is_insufficient_not_a_guess(tmp_path):
     assert all(r.verdict == "insufficient_evidence" for r in a.results.values())
     assert any("teams_per_deployable" in p for p in a.problems)
     assert any("not named" in f.message for f in a.fact_checks)
+
+
+def test_insufficient_evidence_names_the_uncertain_inputs(tmp_path):
+    from mra.explain import inputs_of
+    from mra.sim import architecture_need_family
+    # just below the stay / modular-monolith boundary with small groups: the engine should decline and say why
+    scenario = architecture_need_family(0.40)
+    hits = 0
+    for seed in range(4):
+        r = assess(build(scenario, tmp_path / str(seed), INSTRUMENT, seed=seed, group_size=5), draws=DRAWS, seed=seed)
+        arch = r.results["architecture"]
+        if arch.verdict == "insufficient_evidence":
+            hits += 1
+            signals = [u["signal"] for u in arch.uncertain_inputs]
+            assert "need.architecture" in signals
+            assert "teams_per_deployable" in inputs_of("need.architecture", r.engagement.instrument)["facts"]
+    assert hits >= 1

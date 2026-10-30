@@ -291,6 +291,7 @@ class DecisionResult:
     unresolved_at: list[str] = field(default_factory=list)
     what_would_change: list[dict] = field(default_factory=list)
     excluded: list[str] = field(default_factory=list)
+    uncertain_inputs: list[dict] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
     economics: dict = field(default_factory=dict)
     gates: dict = field(default_factory=dict)
@@ -298,6 +299,50 @@ class DecisionResult:
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()}
+
+
+def _all_leaves(cond, rules: dict, seen=None) -> list[dict]:
+    """Every leaf condition of a tree, with derived boolean signals expanded into their own conditions."""
+    seen = seen if seen is not None else set()
+    if cond is None:
+        return []
+    if isinstance(cond, list):
+        return [leaf for c in cond for leaf in _all_leaves(c, rules, seen)]
+    if any(k in cond for k in ("all", "any", "not")):
+        return [leaf for k in ("all", "any", "not") if k in cond
+                for leaf in _all_leaves(cond[k] if isinstance(cond[k], list) else [cond[k]], rules, seen)]
+    spec = rules.get("signals", {}).get(cond.get("signal", ""), {})
+    if any(k in spec for k in ("all", "any")) and cond["signal"] not in seen:
+        seen.add(cond["signal"])
+        return _all_leaves({k: v for k, v in spec.items() if k in ("all", "any")}, rules, seen)
+    return [cond]
+
+
+def uncertain_inputs(evidence, rules: dict, decision: str, outcomes: list[str], limit: int = 5) -> list[dict]:
+    """Conditions deciding between the given outcomes whose truth varies across draws (or cannot be evaluated)."""
+    specs = [o for o in rules["decisions"][decision]["outcomes"] if o["id"] in outcomes]
+    leaves = {}
+    for o in specs:
+        for c in _all_leaves(o.get("when"), rules) + _all_leaves(o.get("requires_capability"), rules):
+            leaves.setdefault((c["signal"], c.get("op"), str(c.get("value", c.get("ref")))), c)
+    stats = {k: [0, 0, 0] for k in leaves}          # true, false, unresolved
+    for b in range(evidence.draws):
+        ctx = Context(evidence.at(b), rules, evidence.current_state, decision)
+        for k, c in leaves.items():
+            r = _compare(c, ctx)
+            stats[k][0 if r is True else 1 if r is False else 2] += 1
+    out = []
+    for (signal, op, threshold), (t, f, u) in stats.items():
+        n = t + f + u
+        share_true, unresolved = t / n, u / n
+        balance = min(share_true, f / n)                # 0 when the condition is settled either way
+        if balance >= 0.1 or unresolved >= 0.1:
+            out.append({"signal": signal, "op": op, "threshold": threshold, "share_true": round(share_true, 2),
+                        "unresolved": round(unresolved, 2), "weight": max(balance, unresolved)})
+    best = {}
+    for x in sorted(out, key=lambda x: -x["weight"]):          # one entry per signal: the most uncertain condition
+        best.setdefault(x["signal"], x)
+    return list(best.values())[:limit]
 
 
 def decide(evidence, rules: dict, decision: str, confidence: float | None = None) -> DecisionResult:
@@ -329,6 +374,10 @@ def decide(evidence, rules: dict, decision: str, confidence: float | None = None
     verdict.excluded = [e for e, c in Counter(e for r in results for e in r.excluded).most_common() if c >= n / 2]
     verdict.unresolved_share = round(len(unresolved) / n, 3)
     verdict.unresolved_at = [k for k, _ in Counter(r.unresolved_at for r in unresolved).most_common(3)]
+    contenders = [k for k, _ in Counter(r.outcome for r in results).most_common() if k != "unresolved"][:2]
+    if verdict.verdict == "insufficient_evidence" or p < 0.95:
+        verdict.uncertain_inputs = uncertain_inputs(evidence, rules, decision,
+                                                    contenders + [r.unresolved_at for r in unresolved if r.unresolved_at][:1])
     target = verdict.verdict if verdict.verdict != "insufficient_evidence" else (verdict.leaning or "")
     verdict.what_would_change = what_would_change(rules, decision, point_ctx, target) if target else []
     return verdict

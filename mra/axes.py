@@ -265,7 +265,7 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
     for fid, f in ins.facts.iterrows():
         need = f["required"] == "true" or (f["required"] == "if_distributed" and arch_state == "distributed") or \
             (f["required"] == "if_cloud" and eng.config.get("current_hosting") == "cloud")
-        if need and fid not in eng.facts:
+        if need and (fid not in eng.facts or eng.facts[fid].point is None):
             missing.append(fid)
 
     # track record (G14): ≥ 30% of informed respondents in any group report a failed programme

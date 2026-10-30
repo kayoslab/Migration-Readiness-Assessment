@@ -32,6 +32,10 @@ def main(argv: list[str] | None = None) -> int:
     sim.add_argument("--quick", action="store_true", help="reduced grid (as run in CI)")
     sim.add_argument("--out", default=None, help="output folder (default Output/sim)")
 
+    ini = sub.add_parser("init", help="v3: create a blank engagement folder with annotated templates")
+    ini.add_argument("folder")
+    ini.add_argument("--instrument", default="instrument")
+
     cpl = sub.add_parser("coupling", help="v3: scripted coupling facts from a git repository")
     cpl.add_argument("repo", help="path to the repository of the deployable")
     own = cpl.add_mutually_exclusive_group(required=True)
@@ -54,6 +58,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "decide":
         return _decide(args)
+
+    if args.command == "init":
+        from .scaffold import init
+        for p in init(Path(args.folder), Path(args.instrument)):
+            print(f"created {p}")
+        return 0
 
     if args.command == "coupling":
         import yaml as _yaml

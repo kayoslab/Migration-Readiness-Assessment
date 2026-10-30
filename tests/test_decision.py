@@ -137,3 +137,17 @@ def test_premium_and_ref():
     ctx = Context({"r": 1.08, "p": 10.0, "x": 3.0, "y": 4.0}, {"signals": {}})
     assert evaluate({"signal": "r", "op": "<=", "value": 1.0, "premium": "p"}, ctx) is True
     assert evaluate({"signal": "x", "op": "<", "ref": "y"}, ctx) is True
+
+
+def test_blank_engagement_from_init_is_insufficient_not_a_guess(tmp_path):
+    from mra.scaffold import init
+    folder = tmp_path / "acme"
+    init(folder, INSTRUMENT)
+    cfg = yaml.safe_load((folder / "engagement.yaml").read_text())
+    cfg["instrument"] = str(INSTRUMENT)
+    cfg["responses"] = {}
+    (folder / "engagement.yaml").write_text(yaml.safe_dump(cfg))
+    a = assess(folder / "engagement.yaml", draws=50)
+    assert all(r.verdict == "insufficient_evidence" for r in a.results.values())
+    assert any("teams_per_deployable" in p for p in a.problems)
+    assert any("not named" in f.message for f in a.fact_checks)

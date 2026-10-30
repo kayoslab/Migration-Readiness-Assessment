@@ -50,7 +50,8 @@ def check(eng) -> list[FactCheck]:
             out.append(FactCheck("warning", fid, f"{spec.at[fid, 'label']} needs a second attester."))
 
     max_ratio = disc.get("max_range_ratio")
-    unsourced = [fid for fid, f in facts.items() if fid in spec.index and not f.source and not f.scripted]
+    unsourced = [fid for fid, f in facts.items()
+                 if fid in spec.index and f.point is not None and not f.source and not f.scripted]
     if unsourced:
         out.append(FactCheck("warning", None, f"{len(unsourced)} fact(s) have no source, e.g. {', '.join(unsourced[:5])}."))
     for fid, f in facts.items():

@@ -19,6 +19,10 @@ def main(argv: list[str] | None = None) -> int:
     rep.add_argument("--output", help="PDF path (default: report.output in the config)")
     rep.add_argument("--llm", action="store_true", help="analyse free-text answers with the configured LLM")
 
+    bm = sub.add_parser("benchmarks", help="show the age of the DORA benchmark table, or rebuild it")
+    bm.add_argument("--instrument", default="instrument")
+    bm.add_argument("--update", action="store_true", help="download the latest edition from DORA's repository")
+    bm.add_argument("--edition", default="2025")
     val = sub.add_parser("validate", help="cross-check the v3 instrument files")
     val.add_argument("--instrument", default="instrument")
 
@@ -56,10 +60,27 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "validate":
+        from .benchmark import age_warning, load as load_benchmarks
         from .instrument import load_instrument, validate
         errors = validate(load_instrument(args.instrument))
         print("\n".join(errors) or "Instrument is consistent.")
+        bench = load_benchmarks(Path(args.instrument))
+        if bench and (warning := age_warning(bench)):
+            print(f"Warning: {warning}")
         return 1 if errors else 0
+
+    if args.command == "benchmarks":
+        from .benchmark import age_warning, load as load_benchmarks, update
+        if args.update:
+            print(f"Benchmarks written to {update(Path(args.instrument), args.edition)}")
+        bench = load_benchmarks(Path(args.instrument))
+        if not bench:
+            print("No benchmark table; run `mra benchmarks --update`.")
+            return 1
+        src = bench["source"]
+        print(f"{src['title']} · retrieved {src['retrieved']} · commit {src['commit'][:10]}\n{src['url']}")
+        print(age_warning(bench) or "Up to date enough to use.")
+        return 0
 
     if args.command == "decide":
         return _decide(args)

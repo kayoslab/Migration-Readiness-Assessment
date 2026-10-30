@@ -230,6 +230,21 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         readiness["insights"]["weakest"] = register("readiness.weakest", interpret.weakest(rd.weakest), [
             {"statement": w["text"], "score": w["score"], "share_low": round(w["low"], 2), "share_high": round(w["high"], 2)}
             for w in rd.weakest[:6]])
+    from .benchmark import compare as compare_benchmarks
+    try:
+        bm = compare_benchmarks(eng)
+    except ValueError as exc:
+        bm, benchmark_problem = None, str(exc)
+    else:
+        benchmark_problem = None
+    if bm:
+        arch = assessment.results.get("architecture")
+        readiness["benchmark"] = {
+            **bm, "chart": _rel(charts.benchmark_chart(bm["rows"], cdir / "benchmark.svg"), root),
+            "insight": register("readiness.benchmark", interpret.benchmark(bm, arch.verdict if arch else None), {
+                "segment": [bm["industry"], bm["organisation_size"]],
+                "measures": [{k: r[k] for k in ("label", "shown", "score", "industry_mean", "industry_sd",
+                                                "industry_typical", "position")} for r in bm["rows"]]})}
     readiness["differences"] = [{"sub_area": d["sub_area"], "high": f"{d['high'][0]} ({d['high'][1]})",
                                  "low": f"{d['low'][0]} ({d['low'][1]})", "spread": d["spread"], "effect": d["effect"],
                                  "significant": d["significant"]} for d in rd.differences[:8]]
@@ -340,7 +355,8 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         "notice": notice,
         "glossary": glossary,
         "evidence_strength": _evidence_strength(assessment),
-        "problems": assessment.problems,
+        "problems": assessment.problems + ([benchmark_problem] if benchmark_problem else [])
+                    + ([bm["warning"]] if bm and bm.get("warning") else []),
         "fact_checks": [{"severity": f.severity, "message": f.message} for f in assessment.fact_checks],
         "rules": {"version": rules.get("version"), "signed_off_by": rules.get("signed_off_by"),
                   "confidence": rules.get("evidence", {}).get("confidence", 0.8),

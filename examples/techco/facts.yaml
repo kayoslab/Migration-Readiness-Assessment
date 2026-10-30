@@ -59,6 +59,10 @@ change_failure_pct:
   value: 6
   source: synthetic scenario
   attester: Fact-sheet owner
+deploy_rework_pct:
+  value: 9
+  source: synthetic scenario
+  attester: Fact-sheet owner
 restore_hours:
   value: 4
   source: synthetic scenario

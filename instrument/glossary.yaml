@@ -9,6 +9,7 @@ Hybrid: Running some workloads in a public cloud and the rest on own or leased i
 Total cost of ownership (TCO): All costs of running an option over the horizon — infrastructure, people, licences, migration and running both setups in parallel — discounted to today's value.
 Payback after cut-over: The months after the last workload has moved until the option's cumulative cost falls below that of the alternative.
 FTE: Full-time equivalent; savings are expressed as fully loaded annual salaries.
-DORA metrics: Lead time, deployment frequency, change failure rate and time to restore — the delivery measures used by the DORA research programme.
+DORA metrics: Lead time, deployment frequency, failed deployment recovery time, change failure rate and deployment rework rate — the delivery measures used by the DORA research programme (Google Cloud).
+DORA score: DORA's 0–10 scale for each delivery measure, 10 best, used to compare with the published benchmarks.
 Operating-model fit: How current ways of working match what a path requires, such as domain ownership or team-owned operations. It describes fit, not maturity.
 Stake: How a respondent expects an option to affect their own role and skills. Reported for groups only and never used to weight answers.

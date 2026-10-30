@@ -214,3 +214,38 @@ def stakeholder_map(rows: list[dict]) -> dict:
     if any(r["influence_source"] == "default" for r in rows):
         points.append("Influence ratings marked as default are assumptions; agree them with the sponsor.")
     return {"title": title, "points": points}
+
+
+def benchmark(bm: dict, architecture_verdict: str | None) -> dict:
+    rows = [r for r in bm["rows"] if r["score"] is not None]
+    if not rows:
+        return {"title": "No delivery measures are available to compare with the industry", "points": []}
+    seg = "industry" if bm["industry"] == "All industries" else f"{bm['industry']} industry"
+    by = {p: [r["label"].lower() for r in rows if r["position"] == p] for p in ("above", "around", "below")}
+    if by["below"]:
+        title = f"Behind the {seg} average on {_join(by['below'])}"
+    elif by["above"] and not by["around"]:
+        title = f"Ahead of the {seg} average on every measured delivery measure"
+    elif by["above"]:
+        title = f"Around the {seg} average on {_join(by['around'])}, and ahead on {_join(by['above'])}"
+    else:
+        title = f"Around the {seg} average on every measured delivery measure"
+    points = []
+    throughput_below = any(r["position"] == "below" for r in rows if r["metric"] in ("leadtime", "deployfreq"))
+    if architecture_verdict in ("stay_and_improve", None):
+        pass
+    elif throughput_below:
+        points.append("Slower delivery than peers is consistent with the need for change found in the architecture "
+                      "assessment.")
+    else:
+        points.append("Delivery speed is not where the organisation trails its peers, so the case for change rests on "
+                      "the architecture findings rather than on delivery performance; these measures should not fall "
+                      "while the change is made.")
+    missing = [r["label"].lower() for r in bm["rows"] if r["score"] is None]
+    if missing:
+        points.append(f"Not measured: {_join(missing)}.")
+    return {"title": title, "points": points}
+
+
+def _join(words: list[str]) -> str:
+    return words[0] if len(words) == 1 else ", ".join(words[:-1]) + " and " + words[-1]

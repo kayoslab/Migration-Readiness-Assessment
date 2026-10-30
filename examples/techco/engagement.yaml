@@ -33,6 +33,9 @@ report:
   prepared_by: Platform Advisory
   sample_data: true
   stakeholder_map: true
+benchmark:
+  industry: technology
+  organisation_size: fewer_than_1000
 influence:
   EXE: high
   TEC: high

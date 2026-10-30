@@ -13,6 +13,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.patches  # noqa: E402
 import matplotlib.ticker  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
@@ -473,4 +474,30 @@ def stakeholder_chart(rows: list[dict], path: Path) -> Path:
     ax.set_ylabel("Influence on the decision")
     ax.xaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
     ax.set_xlabel("Respondents preferring the recommended path (or its interim step), averaged over decisions")
+    return _save(fig, path)
+
+
+def benchmark_chart(rows: list[dict], path: Path) -> Path:
+    """Each delivery measure on DORA's 0–10 scale: industry average ± one standard deviation, and this organisation."""
+    apply_style()
+    rows = [r for r in rows][::-1]
+    fig, ax = plt.subplots(figsize=(WIDTH, 0.5 * len(rows) + 1.0))
+    for yi, r in enumerate(rows):
+        lo, hi = max(0, r["industry_mean"] - r["industry_sd"]), min(10, r["industry_mean"] + r["industry_sd"])
+        ax.barh(yi, hi - lo, left=lo, height=0.42, color=RULE)
+        ax.plot([r["industry_mean"]] * 2, [yi - 0.21, yi + 0.21], color=INK_MUTED, lw=1.5)
+        if r["score"] is not None:
+            ax.scatter(r["score"], yi, s=60, color=ACCENT, edgecolor=SURFACE, lw=1.5, zorder=3, clip_on=False)
+        else:
+            ax.text(0.1, yi, "not measured", va="center", fontsize=7.5, color=INK_MUTED)
+    ax.set_yticks(range(len(rows)), [_wrap(r["label"], 26) for r in rows])
+    ax.tick_params(axis="y", length=0)
+    ax.spines["left"].set_visible(False)
+    ax.set_xlim(0, 10.2)
+    ax.set_xticks(range(0, 11, 2))
+    ax.set_xlabel("DORA score (0–10, higher is better)")
+    handles = [plt.Line2D([], [], marker="o", ls="", color=ACCENT, markersize=7, label="This organisation"),
+               plt.Line2D([], [], color=INK_MUTED, lw=1.5, label="Industry average"),
+               matplotlib.patches.Patch(color=RULE, label="± one standard deviation")]
+    ax.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=3, frameon=False, fontsize=7.5)
     return _save(fig, path)

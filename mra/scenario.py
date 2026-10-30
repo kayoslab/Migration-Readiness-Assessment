@@ -26,7 +26,7 @@ HEALTHY_FACTS = {
     "teams_per_deployable": 4, "cross_team_change_pct": 12, "blast_radius_pct": 15,
     "components_distinct_load": 0, "components_distinct_availability": 0, "components_distinct_compliance": 0,
     "friction_concentration_index": 1.3,
-    "deploy_automation": "team_triggered", "rollback_minutes": 10, "test_automation_pct": 70, "change_failure_pct": 12,
+    "deploy_automation": "team_triggered", "rollback_minutes": 10, "test_automation_pct": 70, "change_failure_pct": 12, "deploy_rework_pct": 9,
     "restore_hours": 4, "deploys_per_week": 3, "lead_time_hours": 72, "logs_and_metrics": "yes",
     "platform_basics_count": 3, "provision_days": 5, "oncall_model": "sre_escalating",
     "shared_tables_pct": 25, "cross_module_transactions": 4,

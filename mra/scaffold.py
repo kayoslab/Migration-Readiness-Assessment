@@ -80,7 +80,14 @@ facts: facts.yaml
 governance: governance.yaml
 responses:                                     # one form export per group; remove groups you do not survey
 {chr(10).join(f'  {r}: Responses/{r}.csv' for r in ROLES)}
+invited: {{}}                                   # people invited per group, e.g. ENG: 22 (for response rates)
+benchmark:                                     # comparison group for delivery measures (mra benchmarks lists the data)
+  industry: all                                # e.g. technology, financial_services, … (see instrument/benchmarks.yaml)
+  organisation_size: all                       # e.g. fewer_than_1000 (500 to 999 employees)
+targets: {{}}                                   # success-measure targets agreed with the sponsor, by fact id
+influence: {{}}                                 # stakeholder map: GROUP: high | medium | low (default: EXE, TEC high)
 report:
+  stakeholder_map: false                       # discuss with the sponsor before switching on
   organisation: null
   title: Architecture and Hosting Assessment
   subtitle: null

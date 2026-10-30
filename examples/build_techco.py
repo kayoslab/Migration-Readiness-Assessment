@@ -130,6 +130,7 @@ if __name__ == "__main__":
     cfg["report"] = {"organisation": "TechCo", "title": "Architecture and Hosting Assessment",
                      "subtitle": "Recommended direction for the Order Platform", "prepared_for": "Executive Leadership Team",
                      "prepared_by": "Platform Advisory", "sample_data": True, "stakeholder_map": True}
+    cfg["benchmark"] = {"industry": "technology", "organisation_size": "fewer_than_1000"}
     cfg["influence"] = {"EXE": "high", "TEC": "high", "FIN": "high", "PRD": "medium", "ENG": "medium",
                         "OPS": "medium", "BUS": "medium", "SEC": "medium"}
     path.write_text(yaml.safe_dump(cfg, sort_keys=False))

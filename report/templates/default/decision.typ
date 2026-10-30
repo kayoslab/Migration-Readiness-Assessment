@@ -292,6 +292,36 @@ means more ready. Each group answers only the questions it can judge, so cells a
     source: "Lowest-scoring statements: group-weighted score (1–5) on the right; bars show the share of answers scoring low, middle and high.")
 ]
 
+#if "benchmark" in data.readiness [
+  #let bm = data.readiness.benchmark
+  #block(breakable: false)[
+    == Delivery performance against the industry
+    The fact sheet's delivery measures compared with the #bm.source.research benchmarks for the
+    #(bm.industry) industry#if bm.industry == "All industries" [ as a whole], and with organisations of
+    #lower(bm.organisation_size).
+    #exhibit(bm.chart, bm.insight,
+      source: "DORA scores: categories 1–6 mapped to 0–10, percentages p to 10 − p/10, as in DORA's Quick Check. Grey: segment average ± one standard deviation.")
+  ]
+  #v(2mm)
+  #data-table(
+    columns: (2fr, 2.3fr, 2fr, 0.9fr, 1fr, 1.1fr),
+    align: (left, left, left, left, left, left),
+    header: ("Measure", "Measured", "Industry average", "vs industry", "vs same size", "2024 level"),
+    ..bm.rows.map(r => (r.label, text(size: 8.5pt, r.shown),
+      text(size: 8.5pt, r.industry_typical + " (score " + fmt(r.industry_mean, d: 1) + ")"),
+      r.position, if r.size_position == none [–] else [#r.size_position],
+      if r.level_2024 == none [–] else [#r.level_2024])).flatten(),
+  )
+  #v(2pt)
+  #text(size: 7.5pt, fill: theme.muted)[
+    Position: above or below when more than half a standard deviation from the group's average on DORA's scale;
+    "same size" compares with organisations of #lower(bm.organisation_size) across all industries.
+    Benchmarks are self-reported survey answers; measured values here make the comparison indicative. Sources and
+    conversion: see Method.
+  ]
+  #v(3mm)
+]
+
 = Preconditions
 
 Preconditions are attested with evidence by the sponsor, Finance, the technology lead and risk and compliance, and
@@ -452,6 +482,18 @@ ranges sampled #data.rules.draws times; a path is recommended only if it applies
 The decision rules (version #data.rules.version) were
 #if data.rules.signed_off_by == none [#text(fill: theme.status.RED)[not recorded as signed off]] else [signed off by #data.rules.signed_off_by]
 before results were seen.
+
+#if "benchmark" in data.readiness [
+  #let bm = data.readiness.benchmark
+  == Benchmarks
+  Delivery measures are compared with #bm.source.title (#bm.source.publisher; #bm.source.research), taken from
+  DORA's published repository at commit #bm.source.commit.slice(0, 7) on #bm.source.retrieved and licensed
+  #bm.source.licence. The data give each group's mean and standard deviation on DORA's 0–10 scale. Measured values
+  are converted as DORA's Quick Check does: answer categories 1–6 to 0–10, percentages p to 10 − p/10; durations
+  and deployment frequencies are first assigned to DORA's answer categories (one month = 730 hours; two or more
+  deployments per working day count as on demand). No percentiles are given, because DORA publishes means and
+  standard deviations of ordinal answers only. The 2024 level is taken from #bm.levels_2024.source. #bm.levels_2024.note
+]
 
 #if data.problems.len() > 0 [
   == Data gaps

@@ -1,0 +1,513 @@
+# Delivery performance benchmarks. Rebuild with `mra benchmarks --update`; do not edit the segments by hand.
+# `levels_2024` is transcribed from the Accelerate State of DevOps Report 2024 (v. 2024.3, p. 13) and is kept on update.
+# `conversion` documents how the fact sheet's units map onto DORA's answer categories (mra/benchmark.py).
+conversion:
+  note: How measured fact-sheet values map onto DORA's answer categories (1 worst … 6 best). Durations use DORA's category
+    boundaries; one month = 730 hours, six months = 4,380 hours.
+  lead_time_hours / restore_hours: < 1 → 6 · < 24 → 5 · < 168 → 4 · < 730 → 3 · < 4,380 → 2 · otherwise 1
+  deploys_per_week: ≥ 10 (two or more per working day) → 6 · ≥ 5 (about daily) → 5 · ≥ 1 → 4 · ≥ 0.23 (monthly) → 3 · ≥ 1/26
+    (every six months) → 2 · otherwise 1
+  change_failure_pct / deploy_rework_pct: score = 10 − percentage / 10 (DORA Quick Check)
+levels_2024:
+  source: Accelerate State of DevOps Report 2024, DORA (Google Cloud), v. 2024.3, "Performance levels", p. 13
+  url: https://dora.dev/research/2024/dora-report/
+  note: Clusters emerge from each year's survey and are not set in advance. DORA calls the faster cluster "high" and the slower
+    but more stable one "medium", so change failure rate is not ranked by level. DORA no longer publishes levels (2025 introduced
+    team archetypes) and advises that improving matters more than reaching a level.
+  clusters:
+  - level: Elite
+    lead_time: Less than one day
+    deployment_frequency: On demand (multiple deploys per day)
+    change_fail_rate: 5%
+    recovery_time: Less than one hour
+    respondents: 19% (18–20%)
+  - level: High
+    lead_time: Between one day and one week
+    deployment_frequency: Between once per day and once per week
+    change_fail_rate: 20%
+    recovery_time: Less than one day
+    respondents: 22% (21–23%)
+  - level: Medium
+    lead_time: Between one week and one month
+    deployment_frequency: Between once per week and once per month
+    change_fail_rate: 10%
+    recovery_time: Less than one day
+    respondents: 35% (33–36%)
+  - level: Low
+    lead_time: Between one month and six months
+    deployment_frequency: Between once per month and once every six months
+    change_fail_rate: 40%
+    recovery_time: Between one week and one month
+    respondents: 25% (23–26%)
+  by_category:
+    leadtime:
+      6: elite
+      5: elite
+      4: high
+      3: medium
+      2: low
+      1: below low
+    deployfreq:
+      6: elite
+      5: between elite and high
+      4: high
+      3: medium
+      2: low
+      1: below low
+    failurerecovery:
+      6: elite
+      5: high or medium
+      4: between medium and low
+      3: low
+      2: below low
+      1: below low
+source:
+  title: DORA Quick Check benchmarks, 2025 edition
+  research: DORA research programme, 2025
+  publisher: DORA (Google Cloud)
+  url: https://github.com/dora-team/dora.dev/tree/4ced7e46043ed3491e1768c8fff0ea5062e616bd/svelte/quick-check/src/lib/data/editions/2025
+  commit: 4ced7e46043ed3491e1768c8fff0ea5062e616bd
+  edition: 2025
+  retrieved: '2026-10-30'
+  licence: Apache-2.0 (dora.dev repository)
+  note: Self-reported survey answers; means and standard deviations on DORA's 0–10 scale. Percentage metrics are stored on
+    DORA's instability scale (mean × 10 ≈ mean percentage).
+categories:
+  leadtime:
+    1: More than six months
+    2: One to six months
+    3: One week to one month
+    4: One day to one week
+    5: Less than one day
+    6: Less than one hour
+  deployfreq:
+    1: Less than once per six months
+    2: Between once per month and once every six months
+    3: Between once per week and once per month
+    4: Between once per day and once per week
+    5: Between once per hour and once per day
+    6: On demand (multiple deploys per day)
+  failurerecovery:
+    1: More than six months
+    2: One to six months
+    3: One week to one month
+    4: One day to one week
+    5: Less than one day
+    6: Less than one hour
+segments:
+  industry:
+    all:
+      name: All industries
+      metrics:
+        leadtime:
+          mean: 5.5
+          std: 2.4
+        deployfreq:
+          mean: 4.8
+          std: 2.8
+        failurerecovery:
+          mean: 7.4
+          std: 2.1
+        changefailure:
+          mean: 1.9
+          std: 2.1
+        rework:
+          mean: 2.2
+          std: 2.2
+    consumer:
+      name: Retail/Consumer/e-Commerce
+      metrics:
+        leadtime:
+          mean: 5.9
+          std: 2.3
+        deployfreq:
+          mean: 5.3
+          std: 2.7
+        failurerecovery:
+          mean: 7.8
+          std: 1.8
+        changefailure:
+          mean: 1.7
+          std: 2.0
+        rework:
+          mean: 2.0
+          std: 1.9
+    media_entertainment:
+      name: Media & Entertainment
+      metrics:
+        leadtime:
+          mean: 5.8
+          std: 2.4
+        deployfreq:
+          mean: 5.2
+          std: 2.7
+        failurerecovery:
+          mean: 7.6
+          std: 2.1
+        changefailure:
+          mean: 1.8
+          std: 1.8
+        rework:
+          mean: 1.8
+          std: 1.7
+    non_profit:
+      name: Non-profit
+      metrics:
+        leadtime:
+          mean: 5.9
+          std: 2.7
+        deployfreq:
+          mean: 4.5
+          std: 2.6
+        failurerecovery:
+          mean: 7.5
+          std: 1.8
+        changefailure:
+          mean: 2.2
+          std: 2.8
+        rework:
+          mean: 2.1
+          std: 2.5
+    technology:
+      name: Technology
+      metrics:
+        leadtime:
+          mean: 5.7
+          std: 2.4
+        deployfreq:
+          mean: 4.9
+          std: 2.8
+        failurerecovery:
+          mean: 7.4
+          std: 2.1
+        changefailure:
+          mean: 1.9
+          std: 2.0
+        rework:
+          mean: 2.3
+          std: 2.2
+    telecommunications:
+      name: Telecommunications
+      metrics:
+        leadtime:
+          mean: 5.2
+          std: 2.4
+        deployfreq:
+          mean: 4.7
+          std: 2.6
+        failurerecovery:
+          mean: 7.2
+          std: 2.3
+        changefailure:
+          mean: 2.4
+          std: 2.5
+        rework:
+          mean: 2.6
+          std: 2.5
+    other:
+      name: Other
+      metrics:
+        leadtime:
+          mean: 5.7
+          std: 2.4
+        deployfreq:
+          mean: 5.0
+          std: 2.7
+        failurerecovery:
+          mean: 7.6
+          std: 2.0
+        changefailure:
+          mean: 1.6
+          std: 1.9
+        rework:
+          mean: 2.0
+          std: 2.0
+    education:
+      name: Education
+      metrics:
+        leadtime:
+          mean: 5.5
+          std: 2.6
+        deployfreq:
+          mean: 4.5
+          std: 2.9
+        failurerecovery:
+          mean: 6.6
+          std: 2.6
+        changefailure:
+          mean: 2.7
+          std: 2.4
+        rework:
+          mean: 2.9
+          std: 2.3
+    financial_services:
+      name: Financial Services
+      metrics:
+        leadtime:
+          mean: 5.4
+          std: 2.3
+        deployfreq:
+          mean: 5.1
+          std: 2.6
+        failurerecovery:
+          mean: 7.7
+          std: 1.9
+        changefailure:
+          mean: 1.7
+          std: 2.1
+        rework:
+          mean: 1.9
+          std: 1.9
+    healthcare_pharmaceuticals:
+      name: Healthcare & Pharmaceuticals
+      metrics:
+        leadtime:
+          mean: 5.0
+          std: 2.6
+        deployfreq:
+          mean: 4.3
+          std: 2.8
+        failurerecovery:
+          mean: 7.1
+          std: 2.2
+        changefailure:
+          mean: 2.5
+          std: 2.3
+        rework:
+          mean: 2.6
+          std: 2.4
+    energy:
+      name: Energy
+      metrics:
+        leadtime:
+          mean: 5.4
+          std: 2.5
+        deployfreq:
+          mean: 4.5
+          std: 2.7
+        failurerecovery:
+          mean: 7.2
+          std: 1.9
+        changefailure:
+          mean: 1.8
+          std: 1.8
+        rework:
+          mean: 2.1
+          std: 1.9
+    government:
+      name: Government
+      metrics:
+        leadtime:
+          mean: 4.8
+          std: 2.6
+        deployfreq:
+          mean: 4.3
+          std: 3.0
+        failurerecovery:
+          mean: 7.0
+          std: 2.1
+        changefailure:
+          mean: 2.1
+          std: 2.2
+        rework:
+          mean: 2.4
+          std: 2.2
+    insurance:
+      name: Insurance
+      metrics:
+        leadtime:
+          mean: 4.8
+          std: 2.2
+        deployfreq:
+          mean: 4.4
+          std: 2.5
+        failurerecovery:
+          mean: 7.5
+          std: 1.8
+        changefailure:
+          mean: 1.7
+          std: 2.0
+        rework:
+          mean: 1.8
+          std: 1.9
+    industrials_manufacturing:
+      name: Industrials & Manufacturing
+      metrics:
+        leadtime:
+          mean: 4.9
+          std: 2.6
+        deployfreq:
+          mean: 3.7
+          std: 2.7
+        failurerecovery:
+          mean: 6.5
+          std: 2.3
+        changefailure:
+          mean: 2.0
+          std: 1.9
+        rework:
+          mean: 2.4
+          std: 2.3
+  organisation_size:
+    all:
+      name: All organizations
+      metrics:
+        leadtime:
+          mean: 5.5
+          std: 2.4
+        deployfreq:
+          mean: 4.8
+          std: 2.8
+        failurerecovery:
+          mean: 2.6
+          std: 2.1
+        changefailure:
+          mean: 1.9
+          std: 2.1
+        rework:
+          mean: 2.2
+          std: 2.2
+    solo:
+      name: 1 employee
+      metrics:
+        leadtime:
+          mean: 6.4
+          std: 2.7
+        deployfreq:
+          mean: 5.1
+          std: 3.4
+        failurerecovery:
+          mean: 2.8
+          std: 2.6
+        changefailure:
+          mean: 3.0
+          std: 3.1
+        rework:
+          mean: 3.3
+          std: 3.1
+    fewer_than_10:
+      name: 2 to 9 employees
+      metrics:
+        leadtime:
+          mean: 6.4
+          std: 2.7
+        deployfreq:
+          mean: 4.8
+          std: 2.9
+        failurerecovery:
+          mean: 2.3
+          std: 2.2
+        changefailure:
+          mean: 1.9
+          std: 2.2
+        rework:
+          mean: 2.3
+          std: 2.3
+    fewer_than_100:
+      name: 20 to 99 employees
+      metrics:
+        leadtime:
+          mean: 5.8
+          std: 2.3
+        deployfreq:
+          mean: 4.4
+          std: 2.4
+        failurerecovery:
+          mean: 2.4
+          std: 1.9
+        changefailure:
+          mean: 1.7
+          std: 1.8
+        rework:
+          mean: 2.3
+          std: 2.1
+    fewer_than_500:
+      name: 100 to 499 employees
+      metrics:
+        leadtime:
+          mean: 5.6
+          std: 2.4
+        deployfreq:
+          mean: 4.8
+          std: 2.7
+        failurerecovery:
+          mean: 2.6
+          std: 2.1
+        changefailure:
+          mean: 1.9
+          std: 2.0
+        rework:
+          mean: 2.3
+          std: 2.2
+    fewer_than_1000:
+      name: 500 to 999 employees
+      metrics:
+        leadtime:
+          mean: 5.5
+          std: 2.4
+        deployfreq:
+          mean: 4.7
+          std: 2.6
+        failurerecovery:
+          mean: 2.7
+          std: 2.1
+        changefailure:
+          mean: 1.8
+          std: 2.1
+        rework:
+          mean: 2.2
+          std: 2.2
+    fewer_than_5000:
+      name: 1,000 to 4,999 employees
+      metrics:
+        leadtime:
+          mean: 5.3
+          std: 2.4
+        deployfreq:
+          mean: 4.7
+          std: 2.7
+        failurerecovery:
+          mean: 2.6
+          std: 2.2
+        changefailure:
+          mean: 1.9
+          std: 2.1
+        rework:
+          mean: 2.1
+          std: 2.1
+    fewer_than_10000:
+      name: 5,000 to 9,999 employees
+      metrics:
+        leadtime:
+          mean: 5.4
+          std: 2.4
+        deployfreq:
+          mean: 4.8
+          std: 2.8
+        failurerecovery:
+          mean: 2.5
+          std: 1.9
+        changefailure:
+          mean: 1.8
+          std: 2.1
+        rework:
+          mean: 2.0
+          std: 1.9
+    more_than_9999:
+      name: 10,000 or more employees
+      metrics:
+        leadtime:
+          mean: 5.2
+          std: 2.5
+        deployfreq:
+          mean: 4.9
+          std: 2.8
+        failurerecovery:
+          mean: 2.8
+          std: 2.2
+        changefailure:
+          mean: 1.9
+          std: 2.2
+        rework:
+          mean: 2.1
+          std: 2.2

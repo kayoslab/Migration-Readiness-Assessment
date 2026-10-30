@@ -8,11 +8,11 @@ Status of the additions that bring the report to the standard of an advisory del
 | What you would need to believe | Done |
 | Risks, assumptions and dependencies | Done |
 | Basis of preparation (notice, glossary, response rates) | Done |
-| Roadmap with stage gates | Planned — **A** |
-| Success measures | Planned — **B** |
-| Scenarios | Planned — **C** |
-| Benchmark against published bands | Planned — **D** |
-| Stakeholder map | Planned — **E** |
+| Roadmap with stage gates | Done |
+| Success measures | Done |
+| Scenarios | Done |
+| Benchmark against published bands | Done — see note under D |
+| Stakeholder map | Done |
 | Benefit side of the business case | Evaluated — **F**, needs new inputs and safeguards |
 | Sustainability (energy and carbon) | Evaluated — **G**, needs new inputs |
 
@@ -99,6 +99,19 @@ two years. Only published, citable sources — no invented "industry averages".
 **Effort.** Small (≈ half a day) plus keeping the table current.
 
 **Recommendation.** Build after A–C; worth it for executive audiences, low risk with the source year shown.
+
+**As built (2026-10-30).** The plan above assumed fixed performance bands. Checked against the sources:
+- DORA published elite/high/medium/low levels for the last time in the *Accelerate State of DevOps Report 2024*
+  (v. 2024.3, p. 13). The *2025 State of AI-assisted Software Development* report replaced them with team archetypes.
+- The 2024 levels are clusters, not thresholds, and are not ordered on change failure rate (medium 10% < high 20%).
+- The newest benchmarks are DORA's 2025 data behind its Quick Check (updated 2026-04-22): mean and standard deviation
+  per metric on a 0–10 scale, by industry and organisation size, published in DORA's repository (Apache-2.0).
+
+So the report compares with the 2025 data first — above, around or below the group average, with half a standard
+deviation as the margin, no percentiles — and shows the 2024 level only for lead time, deployment frequency and
+recovery time. `instrument/benchmarks.yaml` records source, commit and retrieval date; `mra validate` warns when the
+edition is more than two years old; `mra benchmarks --update` rebuilds it. Deployment rework rate was added to the
+fact sheet as an optional, unscored fact.
 
 ## E. Stakeholder map
 

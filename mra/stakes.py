@@ -163,6 +163,14 @@ def analyse(eng, evidence, results: dict) -> StakesReport:
                 # preferences that track one's own benefit; preferring what costs you is not motivated reasoning
                 "notable": bool(gap_value >= gap_from and p_value < 0.05)})
 
+    # ---- multiple testing: Benjamini–Hochberg across the groups tested for each decision
+    for decision in {a["decision"] for a in rep.stake_alignment}:
+        family = [a for a in rep.stake_alignment if a["decision"] == decision]
+        qs = stats.false_discovery_control([a["p"] for a in family])
+        for a, q in zip(family, qs):
+            a["q"] = round(float(q), 3)
+            a["notable"] = bool(a["stake_gap"] >= gap_from and q < 0.05)
+
     # ---- concern (self and projective)
     for item, key in (("S06", "self"), ("S06P", "projective")):
         lab = ans[(ans["item_id"] == item) & ans["row"].isna()].set_index("respondent_id")["label"].map(CONCERN)

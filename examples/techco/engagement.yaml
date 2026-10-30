@@ -1,0 +1,21 @@
+system: the Order Platform
+current_hosting: own_infrastructure
+instrument: ../../instrument
+responses:
+  ENG: Responses/ENG.csv
+  PRD: Responses/PRD.csv
+  BUS: Responses/BUS.csv
+  TEC: Responses/TEC.csv
+  EXE: Responses/EXE.csv
+  OPS: Responses/OPS.csv
+  SEC: Responses/SEC.csv
+  FIN: Responses/FIN.csv
+facts: facts.yaml
+governance: governance.yaml
+report:
+  organisation: TechCo
+  title: Architecture and Hosting Assessment
+  subtitle: Recommended direction for the Order Platform
+  prepared_for: Executive Leadership Team
+  prepared_by: Platform Advisory
+  sample_data: true

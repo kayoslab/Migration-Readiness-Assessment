@@ -1,0 +1,132 @@
+# Action library for the v3 report (M6). Actions are selected by what the assessment found — failed or
+# unresolved gates, hard stops, capability gaps, perception/measurement divergence and stakeholder findings —
+# never by a domain colour. Outcome-specific first steps live in outcomes.yaml.
+#
+# owner: the role that typically owns the action; the report asks the organisation to name a person.
+
+phases:
+  before_commitment: Before committing budget or a timeline
+  capability: Capabilities to build
+  first_steps: First steps on the recommended path
+  people: People and alignment
+  evidence: Evidence to collect
+
+gates:
+  sponsor:
+    action: Name one accountable executive with authority over budget and roadmap for the recommended path, expected to stay for at least 18 months.
+    owner: Executive committee
+  funding:
+    action: Commit funding for the first 12 months, including the cost of running old and new side by side.
+    owner: Finance
+  capacity:
+    action: Agree in writing a fixed share of engineering capacity for this work, and name an owner and staffing plan for the current system until it is retired.
+    owner: Technology lead with head of product
+  baseline:
+    action: Measure lead time, deployment frequency, change failure rate and time to restore, and define two or three outcome measures with baseline, target and business owner.
+    owner: Technology lead
+  stop_criteria:
+    action: Agree checkpoints and the criteria for pausing, re-scoping or stopping, and record them in the steering-committee charter.
+    owner: Sponsor
+  change_load:
+    action: Sequence this work against other major changes affecting the same teams; avoid more than one at a time.
+    owner: Portfolio management
+  compliance_release:
+    action: Agree with risk and compliance how teams can deploy their part independently within change-control requirements.
+    owner: Risk and compliance
+  compliance_hosting:
+    action: Obtain a written assessment of hosting constraints and a tested exit plan for the chosen provider(s).
+    owner: Risk and compliance
+
+hard_stops:
+  hs_rollback:
+    action: Make every release reversible within an hour (automated rollback or feature flags) and rehearse it.
+    owner: Engineering
+  hs_observability:
+    action: Introduce centralised logs, metrics and alerting that the owning teams use themselves.
+    owner: Platform team
+  hs_oncall:
+    action: Establish formal out-of-hours ownership for every part of the system.
+    owner: Technology lead
+  hs_automated_deploy:
+    action: Remove manual steps from production deployment.
+    owner: Engineering
+  hs_cloud_not_permitted:
+    action: Record the legal constraint; options requiring public-cloud hosting are excluded rather than deferred.
+    owner: Risk and compliance
+
+# Matched against unmet capability conditions (first key contained in the condition name wins)
+capabilities:
+  delivery_pipeline:
+    action: Strengthen the delivery pipeline — automated regression tests, lower change failure rate, faster restore — before separating components.
+    owner: Engineering
+  platform_basics:
+    action: Complete the platform basics (central logs, metrics and alerting, secrets management, infrastructure as code).
+    owner: Platform team
+  operations:
+    action: Move to team-owned operations with escalation support, and rehearse incident response.
+    owner: Technology lead
+  shared_tables_pct:
+    action: Reduce tables written by more than one module, starting with the areas that change most.
+    owner: Engineering
+  cross_module_transactions:
+    action: Redesign the core operations that rely on transactions spanning future components.
+    owner: Architecture
+  provision_days:
+    action: Make it possible for a team to take a new deployable to production with monitoring within two days.
+    owner: Platform team
+  seam_data:
+    action: Separate the data of the extraction candidate so that no other module writes to its tables.
+    owner: Engineering
+  domain_ownership:
+    action: Map business domains, assign each to one owning team, and let teams change their own data structures without central approval.
+    owner: Technology lead with business leads
+  distributed_operations:
+    action: Design non-essential features to fail independently and let teams decide within agreed guardrails.
+    owner: Architecture
+  consistency_tolerance:
+    action: Identify the business processes that can tolerate short delays in consistency, and those that cannot.
+    owner: Product with business leads
+  run_cost_within_tolerance:
+    action: Revisit the expected running cost of the target, or the tolerance agreed for it.
+    owner: Finance with technology lead
+  automation:
+    action: Bring provisioning and configuration under infrastructure as code before migrating.
+    owner: Platform team
+  cloud_skills:
+    action: Build hands-on cloud operations experience (training, a pilot workload, targeted hiring).
+    owner: Technology lead
+  onprem_ops:
+    action: Secure hardware operations capability — in-house or through managed dedicated hosting.
+    owner: Platform team
+  infra_oncall_people:
+    action: Grow the infrastructure on-call rota to at least four people for sustainable 24/7 cover.
+    owner: Technology lead
+
+divergence:
+  action: "Reconcile perception with measurement for {area}: respondents rate it {survey}, the measured value corresponds to {fact}. Share the measurement and discuss the difference."
+  owner: Technology lead
+
+people:
+  preference_differs:
+    action: Share the evidence behind the recommended path with {group} before communicating a decision, and invite them to test it.
+    owner: Sponsor
+  stake_alignment:
+    action: Prepare a role plan for {group} that shows how the recommended path affects their roles and skills.
+    owner: HR with line management
+  watermelon:
+    action: Hold a facilitated session between leadership and engineering/operations on the statements they rate most differently.
+    owner: Sponsor
+  leadership_disagreement:
+    action: Align technology and business leadership on the preferred direction before any announcement.
+    owner: Executive committee
+  concern:
+    action: Address role concerns in {group} explicitly; confirm that no individual decisions follow from the survey.
+    owner: HR with line management
+
+evidence:
+  missing_fact:
+    action: "Collect the missing fact-sheet values: {facts}."
+    owner: Fact-sheet owner
+  insufficient:
+    action: "The evidence does not yet support a single path. The inputs that matter most: {inputs}. Collect them and re-run the assessment."
+    owner: Analyst

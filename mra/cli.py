@@ -26,6 +26,7 @@ def main(argv: list[str] | None = None) -> int:
     dec.add_argument("--draws", type=int, default=None)
     dec.add_argument("--json", action="store_true", help="print the full result as JSON")
     dec.add_argument("--llm", action="store_true", help="also code free-text answers via the Vercel AI Gateway")
+    dec.add_argument("--pdf", help="write the v3 report to this PDF path")
 
     sim = sub.add_parser("simulate", help="v3: validity grid and threshold sweeps on synthetic engagements")
     sim.add_argument("--quick", action="store_true", help="reduced grid (as run in CI)")
@@ -95,6 +96,9 @@ def _decide(args) -> int:
     if args.json:
         print(json.dumps({d: r.as_dict() for d, r in result.results.items()}, indent=1, default=str))
         return 0
+    if args.pdf:
+        from .report_v3 import build_report as build_v3
+        print(f"Report written to {build_v3(result, Path(args.pdf))}")
     outcomes = result.engagement.instrument.outcomes
     for problem in result.problems:
         print(f"! {problem}")

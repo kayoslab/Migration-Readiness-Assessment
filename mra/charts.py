@@ -191,3 +191,167 @@ def theme_heatmap(theme_share: pd.DataFrame, path: Path, top: int = 10) -> Path:
     for s in ax.spines.values():
         s.set_visible(False)
     return _save(fig, path)
+
+
+# ====================================================================================== v3 decision exhibits
+
+CATEGORICAL = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#6250d6", "#008300", "#e34948"]
+NEUTRAL = "#c9cbcf"
+
+
+def outcome_colours(outcome_ids: list[str]) -> dict[str, str]:
+    """Fixed colour per outcome, in rule order — identity never depends on rank."""
+    return {o: CATEGORICAL[i % len(CATEGORICAL)] for i, o in enumerate(outcome_ids)}
+
+
+def outcome_probability_chart(distribution: dict, labels: dict, leading: str | None, confidence: float, path: Path) -> Path:
+    apply_style()
+    items = [(k, v) for k, v in distribution.items() if v > 0]
+    items.sort(key=lambda kv: kv[1])
+    fig, ax = plt.subplots(figsize=(WIDTH, 0.38 * len(items) + 0.7))
+    y = np.arange(len(items))
+    colours = [ACCENT if k == leading else NEUTRAL for k, _ in items]
+    ax.barh(y, [v for _, v in items], color=colours, height=0.55)
+    for yi, (k, v) in zip(y, items):
+        ax.text(v + 0.01, yi, f"{v:.0%}", va="center", fontsize=8, color=INK)
+    ax.axvline(confidence, color=INK_MUTED, lw=0.8, ls="--")
+    ax.text(confidence, len(items) - 0.4, f" confidence required ({confidence:.0%})", fontsize=7, color=INK_MUTED, va="bottom")
+    ax.set_yticks(y, [_wrap(labels.get(k, k.replace("_", " ")), 42) for k, _ in items])
+    ax.set_xlim(0, 1.08)
+    ax.set_xticks([0, 0.25, 0.5, 0.75, 1], ["0%", "25%", "50%", "75%", "100%"])
+    ax.tick_params(axis="y", length=0)
+    ax.spines["left"].set_visible(False)
+    ax.set_xlabel("Share of bootstrap draws in which each path applies")
+    return _save(fig, path)
+
+
+def need_capability_map(need: np.ndarray, capability: np.ndarray, path: Path,
+                        need_cuts=(2.5, 3.5), capability_cut=3.5) -> Path:
+    """Bootstrap cloud of (need, capability floor) over the main architecture regions."""
+    apply_style()
+    fig, ax = plt.subplots(figsize=(WIDTH, 3.6))
+    lo, hi = 1, 5
+    regions = [((lo, need_cuts[0]), (lo, hi), "Keep and improve practices", "#f3f7fd"),
+               ((need_cuts[0], need_cuts[1]), (lo, hi), "Restructure within the system", "#f4f5f7"),
+               ((need_cuts[1], hi), (lo, capability_cut), None, "#f4f5f7"),
+               ((need_cuts[1], hi), (capability_cut, hi), "Decomposition possible\n(if gates, data and cost allow)", "#e8f5e8")]
+    for (x0, x1), (y0, y1), label, colour in regions:
+        ax.add_patch(plt.Rectangle((x0, y0), x1 - x0, y1 - y0, color=colour, lw=0, zorder=0))
+        if label:
+            ax.text(x0 + 0.08, y1 - 0.12, _wrap(label, 22), fontsize=7.5, color=INK_MUTED, va="top")
+    ok = ~(np.isnan(need) | np.isnan(capability))
+    ax.scatter(need[ok][1:], capability[ok][1:], s=6, color=ACCENT, alpha=0.12, lw=0, zorder=2)
+    ax.scatter(need[0], capability[0], s=60, color=ACCENT, edgecolor=SURFACE, lw=1.5, zorder=3)
+    for x in need_cuts:
+        ax.axvline(x, color=RULE, lw=0.8)
+    ax.axhline(capability_cut, color=RULE, lw=0.8, xmin=(need_cuts[0] - lo) / (hi - lo))
+    ax.set_xlim(lo, hi)
+    ax.set_ylim(lo, hi)
+    ax.set_xlabel("Need for change (1–5): coupling, blast radius, business impact, cognitive load")
+    ax.set_ylabel("Weakest capability (1–5)")
+    return _save(fig, path)
+
+
+def tco_chart(ratios: dict[str, tuple[float, float, float]], labels: dict, path: Path) -> Path:
+    """Cost of each option relative to the current setup: point and 90% range."""
+    apply_style()
+    items = sorted(ratios.items(), key=lambda kv: kv[1][1])
+    fig, ax = plt.subplots(figsize=(WIDTH, 0.42 * len(items) + 0.9))
+    y = np.arange(len(items))
+    for yi, (k, (p5, mid, p95)) in zip(y, items):
+        ax.hlines(yi, p5, p95, color=ACCENT, lw=2, capstyle="round")
+        ax.scatter(mid, yi, s=46, color=ACCENT, edgecolor=SURFACE, lw=1.5, zorder=3)
+        ax.text(max(p95, mid) + 0.04, yi, f"{mid:.2f}", va="center", fontsize=8)
+    ax.axvline(1.0, color=INK_MUTED, lw=0.8)
+    ax.axvline(0.85, color=INK_MUTED, lw=0.8, ls="--")
+    ax.text(1.0, len(items) - 0.35, " same cost", fontsize=7, color=INK_MUTED)
+    ax.text(0.85, len(items) - 0.35, "15% cheaper ", fontsize=7, color=INK_MUTED, ha="right")
+    ax.set_yticks(y, [_wrap(labels.get(k, k), 40) for k, _ in items])
+    ax.tick_params(axis="y", length=0)
+    ax.spines["left"].set_visible(False)
+    right = max(1.3, max(v[2] for _, v in items) + 0.25)
+    ax.set_xlim(max(0, min(v[0] for _, v in items) - 0.15), right)
+    ax.set_xlabel("5-year cost relative to the current setup (net present value; 90% range)")
+    return _save(fig, path)
+
+
+def tornado_chart(rows: list[dict], label_for, path: Path, top: int = 7) -> Path:
+    apply_style()
+    base = rows[0]["base"]
+    data = rows[1:top + 1][::-1]
+    fig, ax = plt.subplots(figsize=(WIDTH, 0.36 * len(data) + 0.8))
+    y = np.arange(len(data))
+    for yi, r in zip(y, data):
+        lo, hi = sorted((r["low"], r["high"]))
+        ax.barh(yi, hi - lo, left=lo, color=NEUTRAL, height=0.55)
+    ax.axvline(base, color=ACCENT, lw=1.2)
+    ax.set_yticks(y, [_wrap(label_for(r["input"]), 48) for r in data], fontsize=7.5)
+    ax.tick_params(axis="y", length=0)
+    ax.spines["left"].set_visible(False)
+    ax.set_xlabel("Cost ratio with each input at its low and high estimate (others at their likely value)")
+    return _save(fig, path)
+
+
+def divergence_chart(rows: list[dict], path: Path) -> Path:
+    """Measured value (fact band) against perception (survey) for diverging sub-areas."""
+    apply_style()
+    fig, ax = plt.subplots(figsize=(WIDTH, 0.42 * len(rows) + 0.9))
+    y = np.arange(len(rows))
+    for yi, r in zip(y, rows):
+        ax.plot([r["fact"], r["survey"]], [yi, yi], color=RULE, lw=2, zorder=1)
+        ax.scatter(r["fact"], yi, s=46, color=ACCENT, zorder=2, label="Measured" if yi == 0 else None)
+        ax.scatter(r["survey"], yi, s=46, color=SURFACE, edgecolor=ACCENT, lw=1.5, zorder=2,
+                   label="Perceived" if yi == 0 else None)
+    ax.set_yticks(y, [_wrap(r["label"], 40) for r in rows])
+    ax.set_xlim(1, 5)
+    ax.tick_params(axis="y", length=0)
+    ax.spines["left"].set_visible(False)
+    ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=2, fontsize=7.5)
+    ax.set_xlabel("Score (1–5)")
+    return _save(fig, path)
+
+
+def preference_chart(by_group: dict, order: list[str], labels: dict, path: Path) -> Path:
+    """100% stacked bars of preferred direction per group, colours fixed per outcome."""
+    apply_style()
+    groups = list(by_group)[::-1]
+    colours = outcome_colours(order)
+    fig, ax = plt.subplots(figsize=(WIDTH, 0.42 * len(groups) + 1.2))
+    left = np.zeros(len(groups))
+    y = np.arange(len(groups))
+    for o in order + ["no_direction"]:
+        values = np.array([by_group[g].get(o, 0.0) for g in groups])
+        if not values.any():
+            continue
+        ax.barh(y, values, left=left, height=0.6, color=colours.get(o, NEUTRAL), edgecolor=SURFACE, lw=1,
+                label=_wrap(labels.get(o, "No preference / don't know"), 30))
+        left += values
+    ax.set_yticks(y, groups)
+    ax.set_xlim(0, 1)
+    ax.set_xticks([0, 0.5, 1], ["0%", "50%", "100%"])
+    ax.tick_params(axis="y", length=0)
+    ax.spines["left"].set_visible(False)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=3, fontsize=7, handlelength=1)
+    return _save(fig, path)
+
+
+def stakes_heatmap(by_group: dict, order: list[str], labels: dict, path: Path) -> Path:
+    """Mean expected effect of each option on respondents' own roles and skills (−1 harms … +1 helps)."""
+    apply_style()
+    groups = list(by_group)
+    cols = [o for o in order if any(o in by_group[g] for g in groups)]
+    data = np.array([[by_group[g].get(o, np.nan) for o in cols] for g in groups])
+    fig, ax = plt.subplots(figsize=(WIDTH, 0.4 * len(groups) + 1.2))
+    ax.imshow(np.nan_to_num(data), cmap=DIVERGING, vmin=-1, vmax=1, aspect="auto")
+    for i in range(len(groups)):
+        for j in range(len(cols)):
+            v = data[i, j]
+            ax.text(j, i, "–" if np.isnan(v) else f"{v:+.1f}", ha="center", va="center", fontsize=8,
+                    color=SURFACE if not np.isnan(v) and abs(v) > 0.6 else INK)
+    ax.set_xticks(range(len(cols)), [_wrap(labels.get(o, o), 16) for o in cols], fontsize=7)
+    ax.xaxis.tick_top()
+    ax.set_yticks(range(len(groups)), groups)
+    ax.tick_params(length=0)
+    for s in ax.spines.values():
+        s.set_visible(False)
+    return _save(fig, path)

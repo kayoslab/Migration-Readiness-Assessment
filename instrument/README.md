@@ -10,6 +10,7 @@ scoring readiness for a path chosen in advance. See [`docs/phase-2-plan.md`](../
 | `governance.csv` | Gate checklist, each answer backed by evidence | Sponsor, Finance, technology lead, risk & compliance — after the verdict, for the leading outcome |
 | `decision_rules.yaml` | Semantics, thresholds, hard stops, gates, outcome rules, TCO model — **pre-registered** | Agreed and signed off by stakeholders before results |
 | `outcomes.yaml` | Plain-language outcome definitions and preference labels | – |
+| `recommendations.yaml` | Action library for the report's next steps (by gate, hard stop, capability gap and stakeholder finding) | Replace wording to match an organisation |
 | `participant-information.md` | Cover screen, participant information, data protection, form settings, invitation | Analyst, reviewed by DPO / works council |
 
 ## How the pieces fit

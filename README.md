@@ -238,4 +238,4 @@ an issue before larger changes.
 
 ## License
 
-MIT
+MIT — see [`LICENSE`](LICENSE).

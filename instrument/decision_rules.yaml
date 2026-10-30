@@ -261,8 +261,10 @@ decisions:
   hosting:
     horizon_years: 5                 # sensitivity at 3 and 7 years; hardware lives 5–6 years
     # One switching rule in both directions. A move is either NEED-motivated (strong specific need, ratio <= 1.0 plus
-    # the pre-registered premium) or COST-motivated (ratio <= 1 − switching_margin, payback <= 24 months, saving worth
-    # at least one FTE). Ratios divide by the OPTIMISED current TCO, except improve_current, which divides by the
+    # the pre-registered premium) or COST-motivated (ratio <= 1 − switching_margin, payback within 24 months of
+    # cut-over, saving worth at least one FTE). Payback counts from cut-over, not from the decision: counted from the
+    # decision it is dominated by migration duration, which made cost-motivated moves practically unreachable
+    # (docs/calibration.md, finding 2; decided 2026-11-01). Ratios divide by the OPTIMISED current TCO, except improve_current, which divides by the
     # current TCO as it is (so right-sizing and cloud optimisation show up).
     switching_margin: 0.15
     outcomes:
@@ -271,7 +273,7 @@ decisions:
         when:
           all:
             - {signal: tco_ratio.repatriate, op: "<=", value: 0.85}
-            - {signal: payback_months.repatriate, op: "<=", value: 24}
+            - {signal: payback_after_cutover.repatriate, op: "<=", value: 24}
             - {signal: tco_saving_fte.repatriate, op: ">=", value: 1.0}
             - {signal: need.hosting.elasticity, op: "<", value: 3.0}
             - {signal: need.hosting.managed_services, op: "<", value: 3.5}
@@ -291,7 +293,7 @@ decisions:
                 - {signal: tco_ratio.hybrid, op: "<=", value: 1.0, premium: fact.accepted_premium_pct}
             - all:
                 - {signal: tco_ratio.hybrid, op: "<=", value: 0.85}
-                - {signal: payback_months.hybrid, op: "<=", value: 24}
+                - {signal: payback_after_cutover.hybrid, op: "<=", value: 24}
                 - {signal: tco_saving_fte.hybrid, op: ">=", value: 1.0}
         blocked_by: [hs_cloud_not_permitted]
         requires_capability:
@@ -309,7 +311,7 @@ decisions:
                 - {signal: tco_ratio.cloud, op: "<=", value: 1.0, premium: fact.accepted_premium_pct}
             - all:                                                                      # cost-motivated (same test as repatriate)
                 - {signal: tco_ratio.cloud, op: "<=", value: 0.85}
-                - {signal: payback_months.cloud, op: "<=", value: 24}
+                - {signal: payback_after_cutover.cloud, op: "<=", value: 24}
                 - {signal: tco_saving_fte.cloud, op: ">=", value: 1.0}
                 - {signal: tco_ratio.cloud, op: "<=", ref: tco_ratio.hybrid}            # a partial move is not cheaper
         blocked_by: [hs_cloud_not_permitted]

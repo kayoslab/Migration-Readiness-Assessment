@@ -49,8 +49,9 @@ evidence" rather than a wrong outcome (wrong ≤ 5 %) — met: **no wrong outcom
    "insufficient evidence" and lower savings give "stay". Counting payback **from cut-over** ("does the new setup
    recover its switching costs within two years of running?") removes the artefact: the verdict moves from "stay" to
    "move to cloud" at a saving of roughly 35 %, through a short "insufficient evidence" band. The same applies to
-   repatriation and cost-motivated hybrid moves. **This is a rule decision for the engagement owner**; both measures
-   are computed (`payback_months.<option>`, `payback_after_cutover.<option>`).
+   repatriation and cost-motivated hybrid moves. **Decision (2026-11-01): the default rules count payback from
+   cut-over.** Both measures are still computed and reported (`payback_months.<option>`,
+   `payback_after_cutover.<option>`).
 3. **The validity grid is easy by construction.** The expert cases sit far from thresholds, and fact-sheet evidence
    (weight 2) dominates survey perception, so response noise barely matters there. It confirms the rules give the
    experts' answers; reliability is measured by the sweeps.

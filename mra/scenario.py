@@ -8,6 +8,7 @@ and the result is written exactly like a Google Forms export.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -74,6 +75,9 @@ class Scenario:
     noise: float = 0.5
     system: str = "the Order Platform"
     current_hosting: str = "own_infrastructure"
+    # per-respondent overrides: fn(role, index, rng, labels) -> {"S01": label, "S04[<row>]": label, ...}
+    # `labels` maps decision -> outcome id -> the preference label offered for the current state
+    respondent_fn: Callable | None = None
 
 
 def _area_key(ins: Instrument, item_id: str) -> list[str]:
@@ -89,13 +93,16 @@ def _answer(ins: Instrument, q: dict, target: float | None, fixed: str | None, r
         return fixed
     if q["format"] == "text":
         return ""
+    choices = [o for o in q["options"] if o != DONT_KNOW and o != ins.items.at[q["item_id"], "not_applicable"]]
     if q["row"] is not None:                                  # grids
+        if ins.items.at[q["item_id"], "scored"] != "true":
+            return choices[rng.integers(len(choices))]
         if target is None:
             return "No"
         return "Yes" if rng.random() < np.clip((target - 1) / 4, 0, 1) else "No"
     scores = ins.scores(q["item_id"])
     if not isinstance(scores, dict):
-        return q["options"][0]
+        return choices[rng.integers(len(choices))]
     if target is None:
         target = 3.0
     wanted = target + rng.normal(0, 0.5)
@@ -111,11 +118,12 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
     fact_objs = {k: Fact(**(v if isinstance(v, dict) else {"value": v})) for k, v in facts.items() if v is not None}
     current = {"architecture": derive_current_state(ins, fact_objs), "hosting": scenario.current_hosting}
 
+    labels = {d: {oid: label for oid, label in ins.preference_options(d, current[d])} for d in ("architecture", "hosting")}
     answers = {}
     for role, n in {**DEFAULT_SIZES, **scenario.sizes}.items():
         spec = ins.form_spec(role, scenario.system, current)
         people = []
-        for _ in range(n):
+        for index in range(n):
             offset = rng.normal(0, scenario.noise)            # each person's general optimism
             person = {}
             for q in spec:
@@ -128,6 +136,8 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
                     fixed = "No"
                 key = q["item_id"] if q["row"] is None else f"{q['item_id']}[{q['row']}]"
                 person[key] = _answer(ins, q, None if target is None else target + offset, fixed, rng)
+            if scenario.respondent_fn:
+                person.update(scenario.respondent_fn(role, index, rng, labels))
             people.append(person)
         answers[role] = people
     files = write_form_exports(root, ins, scenario.system, current, answers)

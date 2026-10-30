@@ -47,8 +47,9 @@ Requires Python ≥ 3.12. The PDF is compiled with the bundled Typst Python pack
 
 v3 recommends a **path per decision** instead of scoring readiness for a path chosen in advance — see
 [`docs/phase-2-plan.md`](docs/phase-2-plan.md) and the instrument in [`instrument/`](instrument/README.md).
-Milestones M1 (instrument and data layer), M2 (architecture decision) and M3 (hosting decision with a 5-year TCO
-model, `mra/tco.py`) are implemented; stakes (M4), calibration (M5) and the v3 report (M6) follow.
+Milestones M1 (instrument and data layer), M2 (architecture decision), M3 (hosting decision with a 5-year TCO
+model, `mra/tco.py`) and M4 (preferences, stakes, alignment and operating-model fit, `mra/stakes.py`) are
+implemented; calibration (M5) and the v3 report (M6) follow.
 
 ```bash
 mra validate                         # cross-check the instrument files

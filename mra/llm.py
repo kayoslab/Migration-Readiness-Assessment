@@ -28,7 +28,7 @@ import pydantic
 from .config import Config, LLMSettings
 from .data import Survey
 
-PROMPT_VERSION = "2026-10-30.2"
+PROMPT_VERSION = "2026-11-01.1"   # adds mental_model; string item ids (v2 and v3)
 
 THEMES = (
     "Delivery speed", "Technical debt", "Coupling & dependencies", "Data & integration",
@@ -42,12 +42,16 @@ REASONS = (
 )
 
 
+MENTAL_MODELS = ("centralised", "domain_owned", "mixed", "unclear")
+
+
 class AnswerCode(pydantic.BaseModel):
-    item_id: int
+    item_id: str
     sentiment: Literal[-2, -1, 0, 1, 2]
     stance: Literal["supports_change", "opposes_change", "mixed", "neutral"]
     themes: list[Literal[THEMES]]
     reasons: list[Literal[REASONS]]
+    mental_model: Literal[MENTAL_MODELS]
 
 
 class Coding(pydantic.BaseModel):
@@ -74,6 +78,10 @@ and literally — do not infer beyond the text.
   supports_change, opposes_change, mixed, or neutral when the answer does not express a stance.
 - themes: 1–3 from this list only: {", ".join(THEMES)}.
 - reasons: the motives behind the stance (empty if no stance): {", ".join(REASONS)}.
+- mental_model: how the respondent implicitly thinks systems and data should be organised —
+  centralised (one shared model, central decisions, central ownership), domain_owned (teams or business areas own
+  their part and its data end to end), mixed, or unclear when the answer does not reveal it. Neither is better;
+  code what the words imply, not what you would recommend.
 
 Return one entry per item_id given."""
 
@@ -179,10 +187,9 @@ class TextAnalysis:
     model: str
 
 
-async def code_answers(survey: Survey, cfg: Config, client: LLMClient, cache: Cache,
+async def code_answers(texts: pd.DataFrame, questions: dict, settings: LLMSettings, client: LLMClient, cache: Cache,
                        concurrency: int = 4) -> pd.DataFrame:
-    settings = cfg.llm
-    questions = survey.questionnaire["Question"]
+    """Code free-text answers; `texts` has respondent_id, role, item_id, answer."""
     limit = asyncio.Semaphore(concurrency)
 
     async def run(rid: str, role: str, items: list[dict]) -> list[dict]:
@@ -195,8 +202,8 @@ async def code_answers(survey: Survey, cfg: Config, client: LLMClient, cache: Ca
                 for item in items]
 
     jobs = []
-    for rid, answers in survey.text.groupby("respondent_id"):
-        items = [{"item_id": int(r.item_id), "question": questions[r.item_id],
+    for rid, answers in texts.groupby("respondent_id"):
+        items = [{"item_id": str(r.item_id), "question": questions[r.item_id],
                   "answer": redact(r.answer, settings.redact_terms) if settings.redact else r.answer}
                  for r in answers.itertuples()]
         jobs.append(run(rid, answers["role"].iat[0], items))
@@ -216,6 +223,9 @@ def summarise(coded: pd.DataFrame, roles: list[str]) -> tuple[pd.DataFrame, pd.D
     counts = pd.crosstab(exploded["themes"], exploded["role"]).reindex(columns=roles, fill_value=0)
     share = counts / coded.groupby("role").size().reindex(roles)
     share = share.loc[share.mean(axis=1).sort_values(ascending=False).index]
+    if "mental_model" in coded:
+        models = pd.crosstab(coded["role"], coded["mental_model"], normalize="index").add_prefix("model_")
+        by_role = by_role.join(models).fillna(0)
     return by_role, share
 
 
@@ -234,13 +244,14 @@ def pick_quotes(coded: pd.DataFrame, per_theme: int) -> list[dict]:
     return quotes
 
 
-async def analyse_text_async(survey: Survey, cfg: Config) -> TextAnalysis:
-    client = LLMClient.from_settings(cfg.llm)
+async def _analyse(texts: pd.DataFrame, questions: dict, roles: list[str], settings: LLMSettings,
+                   cache_dir: Path) -> TextAnalysis:
+    client = LLMClient.from_settings(settings)
     client.require_key()
-    cache = Cache(cfg.root / "Output" / "llm_cache")
-    coded = await code_answers(survey, cfg, client, cache)
-    by_role, theme_share = summarise(coded, survey.roles)
-    quotes = pick_quotes(coded, cfg.llm.max_quotes)
+    cache = Cache(cache_dir)
+    coded = await code_answers(texts, questions, settings, client, cache)
+    by_role, theme_share = summarise(coded, roles)
+    quotes = pick_quotes(coded, settings.max_quotes)
     payload = {
         "sentiment_by_role": by_role.round(2).reset_index().to_dict("records"),
         "share_of_answers_mentioning_theme_by_role": theme_share.round(2).reset_index().to_dict("records"),
@@ -251,4 +262,21 @@ async def analyse_text_async(survey: Survey, cfg: Config) -> TextAnalysis:
 
 
 def analyse_text(survey: Survey, cfg: Config) -> TextAnalysis:
-    return run_sync(analyse_text_async(survey, cfg))
+    """v2: free text from the v2 questionnaire."""
+    questions = survey.questionnaire["Question"].to_dict()
+    return run_sync(_analyse(survey.text, questions, survey.roles, cfg.llm, cfg.root / "Output" / "llm_cache"))
+
+
+EXCLUDED_FROM_LLM = {"CX03"}   # the withdrawal word is never sent anywhere
+
+
+def analyse_engagement_text(eng) -> TextAnalysis:
+    """v3: open questions of an engagement (settings from engagement.yaml → llm)."""
+    ins = eng.instrument
+    text_items = [i for i in ins.items.index if ins.items.at[i, "format"] == "text" and i not in EXCLUDED_FROM_LLM]
+    texts = eng.answers[eng.answers["item_id"].isin(text_items)].rename(columns={"label": "answer"})
+    questions = {i: ins.items.at[i, "text"].replace("{system}", eng.system) for i in text_items}
+    settings = LLMSettings(**(eng.config.get("llm") or {}))
+    roles = list(dict.fromkeys(eng.respondents["role"]))
+    return run_sync(_analyse(texts[["respondent_id", "role", "item_id", "answer"]], questions, roles, settings,
+                             eng.root / "Output" / "llm_cache"))

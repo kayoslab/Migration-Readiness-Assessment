@@ -25,6 +25,7 @@ def main(argv: list[str] | None = None) -> int:
     dec.add_argument("engagement", help="path to engagement.yaml")
     dec.add_argument("--draws", type=int, default=None)
     dec.add_argument("--json", action="store_true", help="print the full result as JSON")
+    dec.add_argument("--llm", action="store_true", help="also code free-text answers via the Vercel AI Gateway")
 
     chk = sub.add_parser("check-llm", help="verify the Vercel AI Gateway key and model with a one-line request")
     chk.add_argument("--config", default="assessment.yaml")
@@ -74,7 +75,10 @@ def _decide(args) -> int:
     import json
 
     from .assess import assess
-    result = assess(args.engagement, draws=args.draws)
+    if args.llm:
+        load_dotenv(Path(args.engagement).resolve().parent / ".env")
+        load_dotenv()
+    result = assess(args.engagement, draws=args.draws, with_llm=args.llm)
     if args.json:
         print(json.dumps({d: r.as_dict() for d, r in result.results.items()}, indent=1, default=str))
         return 0
@@ -114,6 +118,17 @@ def _decide(args) -> int:
                 print(f"  most sensitive inputs ({r.economics['tornado_option']}): {', '.join(drivers)}")
         if r.shadow and r.shadow["verdict"] != r.verdict:
             print(f"  shadow verdict under default rules: {r.shadow['verdict']}")
+    st = result.stakes
+    if st and (st.findings or st.suppressed):
+        print("\nPreferences, stakes and alignment (group level; inputs for change management, never decisive)")
+        for f in st.findings:
+            print(f"  - {f}")
+        for note in st.suppressed:
+            print(f"  ({note})")
+    if result.text is not None:
+        print(f"\nFree text ({len(result.text.coded)} answers coded with {result.text.model})")
+        for m in result.text.synthesis.get("key_messages", []):
+            print(f"  - {m}")
     return 0
 
 

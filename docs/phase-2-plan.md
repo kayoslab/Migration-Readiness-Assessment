@@ -16,7 +16,8 @@ underneath; Phase 2 builds on top of it.
 | M1 Instrument & data layer | Done — `mra validate`, form spec, engagement loading |
 | M2 Architecture decision | Done — expert walk-through cases (a)–(g) pass for 10/10 seeds |
 | M3 Hosting decision | Done — 5-year TCO model; hosting cases (a)–(e) + symmetry case pass; near-threshold case gives "insufficient evidence", never a wrong outcome |
-| M4–M7 | Open |
+| M4 Stakes & fit | Done — within-respondent stake test (no false alarms on random answers across seeds), watermelon and leadership-disagreement checks, disclosure control, fit per outcome, `mental_model` code |
+| M5–M7 | Open |
 
 ## Agreed defaults
 

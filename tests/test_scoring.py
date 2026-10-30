@@ -154,7 +154,7 @@ def test_llm_coding_with_fake_client(tmp_path, monkeypatch):
         if output_type is llm.Coding:
             body = {"answers": [{"item_id": a["item_id"], "sentiment": -1 if payload["role"] == "Business" else 1,
                                  "stance": "supports_change", "themes": ["Delivery speed"],
-                                 "reasons": ["Speed of delivery"]} for a in payload["answers"]]}
+                                 "reasons": ["Speed of delivery"], "mental_model": "unclear"} for a in payload["answers"]]}
         else:
             body = {"key_messages": ["Business is more negative."],
                     "themes": [{"theme": "Delivery speed", "finding": "All groups mention it.", "quote_ids": [1]}]}
@@ -175,7 +175,7 @@ def test_llm_coding_with_fake_client(tmp_path, monkeypatch):
 def test_codebook_rejects_unknown_theme():
     from mra.llm import AnswerCode
     with pytest.raises(Exception):
-        AnswerCode(item_id=1, sentiment=0, stance="neutral", themes=["Made up"], reasons=[])
+        AnswerCode(item_id="1", sentiment=0, stance="neutral", themes=["Made up"], reasons=[], mental_model="unclear")
 
 
 def test_redaction():

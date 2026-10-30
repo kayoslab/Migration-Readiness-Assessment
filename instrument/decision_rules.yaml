@@ -355,7 +355,8 @@ tco:
 stakes:
   min_cell_n: 5                    # applies to every cross-tab incl. seniority; complementary cells suppressed
   collapse_seniority_below_n: 15   # report manager vs not only
-  report_association_from: 0.3     # |Spearman rho| between per-option stake and preference worth mentioning
+  report_stake_gap_from: 0.3       # preferred option rated this much better for oneself than the alternatives (−1..1),
+                                   # tested within respondents (preferred option vs a random pick), p < 0.05
   symmetric: true                  # status-quo stakes and change stakes reported with equal weight, side by side
   never_weight_answers_by_stake: true
   frame_as: change_management_inputs

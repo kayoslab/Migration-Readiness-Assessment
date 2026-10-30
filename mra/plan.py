@@ -32,14 +32,21 @@ def roadmap(assessment, steps: list[dict]) -> dict:
     ins = eng.instrument
     bars, gates = [], []
     prepare = any(r.status == "prepare_first" for r in assessment.results.values())
+    from .investment import architecture as arch_investment
+    inv = arch_investment(assessment) or {}
+    horizon = 12
     for s in steps:
         phase = PHASE_OF.get(s["phase"], "next")
         if s["phase"] == "first_steps" and not prepare:
             phase = "now"
         start, end = next((a, b) for k, _, a, b in PHASES if k == phase)
-        bars.append({"workstream": s["phase_label"], "label": s["action"], "start": start, "end": end, "end_high": None,
-                     "decision": s["decision"]})
-    horizon = 12
+        end_high = None
+        if s["phase"] == "first_steps" and s["decision"] == "architecture" and inv.get("estimated"):
+            start = inv["start"]                         # the estimated duration, not a nominal phase
+            end, end_high = start + inv["months"], start + inv["months_high"]
+            horizon = max(horizon, int(np.ceil(end_high)))
+        bars.append({"workstream": s["phase_label"], "label": s["action"], "start": start, "end": end,
+                     "end_high": end_high, "decision": s["decision"]})
     hosting = assessment.results.get("hosting")
     if hosting and hosting.verdict in MOVES:
         fact = eng.facts.get("migration_months")

@@ -41,10 +41,15 @@ def build(assessment, ctx: dict) -> dict:
             not_yet = f"Any {d} programme, until the assessment is re-run."
         elif dec["status"] == "prepare_first":
             ask = (f"Approve the preparation for “{dec['verdict_label']}”, led by {owner}: "
-                   f"{_join([_lower(i) for i in open_items])}.")
+                   f"{_join([_lower(i) for i in open_items])}. No programme budget yet; the time it takes must be "
+                   "protected" + (" (see the capacity note)." if (ctx.get("roadmap") or {}).get("load") else "."))
             not_yet = "Budget and timeline for the path itself; decided at checkpoint C1 (month 3)."
         else:
-            ask = f"Approve “{dec['verdict_label']}” and mandate {owner} to start."
+            missing = next((i for i in (ctx.get("integrity") or {}).get("caveats", [])
+                            if i["id"] == f"critical_groups.{d}"), None)
+            names = _join(missing["groups"]) if missing and missing.get("groups") else None
+            ask = f"Approve “{dec['verdict_label']}” and mandate {owner} to start" + \
+                (f", once {names} have been heard directly." if names else ".")
             not_yet = None
         alt = triggers.get(d)
         if alt:
@@ -62,7 +67,10 @@ def _budget(assessment, d: str, dec: dict) -> str | None:
     if d == "hosting" and dec["verdict"] == "improve_current":
         inv = eng.facts.get("automation_investment")
         if inv and inv.point and show:
-            return f"First phase: €{inv.point / 1e3:,.0f}k one-off for automation."
+            refresh = next((c for c in (dec.get("calendar") or []) if c["event"].startswith("Hardware refresh")), None)
+            later = (f" The hardware refresh (month {refresh['month']:g}) is not part of this approval; it is decided "
+                     "at the hosting review." if refresh else "")
+            return f"First phase: €{inv.point / 1e3:,.0f}k one-off for automation.{later}"
     if d == "architecture" and dec["verdict"] not in ("insufficient_evidence", "stay_and_improve"):
         inv = dec.get("investment") or {}
         if not inv.get("estimated"):

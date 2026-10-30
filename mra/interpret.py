@@ -52,7 +52,8 @@ def need_capability(need: np.ndarray, capability: np.ndarray, cuts=(2.5, 3.5), c
               "restructure within the system" if n0 < cuts[1] or c0 < cap_cut else "decomposition possible")
     strength = "low" if n0 < cuts[0] else "moderate" if n0 < cuts[1] else "high"
     cap_word = "strong" if c0 >= cap_cut else "adequate" if c0 >= 3.0 else "weak"
-    title = f"Need for change is {strength} ({n0:.1f}) and the weakest capability is {cap_word} ({c0:.1f}): {region}"
+    title = (f"Need for change is {strength} ({n0:.1f}), and the delivery capabilities a larger change relies on are "
+             f"{cap_word} (weakest {c0:.1f}): {region}")
     points = []
     crossed = [c for c in cuts if n_lo < c < n_hi]
     if crossed:
@@ -98,16 +99,18 @@ def tornado(rows: list[dict], label_for, option_word: str) -> dict:
         return {"title": "The cost case does not depend on any single uncertain input", "points": []}
     top = drivers[0]
     lo, hi = sorted((top["low"], top["high"]))
-    title = (f"For {option_word.lower()}, the {_short(label_for(top['input'])).lower()} moves the cost case most "
-             f"({lo:.2f}–{hi:.2f}× today's cost)")
+    # the decision rules compare a move with an IMPROVED current setup, so this ratio has that base, not today's
+    title = (f"For {option_word.lower()}, the {_short(label_for(top['input'])).lower()} moves the cost comparison most "
+             f"({lo:.2f}–{hi:.2f}× the cost of an improved current setup)")
     flips = [r for r in drivers if min(r["low"], r["high"]) < 1.0 < max(r["low"], r["high"])]
-    points = [f"With every input at its likely value, {option_word.lower()} costs {base:.2f}× today's setup."]
+    points = [f"With every input at its likely value, {option_word.lower()} costs {base:.2f}× an improved current "
+              "setup."]
     if flips:
-        points.append(f"Only the {_short(label_for(flips[0]['input'])).lower()} could bring it below today's cost at the end of its "
-                      "range; firming up that estimate matters most.")
+        points.append(f"Only the {_short(label_for(flips[0]['input'])).lower()} could make it cheaper than improving at "
+                      "the end of its range; firming up that estimate matters most.")
     else:
-        points.append("No single input, at the end of its range, makes it cheaper than today's setup: the conclusion "
-                      "is robust to the estimates.")
+        points.append("No single input, at the end of its range, makes it cheaper than improving the current setup: "
+                      "the conclusion is robust to the estimates.")
     return {"title": title, "points": points}
 
 

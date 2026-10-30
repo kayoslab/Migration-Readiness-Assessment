@@ -73,7 +73,9 @@ def next_steps(assessment) -> list[dict]:
 
     missing = [p.split(": ", 1)[1] for p in assessment.problems if p.startswith("required fact missing")]
     if missing and (e := lib.get("evidence", {}).get("missing_fact")):
-        add("evidence", None, e["action"].format(facts=", ".join(missing)), e["owner"])
+        facts = assessment.engagement.instrument.facts
+        names = [facts.at[m, "label"].split(" (")[0].lower() if m in facts.index else m.replace("_", " ") for m in missing]
+        add("evidence", None, e["action"].format(facts="; ".join(names)), e["owner"])
 
     div = lib.get("divergence")
     for d in assessment.evidence.divergences[:3]:

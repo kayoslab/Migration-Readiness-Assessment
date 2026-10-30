@@ -236,6 +236,15 @@ past overrun), which raises the high end of effort, cost and duration estimates 
 what the first steps take (TechCo: about 44 person-months, 4 FTE for 11 months, €467k, range €365k–€631k) and a
 budget by phase across both decisions; the decision page states it. None of it feeds the decision rules.
 
+**Status:** Phase 4 done (WS9). Board-readiness checks run on every build (`mra/rubric.py`) and are enforced by
+`--final` together with a recorded quality review (`docs/quality-review.md`, `report.reviewed_by`). Planted-defect
+tests cover each check; every expert case must pass all of them. `mra review` (local, refused on client engagements)
+found seven defects the automated checks had missed in TechCo — a mislabelled cost baseline, a capability score
+without its scope, pooled groups left out of a "no group" statement, a salary-equivalent read as headcount, a
+generic step contradicting the measured value, a missing step to hear Security and Finance, a roadmap ignoring the
+estimated duration — and, on the second pass, unexplained group codes and a meaningless "after cut-over" payback;
+all fixed. Open from the review by design: the business value of the restructuring (benefit model, after a pilot).
+
 | Phase | Workstreams | Outcome | Effort |
 |---|---|---|---|
 | **1. Do not mislead** | WS1, WS7, WS8, WS3 (coverage rule, lead-time exhibit) | Every contradiction surfaced; draft vs final; ties and pooled groups honest | ~5 days |

@@ -127,6 +127,10 @@
   #v(6mm)
   #set text(size: 9pt)
   #for p in data.notice [#p #v(2mm)]
+  #if data.at("review", default: none) != none [
+    #if data.review.by != none [Quality review: #data.review.by#if data.review.on != "" [, #data.review.on].] else [#text(fill: theme.muted)[This report has not yet been through quality review.]]
+    #v(2mm)
+  ]
   #if data.integrity.issues.len() > 0 [
     #v(4mm)
     #text(size: 12pt, fill: theme.primary)[Qualifications]
@@ -303,7 +307,7 @@
   #if "map" in dec.charts [
     #v(3mm)
     #exhibit(dec.charts.map, dec.insights.map,
-      source: "Need for change against the weakest capability. Each dot is one bootstrap draw; the large dot is the point estimate.")
+      source: "Need for change against the weakest of the delivery capabilities a larger change relies on (pipeline, platform basics, operations), from fact sheet and survey. Each dot is one draw; the large dot is the point estimate.")
   ]
   #if "leadtime" in dec.charts [
     #exhibit(dec.charts.leadtime, dec.insights.leadtime,
@@ -356,10 +360,10 @@
       #data-table(
         columns: (2fr, 1fr, 1.5fr, 0.8fr, 1.1fr, 1.3fr),
         align: (left, right, right, right, right, right),
-        header: ("Option", "5-year cost", "90% range", "vs today", "Payback after cut-over", "Saving / year"),
+        header: ("Option", "5-year cost", "90% range", "vs today", "Payback", "Saving / year"),
         ..dec.economics.map(r => (r.option, r.eur, r.eur_range, fmt(r.ratio) + "×",
-          if r.payback == none [–] else [#r.payback months],
-          if r.saving_eur == none [–] else [#r.saving_eur (#fmt(r.saving_fte, d: 1) FTE)])).flatten(),
+          if r.payback == none [–] else [#r.payback months #text(size: 7.5pt, fill: theme.muted, r.payback_from)],
+          if r.saving_eur == none [–] else [#r.saving_eur (≈ #fmt(r.saving_fte, d: 1) FTE)])).flatten(),
       )
     ] else [
       #data-table(
@@ -371,8 +375,8 @@
       )
     ]
     #v(2pt)
-    #text(size: 7.5pt, fill: theme.muted)[Five-year cost as present value, each option against today's setup as it is;
-      the saving per year is also shown in fully loaded salaries. The decision rules compare a move with an improved
+    #text(size: 7.5pt, fill: theme.muted)[Five-year cost as present value, each option against today's setup as it is.
+      The saving per year is also expressed in fully loaded salaries (FTE) for scale; it is not a headcount figure. The decision rules compare a move with an improved
       current setup, so moving must also beat what improving would achieve. All inputs from the fact sheet with
       their ranges.]
     #if dec.at("inaction", default: none) != none [
@@ -409,7 +413,7 @@
     #if "tornado" in dec.charts [
       #v(3mm)
       #exhibit(dec.charts.tornado, dec.insights.tornado,
-        source: "Cost ratio of " + dec.tornado_option + " with each input at its low and high estimate, all others at their likely value.")
+        source: "Cost of " + lower(dec.tornado_option) + " relative to an improved current setup — the comparison the decision rules make — with each input at its low and high estimate, all others at their likely value.")
     ]
   ]
   #v(3mm)
@@ -431,7 +435,7 @@ means more ready. Each group answers only the questions it can judge, so cells a
 #if "matrix" in data.readiness.charts [
   #v(3mm)
   #exhibit(data.readiness.charts.matrix, data.readiness.insights.matrix,
-    source: "Readiness as seen by each group: mean of the group's own respondents (1–5). Hatched: fewer respondents than the minimum; shown, not counted.")
+    source: "Readiness as seen by each group: mean of the group's own respondents (1–5), survey answers only — elsewhere the assessment combines them with measured facts, so scores there can differ. Hatched: fewer respondents than the minimum; shown, not counted.")
 ]
 
 #if data.readiness.differences.len() > 0 [
@@ -513,6 +517,7 @@ checked for the recommended path after the verdict.
 
 Preferences and personal stakes never influence the recommendation. They are reported at group level only, to help
 plan how a decision is communicated and supported.
+#text(size: 9pt, fill: theme.muted)[Groups: #data.group_names.pairs().map(((k, v)) => k + " " + v).join(" · ").]
 #if "pooled_note" in data.stakes [#text(size: 9pt, fill: theme.muted, data.stakes.pooled_note)]
 
 #if data.stakes.findings.len() > 0 [
@@ -731,7 +736,7 @@ before results were seen.
 == Participation
 #data-table(columns: (2fr, 1fr, 1fr, 1fr), align: (left, right, right, right),
   header: ("Group", "Respondents", "Invited", "Response rate"),
-  ..data.participation.map(p => (p.group, str(p.n), if p.invited == none [–] else [#p.invited],
+  ..data.participation.map(p => ([#p.group #text(size: 8pt, fill: theme.muted, data.group_names.at(p.group, default: ""))], str(p.n), if p.invited == none [–] else [#p.invited],
     if p.rate == none [not recorded] else [#pct(p.rate)])).flatten())
 
 = Evidence

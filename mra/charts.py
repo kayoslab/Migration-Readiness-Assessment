@@ -290,7 +290,7 @@ def tornado_chart(rows: list[dict], label_for, path: Path, top: int = 7) -> Path
     ax.set_yticks(y, [_wrap(label_for(r["input"]), 48) for r in data], fontsize=7.5)
     ax.tick_params(axis="y", length=0)
     ax.spines["left"].set_visible(False)
-    ax.set_xlabel("Cost ratio with each input at its low and high estimate (others at their likely value)")
+    ax.set_xlabel("Cost relative to an improved current setup, each input at its low and high estimate")
     return _save(fig, path)
 
 

@@ -36,6 +36,7 @@ class Issue:
     key_messages: list[int] = field(default_factory=list)     # indices into the free-text key messages
     themes: list[int] = field(default_factory=list)           # indices into the free-text themes
     step_rewrite: dict | None = None                          # {"starts_with": ..., "action": ...}
+    groups: list[str] = field(default_factory=list)           # groups concerned, by display name
 
     def as_dict(self) -> dict:
         return {k: v for k, v in vars(self).items()}
@@ -233,7 +234,7 @@ def _critical_groups(a, cfg) -> list[Issue]:
                          f"{'Its' if len(short) == 1 else 'Their'} answers are pooled with other small groups and do "
                          f"not count separately towards the {d} assessment, although the decision depends on "
                          f"{'this perspective' if len(short) == 1 else 'these perspectives'}.",
-                         decisions=[d], exhibits=["people.map"]))
+                         decisions=[d], exhibits=["people.map"], groups=[GROUP_NAMES.get(g, g) for g, _ in short]))
     return out
 
 

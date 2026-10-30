@@ -134,7 +134,7 @@ hosting:
     first_steps:
       - Right-size capacity to measured demand.
       - Bring provisioning and configuration under infrastructure as code.
-      - Ensure at least two people can restore the platform independently.
+      - Widen the group of people who can restore the platform independently, towards the target in the success measures.
 
   hybrid:
     appraisal: {programme: medium, reversibility: medium, time_to_value: months}   # judgement; adjust per engagement

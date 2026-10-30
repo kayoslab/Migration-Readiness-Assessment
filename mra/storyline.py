@@ -206,7 +206,13 @@ def _probabilities(f: Findings, d: str) -> list[dict]:
                 T(".")] if no else []
     else:
         no = f.step(lambda s: s["decision"] == d and s["phase"] == "first_steps")
-        out += [T("Nothing has to be resolved before committing"),
+        missing = next((c for c in f.caveats if c["id"] == f"critical_groups.{d}"), None)
+        hear = f.step(lambda s: s["action"].startswith("Hear "))
+        if missing and hear:
+            out += [T("No precondition is open, but perspectives the decision depends on are missing; hearing them is "),
+                    S(hear), T(". ")]
+        out += [T("Nothing else has to be resolved before committing" if missing and hear else
+                  "Nothing has to be resolved before committing"),
                 *([T("; the work starts with "), S(no)] if no else []), T(", reviewed at "), C(1), T(".")]
     return out
 
@@ -401,10 +407,18 @@ def _stakes(f: Findings, d: str) -> list[dict]:
     by = {g: row for g, row in by.items() if g not in ("Other groups", "All respondents")}
     on_path = {g: row[v] for g, row in by.items() if v in row and row[v] is not None}
     worst_g, worst_v = min(on_path.items(), key=lambda kv: kv[1]) if on_path else (None, 0)
-    out = [T("No group expects the recommended path to harm its roles"
-             + (f" (lowest: {worst_g}, {worst_v:+.1f}). " if worst_g else ". "))] if worst_v >= -0.2 else \
-          [T(f"{worst_g} expects the recommended path to affect its roles ({worst_v:+.1f}); that is the concern to "
-             "address. ")]
+    pooled = (f.a.stakes.stakes_by_option[d].get("Other groups") or {}).get(v)
+    if worst_v >= -0.2:
+        out = [T("No named group expects the recommended path to harm its roles"
+                 + (f" (lowest: {worst_g}, {worst_v:+.1f})" if worst_g else ""))]
+        if pooled is not None and pooled < -0.2:              # the smaller groups, reported together, do
+            out += [T(f", but respondents in the smaller groups, reported together, do ({pooled:+.1f}); their concern "
+                      "needs hearing directly. ")]
+        else:
+            out += [T(". ")]
+    else:
+        out = [T(f"{worst_g} expects the recommended path to affect its roles ({worst_v:+.1f}); that is the concern to "
+                 "address. ")]
     worst = min(((val, g, o) for g, row in by.items() for o, val in row.items() if val is not None), default=None)
     if worst and worst[2] != v and worst[0] <= -0.3:
         out += [T(f"The strongest negative expectation ({worst[1]}, {worst[0]:+.1f}) concerns “{f.label(d, worst[2])}”, "

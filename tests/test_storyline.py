@@ -66,6 +66,8 @@ def test_expert_cases_have_no_so_what_issues(name, tmp_path):
     ctx = build_context(a, tmp_path / "out", ROOT)
     assert ctx["so_what_issues"] == []
     assert ctx["coverage_issues"] == []                     # every driver of the verdict is visible
+    from mra.rubric import failures, run
+    assert failures(run(ctx)) == []                         # board-ready on every check
 
 
 def test_replace_means_keeps_references():

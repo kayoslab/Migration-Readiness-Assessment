@@ -116,6 +116,25 @@ def _eur(x: float, signed: bool = False) -> str:
     return f"{sign}€{x / 1e6:.2f}M" if x >= 1e6 else f"{sign}€{x / 1e3:,.0f}k"
 
 
+def _readable_problem(problem: str, ins) -> str:
+    """Data gaps for the report reader: labels, not field names (the CLI keeps the technical form)."""
+    import re as _re
+
+    def label(fid):
+        return ins.facts.at[fid, "label"].split(" (")[0] if fid in ins.facts.index else fid.replace("_", " ")
+    if problem.startswith("required fact missing: "):
+        return f"Missing from the fact sheet: {label(problem.split(': ', 1)[1]).lower()}."
+    if problem.startswith("hosting TCO not computed: missing "):
+        return f"The hosting cost comparison could not be computed: {label(problem.rsplit(' ', 1)[1]).lower()} is missing."
+    m = _re.match(r"fact (\w+): not in facts.csv", problem)
+    if m:
+        return f"The fact sheet contains an entry the instrument does not know ({m.group(1).replace('_', ' ')})."
+    m = _re.match(r"(\w+): (\d+) column\(s\) do not match the form", problem)
+    if m:
+        return f"{m.group(2)} survey column(s) from {m.group(1)} could not be matched to the questionnaire."
+    return problem
+
+
 def _evidence_note(assessment) -> str:
     sizes = assessment.engagement.respondents["role"].value_counts()
     ev = assessment.engagement.instrument.rules.get("evidence", {})
@@ -248,6 +267,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
                         if show else None,
                         "payback": (None if o == "stay" or point.get(f"payback_after_cutover.{o}") in (None, float("inf"))
                                     else round(point[f"payback_after_cutover.{o}"])),
+                        "payback_from": "from the start" if o == "improve_current" else "after cut-over",
                         "saving_eur": (_eur(saving, signed=True) if show and o != "stay" else None),
                         "saving_fte": round(saving / fte, 1) if fte and o != "stay" else 0.0}
             block["economics"] = [eur_row("stay")] + [eur_row(o) for o in sorted(ranges, key=lambda o: ranges[o][1])]
@@ -407,6 +427,16 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         role = s["owner"].lower().split(" with ")[0].replace(" ", "_")
         if people.get(role) and people[role].lower() != s["owner"].lower():
             s["owner"] = f"{s['owner']} ({people[role]})"
+    for issue in issues:                                # perspectives a decision depends on but did not count
+        if issue.id.startswith("critical_groups."):
+            d_id = issue.id.split(".", 1)[1]
+            names = issue.groups[0] if len(issue.groups) == 1 else ", ".join(issue.groups[:-1]) + " and " + issue.groups[-1]
+            sponsor = people.get("sponsor")
+            steps.append({"phase": "people", "phase_label": "People and alignment", "decision": d_id,
+                          "action": f"Hear {names} directly before committing to the {d_id} path: their answers were "
+                                    "too few to count separately.",
+                          "owner": f"Sponsor ({sponsor})" if sponsor and sponsor != "Sponsor" else "Sponsor",
+                          "reason": "", "no": len(steps) + 1})
     for issue in issues:                                # a step that rests on a contradicted input is rewritten
         if issue.step_rewrite:
             for s in steps:
@@ -488,11 +518,13 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         "participation": participation,
         "risks": reg,
         "notice": notice,
-        "glossary": glossary,
+        "glossary": glossary + [{"term": "Stakeholder groups", "definition": "; ".join(
+            f"{g} — {GROUP_NAMES.get(g, g)}" for g in sizes) + "."}],
+        "group_names": {g: GROUP_NAMES.get(g, "") for g in sizes},
         "evidence_strength": _evidence_strength(assessment),
         "evidence_note": _evidence_note(assessment),
-        "problems": assessment.problems + ([benchmark_problem] if benchmark_problem else [])
-                    + ([bm["warning"]] if bm and bm.get("warning") else []),
+        "problems": [_readable_problem(p, ins) for p in assessment.problems]
+                    + ([benchmark_problem] if benchmark_problem else []) + ([bm["warning"]] if bm and bm.get("warning") else []),
         "fact_checks": [{"severity": f.severity, "message": f.message} for f in assessment.fact_checks],
         "rules": {"version": rules.get("version"), "signed_off_by": rules.get("signed_off_by"),
                   "confidence": rules.get("evidence", {}).get("confidence", 0.8),
@@ -548,6 +580,8 @@ def build_report(assessment, output: Path, template: Path = TEMPLATE, narrative:
     context = build_context(assessment, out, root)
     if final and context["integrity"]["draft"]:
         raise NotFinal("; ".join(b["message"] for b in context["integrity"]["blocks"]))
+    reviewed = (assessment.engagement.config.get("report") or {}).get("reviewed_by")
+    context["review"] = {"by": reviewed, "on": str((assessment.engagement.config.get("report") or {}).get("reviewed_on") or "")}
     context["narrative"] = None
     if narrative:
         from .narrative import write as write_narrative
@@ -561,6 +595,12 @@ def build_report(assessment, output: Path, template: Path = TEMPLATE, narrative:
             if sentence and polish_ok(e["insight"]["so_what"], sentence):
                 e["insight"]["so_what"] = replace_means(e["insight"]["so_what"], sentence)
         context["so_what_issues"] = check(context)
+    from .rubric import failures, run as run_rubric
+    context["rubric"] = run_rubric(context)
+    if final:
+        problems = failures(context["rubric"]) + ([] if reviewed else ["no quality review recorded (report.reviewed_by)"])
+        if problems:
+            raise NotFinal("; ".join(problems))
     data = out / "report.json"
     data.write_text(json.dumps(context, indent=1, ensure_ascii=False, default=str))
     output.parent.mkdir(parents=True, exist_ok=True)

@@ -85,7 +85,7 @@ def findings_payload(ctx: dict) -> dict:
                             "uncertain": [u["text"] for u in d.get("uncertain", [])],
                             "economics": [{"option": e["option"], "cost_ratio_vs_current": e["ratio"],
                                            "range_90pct": e["range"], "payback_months_after_cutover": e["payback"],
-                                           "saving_fte_per_year": e["saving_fte"]} for e in d.get("economics") or []]})
+                                           "saving_per_year_in_salary_equivalents_not_headcount": e["saving_fte"]} for e in d.get("economics") or []]})
     return {
         "organisation": ctx["engagement"]["organisation"], "system": ctx["system"],
         "decisions": decisions,

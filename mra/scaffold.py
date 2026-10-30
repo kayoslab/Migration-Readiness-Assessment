@@ -89,6 +89,9 @@ targets: {{}}                                   # success-measure targets agreed
 influence: {{}}                                 # stakeholder map: GROUP: high | medium | low (default: EXE, TEC high)
 report:
   stakeholder_map: false                       # discuss with the sponsor before switching on
+  show_amounts: true                           # false hides absolute euro amounts (ratios remain)
+  reviewed_by: null                            # quality reviewer (docs/quality-review.md); required for --final
+  reviewed_on: null
   organisation: null
   title: Architecture and Hosting Assessment
   subtitle: null

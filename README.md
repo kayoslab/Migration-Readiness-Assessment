@@ -196,9 +196,15 @@ mra report engagements/acme/engagement.yaml --llm
 | `mra decide <engagement.yaml>` | Verdict per decision in the terminal (`--json` for everything) |
 | `mra report <engagement.yaml> [--llm] [--final]` | The report as PDF; `--final` refuses while a blocking issue remains (otherwise a draft is built) |
 | `mra validate` | Check the instrument files after editing them |
+| `mra review <engagement.yaml>` | A language model reads the report as an executive and lists what it leaves open (for the analyst; not run on client engagements) |
 | `mra benchmarks [--update]` | Show the age of the DORA benchmark table, or rebuild it from DORA's published data |
 | `mra simulate [--quick]` | Test the method on synthetic assessments |
 | `mra check-llm` | Verify the AI gateway key and model |
+
+Every build runs board-readiness checks (decision requested, costs in euros, deciding conditions shown, caveats
+placed, reopen criteria agreed, plain language) and prints any failure. A report is final only when the checks
+pass, the decision rules were signed off before the facts were frozen, and a second person has completed the
+[quality review](docs/quality-review.md) and is named in `engagement.yaml`.
 
 `Decision.ipynb` shows every number behind a report for one assessment and lets you try different rule settings.
 

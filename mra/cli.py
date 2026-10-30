@@ -21,6 +21,8 @@ def main(argv: list[str] | None = None) -> int:
     rep.add_argument("--final", action="store_true",
                      help="refuse to build unless every blocking integrity check passes (otherwise a draft is built)")
 
+    rv = sub.add_parser("review", help="have a language model read the report as an executive (analyst only)")
+    rv.add_argument("engagement")
     bm = sub.add_parser("benchmarks", help="show the age of the DORA benchmark table, or rebuild it")
     bm.add_argument("--instrument", default="instrument")
     bm.add_argument("--update", action="store_true", help="download the latest edition from DORA's repository")
@@ -70,6 +72,17 @@ def main(argv: list[str] | None = None) -> int:
         if bench and (warning := age_warning(bench)):
             print(f"Warning: {warning}")
         return 1 if errors else 0
+
+    if args.command == "review":
+        from .review import review
+        load_dotenv(Path(args.engagement).resolve().parent / ".env")
+        load_dotenv()
+        try:
+            print(f"Review written to {review(args.engagement)}")
+        except PermissionError as exc:
+            print(exc, file=sys.stderr)
+            return 2
+        return 0
 
     if args.command == "benchmarks":
         from .benchmark import age_warning, load as load_benchmarks, update
@@ -178,6 +191,12 @@ def _decide(args) -> int:
         except NotFinal as exc:
             print(f"Not built as final: {exc}", file=sys.stderr)
             return 2
+        import json as _json
+        built = Path("Output") / "build-v3" / Path(args.pdf).stem / "report.json"
+        if built.exists():
+            for r in _json.loads(built.read_text()).get("rubric", []):
+                if not r["ok"]:
+                    print(f"! board readiness — {r['check']}: {r['detail']}")
         n = result.narrative
         if n is not None:
             if n.rejected:

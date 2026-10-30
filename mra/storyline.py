@@ -430,10 +430,14 @@ def _people_map(f: Findings) -> list[dict]:
         pref = f.preferred(d, g)
         v = f.target(d)
         if pref and pref[0] != v and pref[0] in {o["id"] for o in f.dec[d].get("options", [])}:
+            dated = any(tr["decision"] == d and tr["alternative"] == f.label(d, pref[0])
+                        for tr in f.ctx.get("triggers", []))
             out += [T(f"{g}'s respondents mostly prefer “{f.label(d, pref[0])}” ({_pct(pref[1])}); the conditions under which "
                       "that path would win ("),
                     SEC(f"options-{d}", "“what you would need to believe”"),
-                    T(") make a good agenda, turning a difference of preference into a test of evidence. ")]
+                    T(") make a good agenda, turning a difference of preference into a test of evidence"),
+                    *([T(", and "), SEC("triggers", "the reopen criteria"), T(" give that test a date")] if dated else []),
+                    T(". ")]
             break
     no = f.step(lambda s: g in s["action"] and "evidence" in s["action"])
     rid = f.risk(lambda x: x["kind"] == "people" and "leadership" in x["title"].lower())
@@ -577,6 +581,10 @@ def _roadmap(f: Findings) -> list[dict]:
                 T(") are dealt with in this phase. ")]
     out += [T("The first checkpoint ("), {**C(1), "short": True}, T(") is the real decision point: commit, re-scope or stop, against "),
             SEC("measures"), T(".")]
+    if f.ctx.get("triggers"):
+        out += [T(" What would reopen each decision is agreed now ("), SEC("triggers", "when to reopen"), T(").")]
+    if (f.ctx.get("roadmap") or {}).get("load"):
+        out += [T(" One owner carries too many actions at once; see the capacity note.")]
     return out
 
 

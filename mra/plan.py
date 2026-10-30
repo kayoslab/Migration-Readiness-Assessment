@@ -11,6 +11,8 @@
 
 from __future__ import annotations
 
+import re
+
 import numpy as np
 
 from .explain import outcome_label, signal_label, with_unit
@@ -253,3 +255,78 @@ def inaction(assessment, show_amounts: bool = True) -> str | None:
     if risks:
         parts.append("It also keeps today's exposure: " + "; ".join(risks) + ".")
     return " ".join(parts) or None
+
+
+# ---------------------------------------------------------------------------------------- reopen triggers
+
+OWN_TEST = re.compile(r"would change my mind|would make sense|would be more open|would convince|proof of concept|"
+                      r"show me|if we .{3,80} (?:still|and)", re.I)
+DECISION_WORDS = {"architecture": ("split", "service", "monolith", "module", "boundar", "deploy"),
+                  "hosting": ("cloud", "hardware", "infrastructure", "on-call", "data centre", "data center", "load")}
+
+
+def _as_trigger(belief: str) -> str:
+    text = belief.rstrip(".")
+    text = text.replace(" would have to be ", " is ").replace("(currently ", "(today ")
+    return text[0].lower() + text[1:]
+
+
+def triggers(assessment, rows_by_decision: dict, measures_rows: list[dict], calendar_rows: list[dict]) -> list[dict]:
+    """When to reopen each decision: the recommended path's own measure falling short, or the nearest alternative's
+    conditions coming true — checked at a dated point, with respondents' own tests where they named one."""
+    out = []
+    quotes = [q for q in (assessment.text.quotes if assessment.text else []) if OWN_TEST.search(q["text"])]
+    for d, r in assessment.results.items():
+        if r.verdict == "insufficient_evidence":
+            continue
+        rows = [o for o in rows_by_decision.get(d, []) if not o["is_verdict"]
+                and o["state"] in ("conditions not met", "capability gap too large") and o["beliefs"]]
+        if not rows:
+            continue
+        # the next larger step reopens when the recommended path falls short; otherwise the most likely alternative
+        size = {"none": 0, "small": 1, "medium": 2, "large": 3}
+        verdict_row = next((o for o in rows_by_decision.get(d, []) if o["is_verdict"]), None)
+        own = size.get(verdict_row["programme"], 1) if verdict_row else 1
+        larger = sorted((o for o in rows if size.get(o["programme"], 0) > own), key=lambda o: size[o["programme"]])
+        alt = larger[0] if larger else max(rows, key=lambda o: (o["probability"], -len(o["beliefs"])))
+        when = "checkpoint C3 (month 12)"
+        if d == "hosting":
+            review = next((c for c in calendar_rows if c["event"] == "Hosting review"), None)
+            if review:
+                when = f"the hosting review (month {review['month']:g})"
+        conditions = []
+        measure = next((m for m in measures_rows if m["decision"] == d.title() and m["target"].startswith(("below", "at least"))), None)
+        if measure:
+            name = measure["measure"].split(" (")[0]
+            word, _, value = measure["target"].partition(" ")
+            still = f"is still at or above {value}" if word == "below" else f"is still below {value}"
+            conditions.append(f"the measure “{name[0].lower() + name[1:]}” {still} (today {measure['baseline']}) once "
+                              "the first steps are complete")
+        conditions.append(_as_trigger(alt["beliefs"][0]))
+        own = [{"role": q["role"], "text": q["text"]} for q in quotes
+               if any(w in q["text"].lower() for w in DECISION_WORDS[d])][:2]
+        out.append({"decision": d, "alternative": alt["label"], "when": when, "conditions": conditions,
+                    "own_tests": own})
+    return out
+
+
+# ---------------------------------------------------------------------------------------- capacity
+
+def load(steps: list[dict], threshold: int = 4) -> list[str]:
+    """Owners carrying many actions in the same phase, across both decisions."""
+    from collections import Counter, defaultdict
+    phase_of = {**PHASE_OF, "first_steps": "next"}
+    names = {"now": "the first three months", "next": "months 3 to 6"}
+    counts = Counter((s["owner"], phase_of.get(s["phase"], "next")) for s in steps)
+    heavy: dict[str, list[str]] = defaultdict(list)
+    for (owner, phase), n in counts.items():
+        if n >= threshold:
+            heavy[owner].append(f"{n} in {names.get(phase, phase)}")
+    notes = []
+    for owner, parts in heavy.items():
+        decisions = {s["decision"] for s in steps if s["owner"] == owner}
+        both = " across both decisions" if {"architecture", "hosting"} <= decisions else ""
+        parts[0] = parts[0].replace(" in ", " actions in ", 1)
+        notes.append(f"{owner} owns {' and '.join(parts)}{both}: plan the capacity, or delegate some, "
+                     "before committing.")
+    return notes

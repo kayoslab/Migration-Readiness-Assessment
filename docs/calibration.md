@@ -97,3 +97,6 @@ grade counts as an estimate), and the scenario builder gives today's own costs t
 "0.69–0.69". Hosting case (b) then sat at the 80% bar (cost ratio 0.93, range 0.89–1.04 instead of 0.91–0.98): its
 story is a need-motivated move, but it pre-registered no accepted premium. The case now accepts 10%, consistent with
 its story; the rule itself is unchanged. The quick simulation still finds no wrong outcome.
+Full re-run after the change (1,770 runs: grid of 720 plus five threshold sweeps of 210): no wrong and no
+overconfident outcome; 4 of 210 runs in the architecture-need sweep return "insufficient evidence" next to the
+boundary, as before (finding 1).

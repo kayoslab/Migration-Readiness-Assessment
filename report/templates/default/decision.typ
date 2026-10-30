@@ -553,6 +553,35 @@ owners and mitigations come from the action library.
   #v(3mm)
 ]
 
+#if data.roadmap.at("load", default: ()).len() > 0 [
+  #callout(title: "Capacity")[#for n in data.roadmap.load [- #n \ ]]
+  #v(3mm)
+]
+
+#if data.triggers.len() > 0 [
+  #anchor("triggers")
+  == When to reopen the decision
+  Agreed now, so that disagreement becomes a test rather than a debate: each decision is reopened only if one of these
+  conditions holds when it is checked.
+  #for tr in data.triggers [
+    #v(1mm)
+    #block(breakable: false)[
+      #text(weight: "semibold", fill: theme.primary)[#upper(tr.decision.slice(0, 1))#tr.decision.slice(1)]: reopen
+      “#tr.alternative” at #tr.when if
+      #for (i, c) in tr.conditions.enumerate() [- #if i > 0 [or ]#c \ ]
+      #if tr.own_tests.len() > 0 [
+        #text(size: 8.5pt, fill: theme.muted)[Respondents named their own test:]
+        #for q in tr.own_tests [
+          #block(inset: (left: 12pt, y: 3pt), stroke: (left: 1.5pt + theme.rule))[
+            #text(size: 8.5pt, style: "italic")[“#q.text”] #h(4pt) #text(size: 8pt, fill: theme.muted)[— #q.role]
+          ]
+        ]
+      ]
+    ]
+  ]
+  #v(3mm)
+]
+
 #if data.measures.len() > 0 [
   #anchor("measures")
   == Success measures

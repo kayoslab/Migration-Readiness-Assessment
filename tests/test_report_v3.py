@@ -181,3 +181,38 @@ def test_amounts_can_be_hidden(techco, tmp_path):
         techco.engagement.config["report"]["show_amounts"] = True
     hosting = next(d for d in ctx["decisions"] if d["id"] == "hosting")
     assert all(r["eur"] is None for r in hosting["economics"]) and "€" not in (hosting["inaction"] or "")
+
+
+def test_reopen_triggers_name_the_next_larger_step(techco, tmp_path):
+    ctx = build_context(techco, tmp_path, ROOT)
+    arch = next(t for t in ctx["triggers"] if t["decision"] == "architecture")
+    assert arch["alternative"].startswith("Gradually split") and arch["when"].startswith("checkpoint C3")
+    assert "is still at or above 15%" in arch["conditions"][0] and "at least 3.5" in arch["conditions"][1]
+    hosting = next(t for t in ctx["triggers"] if t["decision"] == "hosting")
+    assert hosting["when"] == "the hosting review (month 30)"
+
+
+def test_respondents_own_tests_are_attached(techco):
+    from types import SimpleNamespace
+
+    from mra import plan
+    from mra.appraisal import appraise
+    original = techco.text
+    techco.text = SimpleNamespace(quotes=[
+        {"id": 1, "role": "ENG", "text": "If we enforced module boundaries first and still could not deliver faster, "
+                                         "splitting would make sense."},
+        {"id": 2, "role": "OPS", "text": "Nothing would break."}])
+    try:
+        rows = {d: appraise(techco, d) for d in techco.results}
+        out = plan.triggers(techco, rows, plan.measures(techco), [])
+    finally:
+        techco.text = original
+    arch = next(t for t in out if t["decision"] == "architecture")
+    assert [q["role"] for q in arch["own_tests"]] == ["ENG"]
+
+
+def test_capacity_notes():
+    from mra.plan import load
+    steps = [{"owner": "Technology lead", "phase": "first_steps", "decision": d} for d in ["architecture"] * 3 + ["hosting"]]
+    assert load(steps) == ["Technology lead owns 4 actions in months 3 to 6 across both decisions: plan the capacity, "
+                           "or delegate some, before committing."]

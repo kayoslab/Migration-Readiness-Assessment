@@ -426,6 +426,9 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     from .risks import register as risk_register
     for block in decisions:
         block["options"] = appraise(assessment, block["id"])
+    calendar_rows = next((b.get("calendar", []) for b in decisions if b["id"] == "hosting"), [])
+    reopen = plan.triggers(assessment, {b["id"]: b["options"] for b in decisions}, success, calendar_rows)
+    roadmap_block["load"] = plan.load(steps)
     reg = risk_register(assessment)
     invited = eng.config.get("invited") or {}
     participation = [{"group": g, "n": int(n), "invited": invited.get(g),
@@ -470,6 +473,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         "steps": steps,
         "roadmap": roadmap_block,
         "measures": success,
+        "triggers": reopen,
         "evidence": rows,
         "participation": participation,
         "risks": reg,

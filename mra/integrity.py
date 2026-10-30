@@ -85,6 +85,9 @@ def _rules_signed_off(a, cfg) -> list[Issue]:
     return []
 
 
+_ANSWER = {"No": "not measured", "Partly": "only partly measured", None: "not confirmed"}
+
+
 def _baseline_unverified(a, cfg) -> list[Issue]:
     eng = a.engagement
     present = {f: _point(eng, f) for f in cfg["facts"] if _point(eng, f) is not None}
@@ -96,7 +99,7 @@ def _baseline_unverified(a, cfg) -> list[Issue]:
     listed = ", ".join(words[f].format(v=v) for f, v in present.items() if f in words)
     return [Issue("baseline_unverified", cfg["severity"], "Delivery measures not verified",
                   f"The delivery measures in the fact sheet ({listed}) are not backed by a measurement in the last six "
-                  f"months (governance check {cfg['governance']}: {answer or 'not answered'}). Comparisons and "
+                  f"months: the governance checklist records them as {_ANSWER.get(answer, 'not confirmed')}. Comparisons and "
                   "baselines that use them are provisional until they are verified.",
                   exhibits=["readiness.benchmark"], facts=list(present),
                   step_rewrite={"starts_with": "Measure lead time",

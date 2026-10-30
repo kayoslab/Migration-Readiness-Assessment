@@ -141,7 +141,7 @@ def test_hand_entered_coupling_metric_and_wide_range_are_flagged(tmp_path):
     a = _assess_with(tmp_path, {"cross_team_change_pct": {"value": 40, "source": "estimate"},
                                 "migration_cost": {"low": 100000, "likely": 300000, "high": 900000, "grade": "estimate"}})
     messages = " ".join(f.message for f in a.fact_checks)
-    assert "should be produced by `mra coupling`" in messages
+    assert "should be produced by the coupling analysis" in messages
     assert "wider than 3x without a written justification" in messages
 
 

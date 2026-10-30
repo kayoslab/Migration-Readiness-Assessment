@@ -360,11 +360,11 @@ means more ready. Each group answers only the questions it can judge, so cells a
   #let bm = data.readiness.benchmark
   #block(breakable: false)[
     == Delivery performance against the industry
-    The fact sheet's delivery measures compared with the #bm.source.research benchmarks for the
-    #(bm.industry) industry#if bm.industry == "All industries" [ as a whole], and with organisations of
+    The fact sheet's delivery measures compared with DORA's #bm.source.edition industry benchmarks: for the
+    #(bm.industry) industry#if bm.industry == "All industries" [ as a whole], and for organisations of
     #lower(bm.organisation_size).
     #exhibit(bm.chart, bm.insight,
-      source: "DORA scores: categories 1–6 mapped to 0–10, percentages p to 10 − p/10, as in DORA's Quick Check. Grey: segment average ± one standard deviation.")
+      source: "Scores on DORA's scale from 0 to 10 (10 best). Grey band: industry average, plus or minus one standard deviation.")
   ]
   #v(2mm)
   #data-table(
@@ -380,8 +380,8 @@ means more ready. Each group answers only the questions it can judge, so cells a
   #text(size: 7.5pt, fill: theme.muted)[
     Position: above or below when more than half a standard deviation from the group's average on DORA's scale;
     "same size" compares with organisations of #lower(bm.organisation_size) across all industries.
-    Benchmarks are self-reported survey answers; measured values here make the comparison indicative. Sources and
-    conversion: see Method.
+    DORA's figures are what survey respondents report; this organisation's come from its fact sheet, so the
+    comparison is indicative. See Method.
   ]
   #v(3mm)
 ]
@@ -559,13 +559,13 @@ before results were seen.
 #if "benchmark" in data.readiness [
   #let bm = data.readiness.benchmark
   == Benchmarks
-  Delivery measures are compared with #bm.source.title (#bm.source.publisher; #bm.source.research), taken from
-  DORA's published repository at commit #bm.source.commit.slice(0, 7) on #bm.source.retrieved and licensed
-  #bm.source.licence. The data give each group's mean and standard deviation on DORA's 0–10 scale. Measured values
-  are converted as DORA's Quick Check does: answer categories 1–6 to 0–10, percentages p to 10 − p/10; durations
-  and deployment frequencies are first assigned to DORA's answer categories (one month = 730 hours; two or more
-  deployments per working day count as on demand). No percentiles are given, because DORA publishes means and
-  standard deviations of ordinal answers only. The 2024 level is taken from #bm.levels_2024.source. #bm.levels_2024.note
+  Delivery measures are compared with the #bm.source.edition industry benchmarks of DORA, Google Cloud's
+  long-running research programme on software delivery. For each industry and company size, DORA publishes the
+  average result and how widely results vary, not a ranking; the report therefore places each measure above, around
+  or below the average rather than giving a percentile. The organisation's figures are converted to DORA's scoring
+  scale in the same way as DORA's own online Quick Check. The performance level (elite, high, medium, low) comes from
+  DORA's 2024 report; DORA has since stopped publishing levels and stresses that steady improvement matters more than
+  reaching one.
 ]
 
 #if data.problems.len() > 0 [

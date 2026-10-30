@@ -267,18 +267,23 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         if d == "architecture" and "need.architecture" in ev.signals:
             floor = np.nanmin(np.stack([ev.signals.get(f"capability.architecture.{a}", np.full(ev.draws, np.nan))
                                         for a in ("delivery_pipeline", "platform_basics", "operations")]), axis=0)
+            distributed = ev.current_state.get("architecture") == "distributed"
             block["charts"]["map"] = _rel(charts.need_capability_map(ev.signals["need.architecture"], floor,
-                                                                     cdir / "architecture_map.svg"), root)
+                                                                     cdir / "architecture_map.svg",
+                                                                     distributed=distributed), root)
             need = ev.signals["need.architecture"]
-            block["insights"]["map"] = register("architecture.map", interpret.need_capability(need, floor), {
+            block["insights"]["map"] = register("architecture.map", interpret.need_capability(
+                need, floor, distributed=distributed), {
                 "need_point": round(float(need[0]), 2), "need_90pct": [round(float(x), 2) for x in np.nanpercentile(need, [5, 95])],
                 "weakest_capability_point": round(float(floor[0]), 2), "thresholds": {"need": [2.5, 3.5], "capability": 3.5}})
             split = _lead_time_split(eng, ins)
             if split:
-                cross = eng.facts.get("cross_team_change_pct")
+                services = ev.current_state.get("architecture") == "distributed"
+                cross = eng.facts.get("cross_service_change_pct" if services else "cross_team_change_pct")
                 cross = None if cross is None or cross.point is None else float(cross.point)
                 block["charts"]["leadtime"] = _rel(charts.lead_time_chart(split, cdir / "lead_time.svg"), root)
-                block["insights"]["leadtime"] = register("architecture.leadtime", interpret.lead_time(split, cross),
+                block["insights"]["leadtime"] = register("architecture.leadtime",
+                                                         interpret.lead_time(split, cross, services),
                                                          {"by_group": split, "cross_team_change_pct": cross})
             block["fit"] = [{"outcome": labels.get(k.split(".", 1)[1]), "requirement": signal_label(c["signal"], ins),
                              "threshold": c["threshold"], "current": c["current"], "met": c["met"]}
@@ -456,14 +461,16 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     speed = [r for r in bm_rows if r["metric"] in ("leadtime", "deployfreq") and r["score"] is not None]
     if lead and lead_split and speed and not any(r["position"] == "below" for r in speed):
         coord = lead_split["All respondents asked"].get("Coordination between teams", 0)
-        cross = eng.facts.get("cross_team_change_pct")
+        distributed = ev.current_state.get("architecture") == "distributed"
+        cross = eng.facts.get("cross_service_change_pct" if distributed else "cross_team_change_pct")
         if coord >= 0.5:
             key.append("Pipeline speed is around or above the industry average"
                        + (" on measures still to be verified" if unverified else "")
                        + f"; the delay the business experiences lies in coordination between teams: {coord:.0%} of "
                          "the answers on lead time name it"
-                       + (f", and {float(cross.point):g}% of changes need more than one team" if cross and
-                          cross.point is not None else "") + ".")
+                       + (f", and {float(cross.point):g}% of changes "
+                          f"{'need edits in more than one service' if distributed else 'need more than one team'}"
+                          if cross and cross.point is not None else "") + ".")
     if not rd.matrix.empty:
         counted = rd.matrix.where(rd.counts >= min_n)
         area_scores = counted.mean(axis=1).dropna().sort_values()

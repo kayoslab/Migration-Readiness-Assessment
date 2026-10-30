@@ -45,11 +45,13 @@ def outcome_probabilities(dist: dict, labels: dict, verdict: str, leaning: str |
     return {"title": title, "points": points}
 
 
-def need_capability(need: np.ndarray, capability: np.ndarray, cuts=(2.5, 3.5), cap_cut: float = 3.5) -> dict:
+def need_capability(need: np.ndarray, capability: np.ndarray, cuts=(2.5, 3.5), cap_cut: float = 3.5,
+                    distributed: bool = False) -> dict:
     n0, c0 = float(need[0]), float(capability[0])
     n_lo, n_hi = np.nanpercentile(need, [5, 95])
+    change = "consolidate or realign services" if distributed else "restructure within the system"
     region = ("keep and improve practices" if n0 < cuts[0] else
-              "restructure within the system" if n0 < cuts[1] or c0 < cap_cut else "decomposition possible")
+              change if n0 < cuts[1] or c0 < cap_cut or distributed else "decomposition possible")
     near = min(cuts, key=lambda c: abs(c - n0))
     if abs(near - n0) < 0.1:                             # never round across a threshold
         strength, shown = f"at the {near} threshold", f"{n0:.2f}"
@@ -273,7 +275,7 @@ def _join(words: list[str]) -> str:
     return words[0] if len(words) == 1 else ", ".join(words[:-1]) + " and " + words[-1]
 
 
-def lead_time(by_group: dict, cross_team_pct: float | None) -> dict:
+def lead_time(by_group: dict, cross_team_pct: float | None, services: bool = False) -> dict:
     overall = by_group.get("All respondents asked") or next(iter(by_group.values()))
     top = max(overall, key=overall.get)
     if overall[top] >= 0.5:
@@ -294,7 +296,8 @@ def lead_time(by_group: dict, cross_team_pct: float | None) -> dict:
     if len(same) == len(groups) > 1:
         points.append(f"Every group asked gives the same answer ({', '.join(groups)}).")
     if cross_team_pct is not None:
-        points.append(f"{cross_team_pct:g}% of merged changes touch code owned by more than one team.")
+        points.append(f"{cross_team_pct:g}% of changes require edits in more than one service." if services else
+                      f"{cross_team_pct:g}% of merged changes touch code owned by more than one team.")
     return {"title": title, "points": points}
 
 

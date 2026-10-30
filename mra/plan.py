@@ -87,6 +87,17 @@ def _proposed_target(fid: str, value: float, ins) -> tuple[str, float | None]:
     return "at least", min(above)
 
 
+def _rule_target(ins, decision: str, outcome: str, fid: str) -> tuple[str, float | None]:
+    """The opposite of the condition on `fid` that made the outcome apply: the bar it should get past."""
+    from .instrument import _conditions
+    spec = next((o for o in ins.rules["decisions"][decision]["outcomes"] if o["id"] == outcome), {})
+    flip = {">=": "below", ">": "at most", "<=": "above", "<": "at least"}
+    for _, c in _conditions(spec.get("when"), ""):
+        if c.get("signal") == f"fact.{fid}" and c.get("op") in flip and isinstance(c.get("value"), (int, float)):
+            return flip[c["op"]], float(c["value"])
+    return "to be agreed", None
+
+
 def measures(assessment) -> list[dict]:
     eng = assessment.engagement
     ins = eng.instrument
@@ -96,7 +107,10 @@ def measures(assessment) -> list[dict]:
         target_outcome = r.verdict if r.verdict != "insufficient_evidence" else r.leaning
         if not target_outcome:
             continue
-        for fid in ins.outcomes[d][target_outcome].get("measures", []):
+        listed = ins.outcomes[d][target_outcome].get("measures", [])
+        if isinstance(listed, dict):                     # measures that depend on where the system runs today
+            listed = listed.get(r.current_state, listed.get("default", []))
+        for fid in listed:
             fact = eng.facts.get(fid)
             if fact is None or fact.point is None or fid not in ins.facts.index:
                 out.append({"fact": fid, "decision": d.title(), "measure": ins.facts.at[fid, "label"] if fid in ins.facts.index else fid,
@@ -107,10 +121,13 @@ def measures(assessment) -> list[dict]:
                 target, basis = with_unit(f"fact.{fid}", float(agreed[fid]), ins), "agreed"
             else:
                 word, cut = _proposed_target(fid, value, ins)
+                basis = "proposed: next performance band"
+                if cut is None:                          # no bands: the rule that chose the path sets the bar
+                    word, cut = _rule_target(ins, d, target_outcome, fid)
+                    basis = "proposed: past the threshold that chose the path" if cut is not None else "to be agreed"
                 target = word if cut is None or word == "maintain" else f"{word} {with_unit(f'fact.{fid}', cut, ins)}"
                 if word == "maintain":
                     target = f"maintain ({with_unit(f'fact.{fid}', value, ins)})"
-                basis = "proposed: next performance band"
             out.append({"fact": fid, "decision": d.title(), "measure": ins.facts.at[fid, "label"],
                         "baseline": with_unit(f"fact.{fid}", value, ins), "target": target, "basis": basis})
     return out
@@ -170,7 +187,7 @@ def _break_even(opt: str, key: str, lo: float, hi: float, base: dict, current: s
         return _ratio({**base, key: x}, current, opt, vs="improve_current") - limit
     a, b = max(0.0, lo / 4), hi * 4
     fa, fb = f(a), f(b)
-    label = signal_label(f"fact.{key}", ins).split(",")[0]
+    label = signal_label(f"fact.{key}", ins).split(",")[0].split(" (")[0]
     if np.isnan(fa) or np.isnan(fb) or fa * fb > 0:
         return {"option": WORDS.get(opt, opt), "input": label, "value": None,
                 "sentence": f"{WORDS.get(opt, opt)}: no realistic value of {label.lower()} alone would make it pass the "
@@ -184,8 +201,11 @@ def _break_even(opt: str, key: str, lo: float, hi: float, base: dict, current: s
     value = float(f"{(a + b) / 2:.3g}")              # three significant figures; it is an estimate
     likely = base[key]
     unit = ins.facts.at[key, "unit"]
-    shown = f"{value:,.0f}" + (f" {unit}" if unit not in ("EUR",) else " €") if abs(value) >= 10 else f"{value:.1f} {unit}"
-    now = f"{likely:,.0f}" + (f" {unit}" if unit not in ("EUR",) else " €") if abs(likely) >= 10 else f"{likely:.1f} {unit}"
+    def amount(x):
+        if unit == "EUR":
+            return _eur(x)
+        return f"{x:,.0f} {unit}" if abs(x) >= 10 else f"{x:.1f} {unit}"
+    shown, now = amount(value), amount(likely)
     return {"option": WORDS.get(opt, opt), "input": label, "value": value,
             "sentence": f"{WORDS.get(opt, opt)} would be cheap enough to justify a move only if {label.lower()} were "
                         f"{'below' if value < likely else 'above'} {shown} (estimate: {now})."}
@@ -215,6 +235,17 @@ def calendar(assessment, show_amounts: bool = True) -> list[dict]:
              "repatriate": "Prepare the move back; the migration starts once preconditions are met."}.get(target)
     if first:
         out.append({"month": 0, "event": "Decision", "action": first})
+    current = eng.config.get("current_hosting", "own_infrastructure")
+    if current == "cloud" and target != "repatriate":    # no hardware of its own: no refresh, no colocation contract
+        end = eng.facts.get("cloud_commitment_end_months")
+        end = end.point if end is not None else None
+        if end:
+            out.append({"month": max(end - 3, 1), "event": "Hosting review", "action":
+                        f"Re-run the hosting assessment with measured costs before the cloud commitment ends (month "
+                        f"{end:g}), to decide how much to commit again."})
+            out.append({"month": end, "event": "Cloud commitment ends", "action": "Renew, resize or end it, as "
+                        "decided at the review."})
+        return sorted(out, key=lambda x: x["month"])
     due, capex, k = f["hw_refresh_due_months"], f["hw_refresh_capex"], f["rightsized_share_pct"]
     if due is not None and capex:
         amount = f" ({_eur(capex)})" if show_amounts else ""
@@ -253,6 +284,8 @@ def inaction(assessment, show_amounts: bool = True) -> str | None:
         return None
     pt = {k: (eng.facts[k].point if k in eng.facts else None)
           for k in ("hw_refresh_due_months", "hw_refresh_capex", "infra_bus_factor", "infra_toil_pct")}
+    if eng.config.get("current_hosting", "own_infrastructure") == "cloud":   # these describe hardware it does not run
+        pt = {k: None for k in pt}
     horizon = eng.instrument.rules["decisions"]["hosting"].get("horizon_years", 5)
     parts = []
     if show_amounts:

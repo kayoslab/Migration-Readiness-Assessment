@@ -94,6 +94,11 @@ the current infrastructure rather than moving to the cloud, and qualifies both: 
 verified, the invoiced run cost is twice what the cost model accounts for, and too few Security and Finance
 respondents took part to count separately. `mra decide examples/techco/engagement.yaml` prints the same verdict in the terminal.
 
+Two more synthetic organisations show other situations (`python examples/build_<name>.py`, then `mra report`):
+**MidCorp**, a messy case — the evidence does not decide the architecture, an unreconciled run cost puts hosting on
+hold, and the report stays a draft; and **CloudCo**, a scale-up whose 40 services in the public cloud should be
+consolidated and whose cloud setup should be optimised rather than left.
+
 ## How it decides
 
 ```

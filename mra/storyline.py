@@ -642,7 +642,9 @@ def _benchmark(f: Findings) -> list[dict]:
 
 def _roadmap(f: Findings) -> list[dict]:
     high = [r["id"] for r in f.risks if r["score"] >= 9]
-    out = [T("Nothing irreversible happens before the first checkpoint. ")]
+    starting = [d for d, r in f.a.results.items() if r.status == "go" and r.verdict not in ("stay_as_is", "stay_and_improve")]
+    out = [T("Nothing irreversible happens before the first checkpoint. ") if not starting else
+           T(f"Work on the {_join(starting)} path starts now; the first checkpoint decides whether it continues. ")]
     if len(high) == 1:
         out += [T("The highest-rated risk ("), {**R(high[0]), "short": True}, T(") is dealt with in this phase. ")]
     elif high:

@@ -1,0 +1,47 @@
+system: the CloudCo platform
+current_hosting: cloud
+people:
+  sponsor: Chief Executive Officer
+  fact_sheet_owner: Head of Engineering
+  technology_lead: CTO
+  platform_lead: Head of Platform
+fact_sheet_frozen_on: '2026-10-01'
+instrument: ../../instrument
+responses:
+  ENG: Responses/ENG.csv
+  PRD: Responses/PRD.csv
+  BUS: Responses/BUS.csv
+  TEC: Responses/TEC.csv
+  EXE: Responses/EXE.csv
+  OPS: Responses/OPS.csv
+  SEC: Responses/SEC.csv
+  FIN: Responses/FIN.csv
+facts: facts.yaml
+governance: governance.yaml
+sourcing:
+  candidates:
+    search: Search
+  facts: sourcing.yaml
+invited:
+  ENG: 28
+  PRD: 11
+  BUS: 9
+  TEC: 6
+  EXE: 5
+  OPS: 9
+  SEC: 6
+  FIN: 6
+report:
+  organisation: CloudCo
+  title: Architecture and Hosting Assessment
+  subtitle: Recommended direction for the CloudCo platform
+  prepared_for: Leadership team
+  prepared_by: Platform Advisory
+  sample_data: true
+  stakeholder_map: true
+  reviewed_by: Engagement quality reviewer (sample)
+  reviewed_on: '2026-10-29'
+benchmark:
+  industry: technology
+  organisation_size: fewer_than_500
+rules: decision_rules.yaml

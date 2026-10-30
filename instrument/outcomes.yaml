@@ -122,7 +122,10 @@ hosting:
 
   improve_current:
     appraisal: {programme: small, reversibility: high, time_to_value: months}   # judgement; adjust per engagement
-    measures: [infra_toil_pct, infra_bus_factor, iac_pct]   # success measures; targets proposed from the fact bands unless agreed
+    measures:                                                # success measures by where the system runs today
+      own_infrastructure: [infra_toil_pct, infra_bus_factor, iac_pct]
+      hybrid: [infra_toil_pct, infra_bus_factor, iac_pct]
+      cloud: [iac_pct, cloud_committed_share_pct]
     label: Improve, right-size and automate the current infrastructure
     preference_label: Improve and automate what we run today, and adjust its size to actual need
     offered_when_current: [own_infrastructure, cloud, hybrid]
@@ -139,7 +142,7 @@ hosting:
   hybrid:
     appraisal: {programme: medium, reversibility: medium, time_to_value: months}   # judgement; adjust per engagement
     measures: [capacity_lead_time_weeks, infra_toil_pct]   # success measures; targets proposed from the fact bands unless agreed
-    label: Run selected workloads in a public cloud
+    label: Run some workloads in a public cloud and the rest on own infrastructure (hybrid)
     preference_label:
       own_infrastructure: Move some workloads to a public cloud and keep the rest
       cloud: Bring some workloads back to our own infrastructure and keep the rest in the cloud

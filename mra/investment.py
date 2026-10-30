@@ -75,7 +75,8 @@ def hosting_one_off(assessment) -> dict | None:
         capacity = 1 - share if r.verdict == "hybrid" else (0.0 if f["hw_refresh_due_months"] > (f["migration_months"] or 0) else 1.0)
     else:
         capacity = 1.0
-    if f["hw_refresh_capex"] and capacity:
+    owns_hardware = eng.config.get("current_hosting", "own_infrastructure") != "cloud" or r.verdict == "repatriate"
+    if f["hw_refresh_capex"] and capacity and owns_hardware:
         out["items"].append({"label": "Hardware refresh", "amount": f["hw_refresh_capex"] * capacity,
                              "start": f["hw_refresh_due_months"], "months": 0})
     return out
@@ -107,7 +108,7 @@ def budget(assessment, show_amounts: bool = True) -> dict | None:
     for part in getattr(assessment, "sourcing", []) or []:     # replacing a part: integration over the switch
         if part["verdict"] != "replace_with_product" or part.get("integration_cost") is None:
             continue
-        start = 3.0 if part["status"] == "prepare_first" else 0.0
+        start = 6.0 if part["status"] == "prepare_first" else 3.0   # after the proof of concept (and the separation)
         amount, months = np.array([part["integration_cost"]]), np.array([max(part["switch_months"], 1.0)])
         cells = [float(_spread(amount, np.array([start]), months, a, b)[0]) for _, a, b in PHASES]
         rows.append({"item": f"Build or buy: replacing {part['name'].lower()}", "cells": cells,

@@ -1,0 +1,387 @@
+deployables_in_scope:
+  value: 40
+  source: synthetic scenario
+  attester: Fact-sheet owner
+core_code_share_pct:
+  value: 9
+  source: synthetic scenario
+  attester: Fact-sheet owner
+single_node_sufficient:
+  value: 'no'
+  source: synthetic scenario
+  attester: Fact-sheet owner
+teams_per_deployable:
+  value: 3
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  scripted: true
+cross_team_change_pct:
+  value: 12
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  scripted: true
+blast_radius_pct:
+  value: 15
+  source: synthetic scenario
+  attester: Fact-sheet owner
+components_distinct_load:
+  value: 0
+  source: synthetic scenario
+  attester: Fact-sheet owner
+components_distinct_availability:
+  value: 0
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  second_attester: Second attester
+components_distinct_compliance:
+  value: 0
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  second_attester: Second attester
+friction_concentration_index:
+  value: 1.3
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  scripted: true
+deploy_automation:
+  value: automatic_on_merge
+  source: synthetic scenario
+  attester: Fact-sheet owner
+rollback_minutes:
+  value: 10
+  source: synthetic scenario
+  attester: Fact-sheet owner
+test_automation_pct:
+  value: 70
+  source: synthetic scenario
+  attester: Fact-sheet owner
+change_failure_pct:
+  value: 9
+  source: synthetic scenario
+  attester: Fact-sheet owner
+deploy_rework_pct:
+  value: 9
+  source: synthetic scenario
+  attester: Fact-sheet owner
+restore_hours:
+  value: 2
+  source: synthetic scenario
+  attester: Fact-sheet owner
+deploys_per_week:
+  value: 12
+  source: synthetic scenario
+  attester: Fact-sheet owner
+lead_time_hours:
+  value: 30
+  source: synthetic scenario
+  attester: Fact-sheet owner
+logs_and_metrics:
+  value: 'yes'
+  source: synthetic scenario
+  attester: Fact-sheet owner
+platform_basics_count:
+  value: 3
+  source: synthetic scenario
+  attester: Fact-sheet owner
+provision_days:
+  value: 5
+  source: synthetic scenario
+  attester: Fact-sheet owner
+oncall_model:
+  value: sre_escalating
+  source: synthetic scenario
+  attester: Fact-sheet owner
+shared_tables_pct:
+  value: 25
+  source: synthetic scenario
+  attester: Fact-sheet owner
+cross_module_transactions:
+  value: 4
+  source: synthetic scenario
+  attester: Fact-sheet owner
+module_single_owner_pct:
+  value: 60
+  source: synthetic scenario
+  attester: Fact-sheet owner
+domain_map:
+  value: outdated
+  source: synthetic scenario
+  attester: Fact-sheet owner
+degraded_mode_features:
+  value: partly
+  source: synthetic scenario
+  attester: Fact-sheet owner
+run_cost_annual:
+  low: 1350000
+  likely: 1450000
+  high: 1550000
+  grade: invoice
+  source: synthetic scenario
+  attester: Fact-sheet owner
+acceptable_run_cost_increase_pct:
+  value: 20
+  source: synthetic scenario
+  attester: Fact-sheet owner
+target_run_cost_increase_pct:
+  low: 15
+  likely: 25
+  high: 40
+  grade: estimate
+  source: synthetic scenario
+  attester: Fact-sheet owner
+fte_cost_annual:
+  value: 100000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: invoice
+growth_pct_annual:
+  value: 5
+  source: synthetic scenario
+  attester: Fact-sheet owner
+own_price_change_pct_annual:
+  value: 3
+  source: synthetic scenario
+  attester: Fact-sheet owner
+cloud_price_change_pct_annual:
+  value: 2
+  source: synthetic scenario
+  attester: Fact-sheet owner
+discount_rate_pct:
+  value: 6
+  source: synthetic scenario
+  attester: Fact-sheet owner
+ops_fte:
+  value: 5
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: invoice
+infra_share_pct:
+  value: 40
+  source: synthetic scenario
+  attester: Fact-sheet owner
+hw_maintenance_annual:
+  value: 60000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: invoice
+dc_cost_annual:
+  value: 140000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: invoice
+network_transit_annual:
+  value: 40000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: invoice
+dr_site_annual:
+  value: 60000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: invoice
+licence_cost_annual:
+  value: 30000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: invoice
+hw_refresh_capex:
+  value: 700000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: invoice
+hw_refresh_due_months:
+  value: 30
+  source: synthetic scenario
+  attester: Fact-sheet owner
+residual_value:
+  value: 150000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: invoice
+rightsized_share_pct:
+  value: 65
+  source: synthetic scenario
+  attester: Fact-sheet owner
+automation_investment:
+  value: 50000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+toil_reduction_pct:
+  value: 15
+  source: synthetic scenario
+  attester: Fact-sheet owner
+cloud_compute_baseline_annual:
+  low: 900000
+  likely: 980000
+  high: 1080000
+  grade: invoice
+  source: synthetic scenario
+  attester: Fact-sheet owner
+cloud_committed_share_pct:
+  value: 15
+  source: synthetic scenario
+  attester: Fact-sheet owner
+cloud_commit_discount_pct:
+  value: 35
+  source: synthetic scenario
+  attester: Fact-sheet owner
+cloud_peak_cost_annual:
+  value: 30000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: calculator_export
+cloud_egress_annual:
+  value: 30000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: calculator_export
+cloud_network_internal_annual:
+  value: 25000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: calculator_export
+cloud_support_tooling_annual:
+  value: 30000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: calculator_export
+cloud_managed_annual:
+  value: 20000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: calculator_export
+cloud_dr_annual:
+  value: 30000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: calculator_export
+cloud_ops_fte:
+  value: 3
+  source: synthetic scenario
+  attester: Fact-sheet owner
+migration_cost:
+  low: 400000
+  likely: 500000
+  high: 800000
+  grade: estimate
+  source: synthetic scenario
+  attester: Fact-sheet owner
+migration_months:
+  low: 10
+  likely: 12
+  high: 18
+  grade: estimate
+  source: synthetic scenario
+  attester: Fact-sheet owner
+dual_run_months:
+  low: 2
+  likely: 3
+  high: 6
+  grade: estimate
+  source: synthetic scenario
+  attester: Fact-sheet owner
+training_hiring_cost:
+  value: 50000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+exit_cost:
+  value: 100000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+bridge_cost:
+  value: 80000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+need_share_pct:
+  value: 15
+  source: synthetic scenario
+  attester: Fact-sheet owner
+hybrid_interconnect_annual:
+  value: 30000
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  grade: calculator_export
+hybrid_overhead_fte:
+  value: 0.5
+  source: synthetic scenario
+  attester: Fact-sheet owner
+accepted_premium_pct:
+  value: 0
+  source: synthetic scenario
+  attester: Fact-sheet owner
+peak_hours_per_year:
+  value: 200
+  source: synthetic scenario
+  attester: Fact-sheet owner
+average_utilisation_pct:
+  value: 40
+  source: synthetic scenario
+  attester: Fact-sheet owner
+peak_to_median_load:
+  value: 1.5
+  source: synthetic scenario
+  attester: Fact-sheet owner
+capacity_lead_time_weeks:
+  value: 4
+  source: synthetic scenario
+  attester: Fact-sheet owner
+infra_toil_pct:
+  value: 12
+  source: synthetic scenario
+  attester: Fact-sheet owner
+regions_required:
+  value: 1
+  source: synthetic scenario
+  attester: Fact-sheet owner
+managed_services_required:
+  value: 0
+  source: synthetic scenario
+  attester: Fact-sheet owner
+hosting_constraint:
+  value: any
+  source: synthetic scenario
+  attester: Fact-sheet owner
+iac_pct:
+  value: 60
+  source: synthetic scenario
+  attester: Fact-sheet owner
+infra_bus_factor:
+  value: 3
+  source: synthetic scenario
+  attester: Fact-sheet owner
+dr_restore_tested_months:
+  value: 4
+  source: synthetic scenario
+  attester: Fact-sheet owner
+infra_oncall_people:
+  value: 6
+  source: synthetic scenario
+  attester: Fact-sheet owner
+contract_end_months:
+  value: 36
+  source: synthetic scenario
+  attester: Fact-sheet owner
+services_per_team:
+  value: 5.7
+  source: synthetic scenario
+  attester: Fact-sheet owner
+lockstep_deploy_pct:
+  value: 38
+  source: synthetic scenario
+  attester: Fact-sheet owner
+cross_service_change_pct:
+  value: 34
+  source: synthetic scenario
+  attester: Fact-sheet owner
+target_model:
+  value: colocation
+  source: synthetic scenario
+  attester: Fact-sheet owner
+sunk_commitment_cost:
+  value: 0
+  source: synthetic scenario
+  attester: Fact-sheet owner
+cloud_commitment_end_months:
+  value: 0
+  source: synthetic scenario
+  attester: Fact-sheet owner

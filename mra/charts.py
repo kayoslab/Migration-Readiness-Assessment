@@ -228,13 +228,14 @@ def outcome_probability_chart(distribution: dict, labels: dict, leading: str | N
 
 
 def need_capability_map(need: np.ndarray, capability: np.ndarray, path: Path,
-                        need_cuts=(2.5, 3.5), capability_cut=3.5) -> Path:
+                        need_cuts=(2.5, 3.5), capability_cut=3.5, distributed: bool = False) -> Path:
     """Bootstrap cloud of (need, capability floor) over the main architecture regions."""
     apply_style()
     fig, ax = plt.subplots(figsize=(WIDTH, 3.6))
     lo, hi = 1, 5
+    middle = "Consolidate or realign services" if distributed else "Restructure within the system"
     regions = [((lo, need_cuts[0]), (lo, hi), "Keep and improve practices", "#f3f7fd"),
-               ((need_cuts[0], need_cuts[1]), (lo, hi), "Restructure within the system", "#f4f5f7"),
+               ((need_cuts[0], need_cuts[1]), (lo, hi), middle, "#f4f5f7"),
                ((need_cuts[1], hi), (lo, capability_cut), None, "#f4f5f7"),
                ((need_cuts[1], hi), (capability_cut, hi), "Decomposition possible\n(if gates, data and cost allow)", "#e8f5e8")]
     for (x0, x1), (y0, y1), label, colour in regions:

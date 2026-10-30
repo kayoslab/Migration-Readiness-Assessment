@@ -1,0 +1,39 @@
+search:
+  part_maintain_fte:
+    low: 2.5
+    likely: 3
+    high: 3.5
+    grade: estimate
+  part_run_cost_annual:
+    value: 60000
+    grade: invoice
+  product_licence_annual:
+    value: 70000
+    grade: quote
+  product_integration_cost:
+    low: 200000
+    likely: 250000
+    high: 350000
+    grade: estimate
+  product_remaining_fte:
+    low: 0.3
+    likely: 0.5
+    high: 1.0
+    grade: estimate
+  product_switch_months:
+    low: 6
+    likely: 9
+    high: 12
+    grade: estimate
+  product_exit_cost:
+    value: 50000
+    grade: estimate
+  product_coverage_pct:
+    value: 90
+    grade: quote
+  product_data_export:
+    value: 'yes'
+  product_compliance:
+    value: 'yes'
+  part_shared_tables_pct:
+    value: 5

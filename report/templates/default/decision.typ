@@ -189,9 +189,8 @@
       #v(2mm)
     ]
     #if data.brief.conditions.len() > 0 [
-      #text(weight: "semibold", fill: theme.primary)[Conditions] \
+      #text(weight: "semibold", fill: theme.primary)[Conditions] #text(size: 8pt, fill: theme.muted)[— see the Important notice] \
       #for c in data.brief.conditions [- #c \ ]
-      #text(size: 8pt, fill: theme.muted)[Explained in the Important notice and beside the findings they affect.]
     ]
   ],
   [

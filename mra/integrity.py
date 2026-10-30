@@ -205,6 +205,8 @@ def _hits(texts: list[str], keywords: list[str], also: list[str] | None = None) 
 def _urgency_vs_dates(a, cfg) -> list[Issue]:
     eng = a.engagement
     messages, themes = _texts(a)
+    if eng.config.get("current_hosting", "own_infrastructure") == "cloud":
+        return []                                       # refresh and colocation dates describe a target, not today
     dates = {"hardware refresh": _point(eng, "hw_refresh_due_months"), "contract end": _point(eng, "contract_end_months")}
     dates = {k: v for k, v in dates.items() if v is not None}
     if not dates or min(dates.values()) < cfg["min_months"]:

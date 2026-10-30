@@ -63,9 +63,15 @@ def build(assessment, ctx: dict) -> dict:
             missing = next((i for i in (ctx.get("integrity") or {}).get("caveats", [])
                             if i["id"] == f"critical_groups.{d}"), None)
             names = _join(missing["groups"]) if missing and missing.get("groups") else None
-            ask = f"Approve “{dec['verdict_label']}” and mandate {owner} to start" + \
-                (f", once {names} have been heard directly." if names else ".")
-            not_yet = None
+            unestimated = d == "architecture" and not (dec.get("investment") or {}).get("estimated", True)
+            if unestimated:                              # going ahead, but nobody knows what it costs yet
+                ask = (f"Approve “{dec['verdict_label']}” in principle and mandate {owner} to estimate it; the budget is "
+                       "decided at checkpoint C1 (month 3)" + (f", once {names} have been heard directly." if names else "."))
+                not_yet = "Budget and timeline, until the estimate exists."
+            else:
+                ask = f"Approve “{dec['verdict_label']}” and mandate {owner} to start" + \
+                    (f", once {names} have been heard directly." if names else ".")
+                not_yet = None
         alt = triggers.get(d)
         if alt:
             reopen = f"“{alt['alternative']}” is not pursued; it is reopened only under the agreed criteria."
@@ -158,17 +164,18 @@ def _scr(assessment, ctx: dict, decs: dict) -> dict:
     complication = []
     lead = next((e["data"]["by_group"]["All respondents asked"] for e in ctx["exhibits"]
                  if e["insight"]["id"] == "architecture.leadtime"), None)
-    cross = eng.facts.get("cross_team_change_pct")
+    distributed = ev.current_state.get("architecture") == "distributed"
+    cross = eng.facts.get("cross_service_change_pct" if distributed else "cross_team_change_pct")
+    unit = "need edits in more than one service" if distributed else "need more than one team"
     if lead and lead.get("Waiting on process", 0) > lead.get("Coordination between teams", 0):
         complication.append(f"Lead time goes mainly to waiting on approvals, testing or environments "
                             f"({lead['Waiting on process']:.0%} of the answers), not to coordination between teams.")
     if lead and lead.get("Coordination between teams", 0) >= 0.5:
         complication.append(f"Changes wait on each other across teams: {lead['Coordination between teams']:.0%} of the "
                             "answers on lead time name coordination"
-                            + (f", and {cross.point:g}% of changes need more than one team" if cross and cross.point else "")
-                            + ".")
+                            + (f", and {cross.point:g}% of changes {unit}" if cross and cross.point else "") + ".")
     refresh = eng.facts.get("hw_refresh_due_months")
-    if host and refresh and refresh.point is not None:
+    if host and refresh and refresh.point is not None and eng.config.get("current_hosting") != "cloud":
         complication.append(f"The hardware refresh falls due in month {refresh.point:g}.")
     if any(i["id"] == "disputed_claims.process_not_coupling" for i in ctx["integrity"]["issues"]) or \
             any("leadership" in r["title"].lower() for r in ctx["risks"]["risks"]):
@@ -196,9 +203,13 @@ def _money(assessment, decs: dict) -> list[str]:
         return []
     rows = {r["option"]: r for r in host["economics"]}
     keep = rows.get("Keep as is")
-    verdict = next((r for r in host["economics"] if r["option"] != "Keep as is" and r["ratio"] ==
-                    min(x["ratio"] for x in host["economics"])), None)
+    words = {"improve_current": "Improve / right-size", "move_to_cloud": "Move to cloud", "hybrid": "Hybrid",
+             "repatriate": "Move back from cloud"}
+    verdict = rows.get(words.get(host["verdict"], ""))   # the recommended path, not merely the cheapest
     out = []
+    run = assessment.engagement.facts.get("run_cost_annual")
+    if run is not None and run.point:
+        out.append(f"Today's run cost: about €{run.point / 1e6:.2f}M a year (invoiced).")
     if keep:
         out.append(f"Doing nothing on hosting costs {keep['eur']} over five years.")
     if verdict and keep and host["verdict"] != "stay_as_is" and verdict["saving_eur"]:

@@ -96,8 +96,9 @@ def appraise(assessment, decision: str) -> list[dict]:
                         if evaluate(rules["hard_stops"][h]["when"], ctx) is True]
         elif earlier_applies:
             state = "pre-empted"
+            summary = " ".join(str(ins.outcomes[decision][oid].get("summary", "")).split())
             beliefs = [f"Its conditions are met, but “{outcome_label(ins, decision, earlier_applies)}” comes "
-                       "first in the agreed rule order."]
+                       "first in the agreed rule order."] + ([f"What it would do instead: {summary}"] if summary else [])
         elif status == "prepare_first":
             state = "applies after preparation"
             beliefs = [f"Hard stop to remove: {rules['hard_stops'][h]['label'].lower()}." for h in stops] + \

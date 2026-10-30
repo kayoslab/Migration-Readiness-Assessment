@@ -83,7 +83,7 @@ Items per group: ENG 40 · TEC 35 · OPS 34 · PRD 28 · BUS 20 · FIN 20 · EXE
 | `required` | `true`, `false`, `if_distributed`, `if_cloud` |
 | `band_source` | Source of the cuts; "calibrate in M5" marks provisional values |
 
-Each value in `Responses/facts.yaml` (format defined in M1) carries its source, date, attester and — for economic
+Each value in `facts.yaml` (format: `mra/engagement.py`) carries its source, date, attester and — for economic
 inputs — a source grade (invoice · quote · calculator export · benchmark · estimate) that sets a minimum range width.
 
 ## `governance.csv`
@@ -91,3 +91,5 @@ inputs — a source grade (invoice · quote · calculator export · benchmark ·
 Answers are **Yes** (with an evidence reference) = pass, **Partly** = unresolved, **No** = fail. Gates are checked
 for the leading outcome after the verdict, because funding or a sponsor for one path says nothing about another.
 Survey items marked "Corroborates" measure awareness; disagreement with the attestation is reported.
+
+Run `mra validate` after any change: it cross-checks every reference and enforces that anything a rule depends on is a core item.

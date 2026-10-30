@@ -25,7 +25,8 @@ semantics:
   axis_combination: >-
     Sub-area score = (fact_weight * mean fact band + survey_weight * survey score) / (weights present).
     Axis score = weighted mean of its sub-areas; a sub-area with no fact input has weight 0.5, so survey-only
-    perceptions cannot outweigh measured ones. Divergence |fact band − survey score| > divergence_flag_bands is reported.
+    perceptions cannot outweigh measured ones. A composite is unresolved when a sub-area backed by a required fact
+    has no evidence at all, so opinions never fill a gap left by missing facts. Divergence |fact band − survey score| > divergence_flag_bands is reported.
   grids: >-
     Count-scored grids exclude "Don't know" rows and rescale the count band to the rows answered; a grid with more
     than half its rows "Don't know" is unscored for that respondent.
@@ -84,6 +85,13 @@ fact_discipline:
   estimator_disagreement_flag: 0.25
   second_attester_for: [slo_catalogue, compliance_scoping, candidate_scope_in_main_deployable]
   cloud_prices_from_region_compliant_with: fact.hosting_constraint
+
+# =========================================================================================== composite axes
+# Sub-areas averaged into a composite signal. Specific needs (distinct profiles, seam data) are used directly by
+# the rules that need them and are kept out of the composites, so their absence cannot dilute general need.
+axes:
+  need.architecture: {areas: [coupling, blast_radius, business_impact, cognitive_load, growth]}
+  locality.architecture: {areas: [concentration]}
 
 # =========================================================================================== signals
 # Generated automatically:

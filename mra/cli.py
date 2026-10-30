@@ -18,10 +18,28 @@ def main(argv: list[str] | None = None) -> int:
     rep.add_argument("--output", help="PDF path (default: report.output in the config)")
     rep.add_argument("--llm", action="store_true", help="analyse free-text answers with the configured LLM")
 
+    val = sub.add_parser("validate", help="cross-check the v3 instrument files")
+    val.add_argument("--instrument", default="instrument")
+
+    dec = sub.add_parser("decide", help="v3: recommended path per decision for an engagement")
+    dec.add_argument("engagement", help="path to engagement.yaml")
+    dec.add_argument("--draws", type=int, default=None)
+    dec.add_argument("--json", action="store_true", help="print the full result as JSON")
+
     chk = sub.add_parser("check-llm", help="verify the Vercel AI Gateway key and model with a one-line request")
     chk.add_argument("--config", default="assessment.yaml")
 
     args = parser.parse_args(argv)
+
+    if args.command == "validate":
+        from .instrument import load_instrument, validate
+        errors = validate(load_instrument(args.instrument))
+        print("\n".join(errors) or "Instrument is consistent.")
+        return 1 if errors else 0
+
+    if args.command == "decide":
+        return _decide(args)
+
     config_path = Path(args.config).resolve()
     load_dotenv(config_path.parent / ".env")
 
@@ -49,6 +67,40 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  - {reason}")
     path = build_report(cfg, analysis, Path(args.output) if args.output else None)
     print(f"Report written to {path}")
+    return 0
+
+
+def _decide(args) -> int:
+    import json
+
+    from .assess import assess
+    result = assess(args.engagement, draws=args.draws)
+    if args.json:
+        print(json.dumps({d: r.as_dict() for d, r in result.results.items()}, indent=1, default=str))
+        return 0
+    outcomes = result.engagement.instrument.outcomes
+    for problem in result.problems:
+        print(f"! {problem}")
+    for d, r in result.results.items():
+        label = outcomes[d].get(r.verdict, outcomes["common"].get(r.verdict, {})).get("label", r.verdict)
+        print(f"\n{d.title()} (current: {r.current_state})")
+        print(f"  {label} — {r.status.replace('_', ' ')}, p = {r.probability:.2f}")
+        if r.leaning:
+            print(f"  leaning: {r.leaning}")
+        for s in r.hard_stops:
+            print(f"  blocked by: {s}")
+        for c in r.unmet_capabilities:
+            print(f"  capability to build: {c}")
+        for g, info in r.gates.get("required", {}).items():
+            if info["status"] != "pass":
+                print(f"  gate {g}: {info['status']}")
+        if r.interim:
+            print(f"  interim step: {r.interim}")
+        for w in r.what_would_change:
+            ref = f" ({w['threshold_value']})" if w["threshold"] != w["threshold_value"] else ""
+            print(f"  would become {w['outcome']} if {w['signal']} {w['op']} {w['threshold']}{ref} (now {w['current']})")
+        if r.shadow and r.shadow["verdict"] != r.verdict:
+            print(f"  shadow verdict under default rules: {r.shadow['verdict']}")
     return 0
 
 

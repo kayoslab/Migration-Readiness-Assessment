@@ -150,6 +150,51 @@
   #outline(title: none, depth: 1, indent: 0pt)
 ]
 
+#anchor("decision")
+= Decision requested
+
+#if data.integrity.draft [
+  #text(weight: "semibold", fill: theme.status.RED)[Draft — not for decision until the conditions below are resolved.]
+  #v(2mm)
+]
+#for r in data.brief.requests [
+  #block(breakable: false, below: 4mm)[
+    #eyebrow[#r.decision · #text(fill: theme.tone.at(r.tone), r.status)]
+    #v(1pt)
+    #text(size: 10.5pt, weight: "semibold", fill: theme.primary, r.ask)
+    #set text(size: 9pt)
+    #if r.not_yet != none [\ *Not approved now:* #r.not_yet]
+    #if r.budget != none [\ *Budget:* #r.budget]
+  ]
+]
+
+#set text(size: 9pt)
+#grid(columns: (24mm, 1fr), row-gutter: 2.5mm, column-gutter: 4mm,
+  text(weight: "semibold", fill: theme.primary)[Situation], data.brief.scr.situation,
+  text(weight: "semibold", fill: theme.primary)[Complication], data.brief.scr.complication,
+  text(weight: "semibold", fill: theme.primary)[Resolution], data.brief.scr.resolution,
+)
+#v(3mm)
+#grid(columns: (1fr, 1fr), column-gutter: 8mm,
+  [
+    #if data.brief.money.len() > 0 [
+      #text(weight: "semibold", fill: theme.primary)[The money] \
+      #for m in data.brief.money [- #m \ ]
+      #v(2mm)
+    ]
+    #if data.brief.conditions.len() > 0 [
+      #text(weight: "semibold", fill: theme.primary)[Conditions] \
+      #for c in data.brief.conditions [- #c \ ]
+      #text(size: 8pt, fill: theme.muted)[Explained in the Important notice and beside the findings they affect.]
+    ]
+  ],
+  [
+    #text(weight: "semibold", fill: theme.primary)[When the decision is taken again] \
+    #for g in data.brief.again [- #g \ ]
+  ],
+)
+#set text(size: 9.5pt)
+
 = Executive summary
 
 #if data.integrity.draft [

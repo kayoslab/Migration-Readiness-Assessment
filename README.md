@@ -194,8 +194,9 @@ mra report engagements/acme/engagement.yaml --llm
 | `mra coupling <repo> --modules <map>` | Coupling metrics from git history, as a fact-sheet snippet |
 | `mra forms <engagement.yaml>` | Google Apps Script that creates the survey forms |
 | `mra decide <engagement.yaml>` | Verdict per decision in the terminal (`--json` for everything) |
-| `mra report <engagement.yaml> [--llm]` | The report as PDF |
+| `mra report <engagement.yaml> [--llm] [--final]` | The report as PDF; `--final` refuses while a blocking issue remains (otherwise a draft is built) |
 | `mra validate` | Check the instrument files after editing them |
+| `mra benchmarks [--update]` | Show the age of the DORA benchmark table, or rebuild it from DORA's published data |
 | `mra simulate [--quick]` | Test the method on synthetic assessments |
 | `mra check-llm` | Verify the AI gateway key and model |
 

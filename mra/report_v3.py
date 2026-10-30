@@ -492,6 +492,8 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     _apply_integrity(ctx, issues)
     from .storyline import compose
     compose(assessment, ctx)
+    from .brief import build as build_brief
+    ctx["brief"] = build_brief(assessment, ctx)
     return ctx
 
 

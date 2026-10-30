@@ -29,7 +29,8 @@ yet support a single path. Describe stakeholder stakes neutrally, as considerati
 communication, never as motives or bias. Attribute views to groups, never to individuals. "integrity" lists where the
 inputs contradict each other: carry each qualification where you use the affected finding, never present a view
 marked as unsupported as a finding or as common ground, and if any issue has severity "block", say in the first
-paragraph that the report is a draft and why.
+paragraph that the report is a draft and why. The executive summary follows a page headed "decision requested"
+("decision_requested"): stay consistent with it and do not restate it; explain why.
 
 Return:
 - executive: 2 to 4 short paragraphs telling one coherent story — the situation, what the evidence says for each
@@ -107,6 +108,9 @@ def findings_payload(ctx: dict) -> dict:
                             for r in ctx["stakes"].get("map", [])],
         "integrity": [{"severity": i["severity"], "issue": i["title"], "detail": i["message"]}
                       for i in (ctx.get("integrity") or {}).get("issues", [])],
+        "decision_requested": (ctx.get("brief") or {}).get("requests", []),
+        "decision_calendar": next((d.get("calendar", []) for d in ctx["decisions"] if d["id"] == "hosting"), []),
+        "reopen_criteria": ctx.get("triggers", []),
     }
 
 

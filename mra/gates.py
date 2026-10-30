@@ -25,15 +25,21 @@ def gate_status(gate: str, rules: dict, governance: dict, evidence) -> dict:
     spec = rules["gates"][gate]
     checks = {c: check_status(governance.get(c)) for c in spec["checks"]}
     status = min(checks.values(), key=RANK.get)
-    corroboration = []
+    low, high = [], []                                   # survey questions that contradict the attestation
     for item in spec.get("corroborated_by", []):
         score = evidence.at(0).get(f"item.{item}")
         if score is None:
             continue
         if status == "pass" and score < 3.0:
-            corroboration.append(f"{item}: attested, but respondents' awareness is low ({score:.1f})")
+            low.append(f"{score:.1f}")
         elif status == "fail" and score >= 4.0:
-            corroboration.append(f"{item}: attested as not in place, but respondents believe it is ({score:.1f})")
+            high.append(f"{score:.1f}")
+    corroboration = []
+    if low:
+        corroboration.append(f"Attested, but respondents rate it low ({' and '.join(low)} of 5 on the related survey "
+                             f"question{'s' if len(low) > 1 else ''}).")
+    if high:
+        corroboration.append(f"Attested as not in place, but respondents rate it high ({' and '.join(high)} of 5).")
     return {"label": spec["label"], "status": status, "checks": checks, "corroboration": corroboration}
 
 

@@ -216,3 +216,24 @@ def test_capacity_notes():
     steps = [{"owner": "Technology lead", "phase": "first_steps", "decision": d} for d in ["architecture"] * 3 + ["hosting"]]
     assert load(steps) == ["Technology lead owns 4 actions in months 3 to 6 across both decisions: plan the capacity, "
                            "or delegate some, before committing."]
+
+
+def test_decision_page(techco, tmp_path):
+    ctx = build_context(techco, tmp_path, ROOT)
+    brief = ctx["brief"]
+    arch = next(r for r in brief["requests"] if r["decision"] == "Architecture")
+    assert arch["ask"].startswith("Approve the preparation for") and "checkpoint C1" in arch["not_yet"]
+    assert "not yet estimated" in arch["budget"]
+    hosting = next(r for r in brief["requests"] if r["decision"] == "Hosting")
+    assert hosting["ask"].startswith("Approve “Improve") and hosting["budget"].startswith("First phase: €50k")
+    assert any(m.startswith("Doing nothing on hosting costs €") for m in brief["money"])
+    assert brief["scr"]["complication"] and brief["again"][0].startswith("Checkpoint C1")
+
+
+def test_decision_page_requests_evidence_when_insufficient(techco, tmp_path):
+    from mra.brief import build
+    ctx = build_context(techco, tmp_path, ROOT)
+    ctx["decisions"][0] = {**ctx["decisions"][0], "verdict": "insufficient_evidence",
+                           "uncertain": [{"text": "Need for change is too close to its threshold."}]}
+    ask = build(techco, ctx)["requests"][0]["ask"]
+    assert ask.startswith("Do not choose a path yet") and "need for change is too close" in ask

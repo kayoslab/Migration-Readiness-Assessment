@@ -225,6 +225,11 @@ F12 are addressed; F3 and F9–F11 belong to phase 2 and 3. Deviations from the 
 only (the block condition "verdict flips within the gap" needs WS2's allocation of the difference); free-text claims
 are checked against named survey measures (`disputed_claims`) rather than all numbers in the text.
 
+**Status:** Phase 2 done — WS2, WS5 and WS4. F3, F9 (except the architecture investment, WS6) and F10–F11 are
+addressed. Single-value cost inputs are now widened by their source grade, as the pre-registered rule required;
+hosting case (b) pre-registers the premium its story implies (docs/calibration.md). The run-cost reconciliation
+blocks when an unallocated difference would change the hosting verdict.
+
 | Phase | Workstreams | Outcome | Effort |
 |---|---|---|---|
 | **1. Do not mislead** | WS1, WS7, WS8, WS3 (coverage rule, lead-time exhibit) | Every contradiction surfaced; draft vs final; ties and pooled groups honest | ~5 days |

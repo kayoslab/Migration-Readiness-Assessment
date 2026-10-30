@@ -32,6 +32,15 @@ def main(argv: list[str] | None = None) -> int:
     sim.add_argument("--quick", action="store_true", help="reduced grid (as run in CI)")
     sim.add_argument("--out", default=None, help="output folder (default Output/sim)")
 
+    cpl = sub.add_parser("coupling", help="v3: scripted coupling facts from a git repository")
+    cpl.add_argument("repo", help="path to the repository of the deployable")
+    own = cpl.add_mutually_exclusive_group(required=True)
+    own.add_argument("--modules", help="module map YAML (preferred; freeze it before extraction)")
+    own.add_argument("--codeowners", help="CODEOWNERS file")
+    cpl.add_argument("--authors", help="YAML mapping author e-mail or name to team")
+    cpl.add_argument("--days", type=int, default=90)
+    cpl.add_argument("--branch", default=None, help="branch to analyse (default: current)")
+
     chk = sub.add_parser("check-llm", help="verify the Vercel AI Gateway key and model with a one-line request")
     chk.add_argument("--config", default="assessment.yaml")
 
@@ -45,6 +54,19 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "decide":
         return _decide(args)
+
+    if args.command == "coupling":
+        import yaml as _yaml
+
+        from .coupling import analyse, facts_yaml, load_codeowners, load_module_map
+        repo = Path(args.repo)
+        modules = load_module_map(Path(args.modules)) if args.modules else load_codeowners(Path(args.codeowners))
+        authors = _yaml.safe_load(Path(args.authors).read_text()) if args.authors else None
+        result = analyse(repo, modules, authors, args.days, last_wins=bool(args.codeowners), branch=args.branch)
+        if result.unmapped_files:
+            print(f"# note: {result.unmapped_files} changed files are not covered by the ownership map")
+        print(facts_yaml(result, repo))
+        return 0
 
     if args.command == "simulate":
         from .sim import main as simulate, summary

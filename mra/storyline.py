@@ -305,9 +305,9 @@ def _tco(f: Findings) -> list[dict]:
     word = {"stay_as_is": "Keep as is", "improve_current": "Improve / right-size", "move_to_cloud": "Move to cloud",
             "hybrid": "Hybrid", "repatriate": "Move back from cloud"}.get(r.verdict)
     row = next((e for e in econ if e["option"] == word), None)
-    cheapest = econ[0] if econ else None
+    cheapest = min(econ, key=lambda e: e["ratio"]) if econ else None
     if r.verdict == "stay_as_is":
-        cheaper = [e for e in econ if e["ratio"] < 1]
+        cheaper = sorted((e for e in econ if e["ratio"] < 1), key=lambda e: e["ratio"])
         out = [T("Every alternative costs more than today's setup, so keeping it is also the cheapest course. ")
                if not cheaper else
                T(f"“{cheaper[0]['option']}” would cost {cheaper[0]['ratio']:.2f}× today's, but the evidence does not call "

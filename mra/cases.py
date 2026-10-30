@@ -95,8 +95,9 @@ HOSTING_CASES = {
         targets={"need.hosting.elasticity": 4.8, "need.hosting.capacity_lead_time": 4.5,
                  "capability.hosting.automation": 2.0, "capability.hosting.operations": 2.8,
                  "capability.hosting.cloud_skills": 2.0},
+        # a need-motivated move: leadership pre-registers that it accepts up to 10% more cost for elasticity
         facts={"peak_to_median_load": 15, "capacity_lead_time_weeks": 10, "iac_pct": 20, "need_share_pct": 75,
-               "hw_refresh_due_months": 9, "rightsized_share_pct": 95,
+               "hw_refresh_due_months": 9, "rightsized_share_pct": 95, "accepted_premium_pct": 10,
                "hw_maintenance_annual": 180000, "dc_cost_annual": 240000, "dr_site_annual": 120000,
                "hw_refresh_capex": 1200000, "residual_value": 300000,
                "cloud_compute_baseline_annual": {"low": 220000, "likely": 250000, "high": 300000, "grade": "calculator_export"},

@@ -19,6 +19,14 @@ from .axes import derive_current_state
 from .engagement import Fact, write_form_exports
 from .instrument import DONT_KNOW, Instrument, load_instrument
 
+# Source grades a real fact sheet would carry for single values: today's own costs from invoices and the payroll,
+# cloud costs from the provider's calculator, judgements as estimates (instrument rules widen each by its grade).
+_INVOICED = ["hw_maintenance_annual", "dc_cost_annual", "network_transit_annual", "dr_site_annual", "licence_cost_annual",
+             "fte_cost_annual", "ops_fte", "hw_refresh_capex", "residual_value"]
+_CALCULATED = ["cloud_peak_cost_annual", "cloud_egress_annual", "cloud_network_internal_annual",
+               "cloud_support_tooling_annual", "cloud_managed_annual", "cloud_dr_annual", "hybrid_interconnect_annual"]
+DEFAULT_GRADES = {**{k: "invoice" for k in _INVOICED}, **{k: "calculator_export" for k in _CALCULATED}}
+
 DEFAULT_SIZES = {"ENG": 15, "PRD": 8, "BUS": 6, "TEC": 5, "EXE": 5, "OPS": 6, "SEC": 5, "FIN": 5}
 
 HEALTHY_FACTS = {
@@ -163,6 +171,8 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
             entry.setdefault("scripted", True)
         if k in second:
             entry.setdefault("second_attester", "Second attester")
+        if "value" in entry and k in DEFAULT_GRADES:
+            entry.setdefault("grade", DEFAULT_GRADES[k])
         sheet[k] = entry
     (root / "facts.yaml").write_text(yaml.safe_dump(sheet, sort_keys=False))
     (root / "governance.yaml").write_text(yaml.safe_dump({**ALL_YES, **scenario.governance}, sort_keys=False))

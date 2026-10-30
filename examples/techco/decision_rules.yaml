@@ -85,6 +85,9 @@ fact_discipline:
     calculator_export: 0.20
     benchmark: 0.30
     estimate: 0.40
+  widen_single_values:            # single values are ranges too: the grade's minimum width applies (no grade = estimate)
+    units: [EUR, FTE]
+    facts: [rightsized_share_pct, toil_reduction_pct, infra_share_pct]
   two_estimators_for: [hosting.economics, target_run_cost_increase_pct]   # model uses the union of both ranges
   estimator_disagreement_flag: 0.25
   second_attester_for: [components_distinct_availability, components_distinct_compliance, candidate_scope_in_main_deployable]

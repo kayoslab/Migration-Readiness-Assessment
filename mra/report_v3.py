@@ -110,6 +110,12 @@ def _lead_time_split(eng, ins) -> dict:
     return out
 
 
+def _eur(x: float, signed: bool = False) -> str:
+    sign = ("+" if x > 0 else "−" if x < 0 else "") if signed else ("−" if x < 0 else "")
+    x = abs(x)
+    return f"{sign}€{x / 1e6:.2f}M" if x >= 1e6 else f"{sign}€{x / 1e3:,.0f}k"
+
+
 def _evidence_note(assessment) -> str:
     sizes = assessment.engagement.respondents["role"].value_counts()
     ev = assessment.engagement.instrument.rules.get("evidence", {})
@@ -227,12 +233,28 @@ def build_context(assessment, out: Path, root: Path) -> dict:
                     "option": option_word, "base_ratio": round(r.economics["tornado"][0]["base"], 2),
                     "inputs": [{"input": signal_label(f"fact.{t['input']}", ins), "low": round(t["low"], 2),
                                 "high": round(t["high"], 2)} for t in r.economics["tornado"][1:6]]})
-            block["economics"] = [{"option": words.get(o, o), "ratio": round(ranges[o][1], 2),
-                                   "range": f"{ranges[o][0]:.2f}–{ranges[o][2]:.2f}",
-                                   "payback": (None if point.get(f"payback_after_cutover.{o}") in (None, float("inf"))
-                                               else round(point[f"payback_after_cutover.{o}"])),
-                                   "saving_fte": round(point.get(f"tco_saving_fte.{o}") or 0, 1)}
-                                  for o in sorted(ranges, key=lambda o: ranges[o][1])]
+            show = (eng.config.get("report") or {}).get("show_amounts", True)
+            horizon = ins.rules["decisions"]["hosting"].get("horizon_years", 5)
+            fte = float(point.get("fact.fte_cost_annual") or 0)
+
+            def eur_row(o):
+                v = ev.signals[f"tco.{o}"]
+                saving = (float(stay[0]) - float(v[0])) / horizon if o != "stay" else 0.0
+                return {"option": words.get(o, o), "ratio": 1.0 if o == "stay" else round(ranges[o][1], 2),
+                        "range": "—" if o == "stay" and float(np.nanpercentile(stay / stay, 95)) == 1 else
+                        (f"{ranges[o][0]:.2f}–{ranges[o][2]:.2f}" if o != "stay" else "—"),
+                        "eur": _eur(float(v[0])) if show else None,
+                        "eur_range": f"{_eur(float(np.nanpercentile(v, 5)))}–{_eur(float(np.nanpercentile(v, 95)))}"
+                        if show else None,
+                        "payback": (None if o == "stay" or point.get(f"payback_after_cutover.{o}") in (None, float("inf"))
+                                    else round(point[f"payback_after_cutover.{o}"])),
+                        "saving_eur": (_eur(saving, signed=True) if show and o != "stay" else None),
+                        "saving_fte": round(saving / fte, 1) if fte and o != "stay" else 0.0}
+            block["economics"] = [eur_row("stay")] + [eur_row(o) for o in sorted(ranges, key=lambda o: ranges[o][1])]
+            block["show_amounts"] = show
+            from . import plan
+            block["calendar"] = plan.calendar(assessment, show)
+            block["inaction"] = plan.inaction(assessment, show)
             block["tornado_option"] = words.get(r.economics.get("tornado_option"), "")
         decisions.append(block)
 

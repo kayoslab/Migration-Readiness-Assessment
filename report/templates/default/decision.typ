@@ -289,17 +289,43 @@
 
   #if "economics" in dec [
     == Cost case
-    #data-table(
-      columns: (2.2fr, 1fr, 1.3fr, 1.4fr, 1.2fr),
-      align: (left, right, center, right, right),
-      header: ("Option", "Cost ratio", "90% range", "Payback after cut-over", "Saving / year"),
-      ..dec.economics.map(r => (r.option, fmt(r.ratio), r.range,
-        if r.payback == none [–] else [#r.payback months], fmt(r.saving_fte, d: 1) + " FTE")).flatten(),
-    )
+    #if dec.show_amounts [
+      #data-table(
+        columns: (2fr, 1fr, 1.5fr, 0.8fr, 1.1fr, 1.3fr),
+        align: (left, right, right, right, right, right),
+        header: ("Option", "5-year cost", "90% range", "vs today", "Payback after cut-over", "Saving / year"),
+        ..dec.economics.map(r => (r.option, r.eur, r.eur_range, fmt(r.ratio) + "×",
+          if r.payback == none [–] else [#r.payback months],
+          if r.saving_eur == none [–] else [#r.saving_eur (#fmt(r.saving_fte, d: 1) FTE)])).flatten(),
+      )
+    ] else [
+      #data-table(
+        columns: (2.2fr, 1fr, 1.3fr, 1.4fr, 1.2fr),
+        align: (left, right, center, right, right),
+        header: ("Option", "Cost ratio", "90% range", "Payback after cut-over", "Saving / year"),
+        ..dec.economics.map(r => (r.option, fmt(r.ratio), r.range,
+          if r.payback == none [–] else [#r.payback months], fmt(r.saving_fte, d: 1) + " FTE")).flatten(),
+      )
+    ]
     #v(2pt)
-    #text(size: 7.5pt, fill: theme.muted)[Five-year net present value of each option relative to today's setup as it is;
-      "saving / year" in fully loaded salaries. The decision rules compare a move with an improved current setup, so
-      moving must also beat what improving would achieve. All inputs from the fact sheet with their ranges.]
+    #text(size: 7.5pt, fill: theme.muted)[Five-year cost as present value, each option against today's setup as it is;
+      the saving per year is also shown in fully loaded salaries. The decision rules compare a move with an improved
+      current setup, so moving must also beat what improving would achieve. All inputs from the fact sheet with
+      their ranges.]
+    #if dec.at("inaction", default: none) != none [
+      #v(2mm)
+      *If nothing changes.* #dec.inaction
+    ]
+    #if dec.at("calendar", default: ()).len() > 0 [
+      #anchor("calendar")
+      == Decision calendar
+      #data-table(
+        columns: (0.6fr, 1.6fr, 4fr),
+        align: (right, left, left),
+        header: ("Month", "Event", "What to decide or do"),
+        ..dec.calendar.map(c => (fmt(c.month, d: 0), c.event, text(size: 8.5pt, c.action))).flatten(),
+      )
+    ]
     #v(3mm)
     #exhibit(dec.charts.tco, dec.insights.tco,
       source: "Five-year net present value relative to the current setup; dot = likely value, line = 90% range.")

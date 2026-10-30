@@ -108,6 +108,33 @@ def _baseline_unverified(a, cfg) -> list[Issue]:
                                           "measures with baseline, target and business owner."})]
 
 
+def _point_hosting_verdict(a, extra: dict[str, float]) -> str | None:
+    """The hosting path at the point estimate if `extra` facts were added (used to test what a cost gap could do)."""
+    import numpy as np
+
+    from .decision import Context, _check_outcome
+    from .tco import compute
+    eng, ev = a.engagement, a.evidence
+    rules = eng.instrument.rules
+    facts = {k: np.array([float(v)]) for k, v in ev.fact_point.items() if isinstance(v, (int, float))}
+    facts.update({k: np.array([float(v)]) for k, v in extra.items()})
+    current = eng.config.get("current_hosting", "own_infrastructure")
+    signals, problems = compute(facts, current, rules["decisions"]["hosting"].get("horizon_years", 5))
+    if problems:
+        return None
+    values = dict(ev.at(0))
+    values.update({k: float(v[0]) for k, v in signals.items()})
+    ctx = Context(values, rules, ev.current_state, "hosting")
+    for spec in rules["decisions"]["hosting"]["outcomes"]:
+        allowed = spec.get("only_if_current")
+        if allowed and ev.current_state["hosting"] not in (allowed if isinstance(allowed, list) else [allowed]):
+            continue
+        applies, status, _, _ = _check_outcome(spec, ctx, rules)
+        if applies and status in ("go", "prepare_first"):
+            return spec["id"]
+    return None
+
+
 def _run_cost_reconciliation(a, cfg) -> list[Issue]:
     eng = a.engagement
     if eng.config.get("current_hosting", "own_infrastructure") != "own_infrastructure":
@@ -117,19 +144,35 @@ def _run_cost_reconciliation(a, cfg) -> list[Issue]:
     ops, share, fte = (_point(eng, k) for k in ("ops_fte", "infra_share_pct", "fte_cost_annual"))
     if invoice is None or None in parts.values() or None in (ops, share, fte):
         return []
+    allocated = (_point(eng, "unallocated_infra_annual") or 0) + (_point(eng, "unallocated_common_annual") or 0)
     infra = sum(parts.values())
     staff = ops * share / 100 * fte
-    model = infra + staff
+    model = infra + staff + allocated
     if not model or abs(invoice / model - 1) * 100 <= cfg["tolerance_pct"]:
         return []
+    gap = invoice - model
+    facts = ["run_cost_annual", *OWN_RUN, "ops_fte", "infra_share_pct", "unallocated_infra_annual",
+             "unallocated_common_annual"]
+    message = (f"The fact sheet's annual run cost ({_eur(invoice)}, infrastructure and operations) is "
+               f"{invoice / model:.1f}× what the cost model accounts for ({_eur(model)}: infrastructure {_eur(infra)}, "
+               f"operations staff {_eur(staff)} at {share:g}% of {ops:g} FTE"
+               + (f", allocated difference {_eur(allocated)}" if allocated else "") + "). ")
+    verdict = a.results["hosting"].verdict if "hosting" in a.results else None
+    if gap > 0 and verdict and verdict != "insufficient_evidence":
+        as_infra = _point_hosting_verdict(a, {"unallocated_infra_annual": (_point(eng, "unallocated_infra_annual") or 0) + gap})
+        as_common = _point_hosting_verdict(a, {"unallocated_common_annual": (_point(eng, "unallocated_common_annual") or 0) + gap})
+        changed = [w for w, v in (("if it is infrastructure cost", as_infra), ("if it remains in every option", as_common))
+                   if v and v != verdict]
+        if changed:
+            return [Issue("run_cost_reconciliation", "block", "Run cost not reconciled — the recommendation depends on it",
+                          message + f"If the remaining {_eur(gap)} a year is real cost, the hosting recommendation "
+                          f"changes {' or '.join(changed)}. Finance should allocate it before the report is final.",
+                          exhibits=["hosting.tco", "hosting.tornado"], decisions=["hosting"], facts=facts)]
     return [Issue("run_cost_reconciliation", cfg["severity"], "Run cost not reconciled",
-                  f"The fact sheet's annual run cost ({_eur(invoice)}, infrastructure and operations) is "
-                  f"{invoice / model:.1f}× what the cost model's components add up to ({_eur(model)}: infrastructure "
-                  f"{_eur(infra)}, operations staff {_eur(staff)} at {share:g}% of {ops:g} FTE). The comparison of "
-                  "options uses the components; if the difference is real cost, every option's absolute cost is "
-                  "understated and the ranking should be confirmed once it is allocated.",
-                  exhibits=["hosting.tco", "hosting.tornado"], decisions=["hosting"],
-                  facts=["run_cost_annual", *OWN_RUN, "ops_fte", "infra_share_pct"])]
+                  message + "The comparison of options uses what the model accounts for. Whether the remaining "
+                  f"{_eur(abs(gap))} a year is infrastructure cost or remains in every option, the recommendation "
+                  "stays the same; the absolute figures should be confirmed once Finance has allocated it.",
+                  exhibits=["hosting.tco", "hosting.tornado"], decisions=["hosting"], facts=facts)]
 
 
 def _texts(a) -> tuple[list[str], list[str]]:

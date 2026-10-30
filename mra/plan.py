@@ -180,3 +180,76 @@ def _break_even(opt: str, key: str, lo: float, hi: float, base: dict, current: s
     return {"option": WORDS.get(opt, opt), "input": label, "value": value,
             "sentence": f"{WORDS.get(opt, opt)} would be cheap enough to justify a move only if {label.lower()} were "
                         f"{'below' if value < likely else 'above'} {shown} (estimate: {now})."}
+
+
+# ---------------------------------------------------------------------------------------- decision calendar
+
+def _eur(x: float) -> str:
+    return f"€{x / 1e6:.2f}M" if abs(x) >= 1e6 else f"€{x / 1e3:,.0f}k"
+
+
+def calendar(assessment, show_amounts: bool = True) -> list[dict]:
+    """Dated hosting decisions: what to decide now, at the refresh, at contract end, and when a move would finish."""
+    eng = assessment.engagement
+    r = assessment.results.get("hosting")
+    if not r:
+        return []
+    f = {k: (eng.facts[k].point if k in eng.facts and eng.facts[k].point is not None else None)
+         for k in ("hw_refresh_due_months", "hw_refresh_capex", "rightsized_share_pct", "contract_end_months",
+                   "migration_months")}
+    out = []
+    target = r.verdict if r.verdict != "insufficient_evidence" else r.leaning
+    first = {"improve_current": "Start right-sizing and automating the current infrastructure.",
+             "stay_as_is": "Keep the current setup; no hosting programme is started.",
+             "move_to_cloud": "Prepare the move; the migration starts once preconditions are met.",
+             "hybrid": "Prepare the partial move; the migration starts once preconditions are met.",
+             "repatriate": "Prepare the move back; the migration starts once preconditions are met."}.get(target)
+    if first:
+        out.append({"month": 0, "event": "Decision", "action": first})
+    due, capex, k = f["hw_refresh_due_months"], f["hw_refresh_capex"], f["rightsized_share_pct"]
+    if due is not None and capex:
+        amount = f" ({_eur(capex)})" if show_amounts else ""
+        if target == "improve_current" and k:
+            saving = f", about {_eur(capex * (1 - k / 100))} less" if show_amounts else ""
+            action = (f"Order the refresh for the right-sized estate — {k:g}% of today's capacity{saving}. Confirm the "
+                      "sizing at the checkpoint before the order.")
+        elif target in ("move_to_cloud", "repatriate") and f["migration_months"]:
+            action = ("The refresh falls before cut-over; a bridge (extended support or leased capacity) is needed."
+                      if due <= f["migration_months"] else "The move completes before the refresh; it is not ordered.")
+        else:
+            action = "Order the refresh at today's capacity, or right-size first to reduce it."
+        out.append({"month": due, "event": f"Hardware refresh due{amount}", "action": action})
+    end = f["contract_end_months"]
+    if end is not None:
+        review = max(end - 6, 0)
+        out.append({"month": review, "event": "Hosting review", "action":
+                    f"Re-run the hosting assessment six months before the contract ends (month {end:g}), with "
+                    "measured costs, to decide whether to renew."})
+        out.append({"month": end, "event": "Colocation contract ends", "action": "Renew or exit, as decided at the review."})
+    if target in ("move_to_cloud", "hybrid", "repatriate") and f["migration_months"]:
+        out.append({"month": f["migration_months"], "event": "Planned cut-over", "action": "Last workload moved."})
+    return sorted(out, key=lambda x: x["month"])
+
+
+def inaction(assessment, show_amounts: bool = True) -> str | None:
+    """What keeping today's setup unchanged costs and carries."""
+    eng, ev = assessment.engagement, assessment.evidence
+    if "tco.stay" not in ev.signals:
+        return None
+    pt = {k: (eng.facts[k].point if k in eng.facts else None)
+          for k in ("hw_refresh_due_months", "hw_refresh_capex", "infra_bus_factor", "infra_toil_pct")}
+    horizon = eng.instrument.rules["decisions"]["hosting"].get("horizon_years", 5)
+    parts = []
+    if show_amounts:
+        parts.append(f"Keeping today's setup unchanged costs {_eur(float(ev.signals['tco.stay'][0]))} over {horizon} years "
+                     "(present value)" + (f", including the {_eur(pt['hw_refresh_capex'])} hardware refresh in month "
+                                          f"{pt['hw_refresh_due_months']:g}" if pt["hw_refresh_capex"] else "") + ".")
+    risks = []
+    if pt["infra_bus_factor"] is not None:
+        risks.append(f"{pt['infra_bus_factor']:g} people can restore the platform after a hardware or network failure")
+    if pt["infra_toil_pct"] is not None:
+        risks.append(f"{pt['infra_toil_pct']:g}% of platform engineering hours go to hardware, data-centre and network "
+                     "tasks")
+    if risks:
+        parts.append("It also keeps today's exposure: " + "; ".join(risks) + ".")
+    return " ".join(parts) or None

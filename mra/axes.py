@@ -157,6 +157,7 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
 
     # ------------------------------------------------------------------ facts
     min_width = (rules.get("fact_discipline") or {}).get("min_range_width_by_grade", {})
+    widen_cfg = (rules.get("fact_discipline") or {}).get("widen_single_values", {})
     correlated = set((rules.get("tco") or {}).get("correlated", []))
     shared_u = rng.random(B)                                     # one overrun quantile per draw for the group
     categories, fact_values, fact_ranges = {}, {}, {}
@@ -166,8 +167,13 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
         if ins.facts.at[fid, "kind"] == "category":
             categories[fid] = fact.value
             continue
+        if not fact.is_range and isinstance(fact.value, (int, float)) and fact.value and \
+                (ins.facts.at[fid, "unit"] in widen_cfg.get("units", []) or fid in widen_cfg.get("facts", [])):
+            fact = Fact(low=float(fact.value), likely=float(fact.value), high=float(fact.value), grade=fact.grade)
         if fact.is_range:
             low, likely, high = widen(fact, min_width)
+            if ins.facts.at[fid, "unit"] == "%":
+                low, high = max(low, 0.0), min(high, 100.0)
             fact_ranges[fid] = (low, high)
             values = pert(rng, low, likely, high, B, shared_u if fid in correlated else None)
             values[0] = likely

@@ -100,3 +100,16 @@ def test_final_report_refused_while_blocked(base, tmp_path):
     from mra.report_v3 import NotFinal, build_report
     with pytest.raises(NotFinal, match="not recorded as signed off"):
         build_report(base, tmp_path / "r.pdf", final=True)
+
+
+def test_allocated_difference_closes_the_gap(a):
+    a.engagement.facts["unallocated_infra_annual"] = Fact(value=300000, attester="Finance")
+    a.engagement.facts["unallocated_common_annual"] = Fact(value=210000, attester="Finance")
+    assert "run_cost_reconciliation" not in ids(a)
+
+
+def test_gap_that_could_change_the_verdict_blocks(a):
+    # an invoice far above the components: if it were infrastructure cost, keeping it would no longer be cheapest
+    a.engagement.facts["run_cost_annual"] = Fact(low=5.0e6, likely=5.5e6, high=6.0e6, grade="invoice", attester="x")
+    issue = ids(a)["run_cost_reconciliation"]
+    assert issue.severity == "block" and "recommendation changes" in issue.message

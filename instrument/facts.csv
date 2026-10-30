@@ -95,4 +95,6 @@ training_hiring_cost,hosting,economics,tco,Training and hiring for the target sk
 hybrid_interconnect_annual,hosting,economics,tco,Interconnect for a hybrid setup per year,EUR,number,none,,,,true,true,Low / likely / high with source grade,Hosting review §2
 hybrid_overhead_fte,hosting,economics,tco,Additional people for running two platforms,FTE,number,none,,,,true,true,Low / likely / high with source grade,Hosting review §2
 exit_cost,hosting,economics,tco,Cost of leaving the target at horizon end (rework off proprietary services),EUR,number,none,,,,true,true,Low / likely / high with source grade,Hosting review §2
+unallocated_infra_annual,hosting,economics,tco,"Run cost in the invoiced total not covered by the components, that ends with own infrastructure (per year)",EUR,number,none,,,,false,false,Finance reconciliation,Closes the gap to run_cost_annual
+unallocated_common_annual,hosting,economics,tco,"Run cost in the invoiced total not covered by the components, that remains in every option (per year)",EUR,number,none,,,,false,false,Finance reconciliation,Closes the gap to run_cost_annual
 accepted_premium_pct,hosting,economics,tco,Cost premium leadership accepts for the stated specific need — agreed before results,%,number,none,,,,false,true,Pre-registered,Hosting review §2

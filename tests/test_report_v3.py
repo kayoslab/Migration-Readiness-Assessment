@@ -159,3 +159,25 @@ def test_pooled_groups_owners_and_appendix(techco, tmp_path):
     assert len(labels) == len(set(labels)) and not any(l.startswith(("capability.", "need.")) for l in labels)
     assert ctx["decisions"][0]["charts"]["probabilities"] is None          # a single 100% bar is not drawn
     assert "Evidence indicative" in ctx["evidence_note"]
+
+
+def test_costs_in_euros_with_ranges_and_calendar(techco, tmp_path):
+    ctx = build_context(techco, tmp_path, ROOT)
+    hosting = next(d for d in ctx["decisions"] if d["id"] == "hosting")
+    keep = hosting["economics"][0]
+    assert keep["option"] == "Keep as is" and keep["eur"].startswith("€")
+    low, high = keep["eur_range"].split("–")
+    assert low != high                                         # single values are ranges too
+    events = [c["event"] for c in hosting["calendar"]]
+    assert any(e.startswith("Hardware refresh due") for e in events) and "Colocation contract ends" in events
+    assert "including the €400k hardware refresh in month 30" in hosting["inaction"]
+
+
+def test_amounts_can_be_hidden(techco, tmp_path):
+    techco.engagement.config.setdefault("report", {})["show_amounts"] = False
+    try:
+        ctx = build_context(techco, tmp_path, ROOT)
+    finally:
+        techco.engagement.config["report"]["show_amounts"] = True
+    hosting = next(d for d in ctx["decisions"] if d["id"] == "hosting")
+    assert all(r["eur"] is None for r in hosting["economics"]) and "€" not in (hosting["inaction"] or "")

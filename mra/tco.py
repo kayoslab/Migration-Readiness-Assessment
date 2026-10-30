@@ -29,7 +29,8 @@ OWN = OWN_RUN + ["ops_fte", "infra_share_pct", "hw_refresh_capex", "hw_refresh_d
 CLOUD = ["cloud_compute_baseline_annual", "cloud_committed_share_pct", "cloud_commit_discount_pct",
          "cloud_peak_cost_annual", "cloud_ops_fte"] + CLOUD_RUN
 HYBRID = ["need_share_pct", "hybrid_interconnect_annual", "hybrid_overhead_fte"]
-OPTIONAL_ZERO = ["bridge_cost", "sunk_commitment_cost", "exit_cost", "hybrid_interconnect_annual", "hybrid_overhead_fte"]
+OPTIONAL_ZERO = ["bridge_cost", "sunk_commitment_cost", "exit_cost", "hybrid_interconnect_annual", "hybrid_overhead_fte",
+                 "unallocated_infra_annual", "unallocated_common_annual"]
 
 
 class Missing(Exception):
@@ -62,7 +63,7 @@ class _Model:
 
     # ------------------------------------------------------------------ monthly running costs
     def own(self, capacity: np.ndarray, staff_factor: np.ndarray | float = 1.0) -> np.ndarray:
-        infra = sum(self.v(k) for k in OWN_RUN) / 12
+        infra = (sum(self.v(k) for k in OWN_RUN) + self.v("unallocated_infra_annual")) / 12
         staff = self.v("ops_fte") * self.v("infra_share_pct") / 100 * self.fte / 12
         return infra[:, None] * capacity[:, None] * self.growth * self.p_own + (staff[:, None] * staff_factor)
 
@@ -176,6 +177,8 @@ def compute(facts: dict[str, np.ndarray], current: str, horizon_years: int = 5) 
         options = _options(model, current)
     except Missing as exc:
         return {}, [f"hosting TCO not computed: missing {exc}"]
+    common = (model.v("unallocated_common_annual") / 12)[:, None] * model.growth   # remains whatever is chosen
+    options = {o: {**s, "cost": s["cost"] + common} for o, s in options.items()}
     tco = {o: model.npv(s["cost"], s["residual"]) for o, s in options.items()}
     cumulative = {o: np.cumsum(s["cost"], axis=1) for o, s in options.items()}
     signals = {f"tco.{o}": v for o, v in tco.items()}

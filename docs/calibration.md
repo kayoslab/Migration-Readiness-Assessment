@@ -86,3 +86,14 @@ the validity grid and the five sweeps.**
   procedural safeguards in `decision_rules.yaml → fact_discipline`, not by the statistics.
 - Each sweep crosses one threshold with the others held clearly on one side; interactions between thresholds
   are covered by the validity grid. Further families can be added in `mra/sim.py → FAMILIES`.
+
+
+## Ranges for single-value inputs (2026-10-30)
+
+The rule that every economic input is at least as wide as its source grade allows (`fact_discipline`) was applied
+only to inputs entered as ranges; single values were treated as exact. They are now widened by their grade too (no
+grade counts as an estimate), and the scenario builder gives today's own costs the grade *invoice* and cloud prices
+*calculator export*, as a real fact sheet would. Effect: keep-as-is and improve now carry real uncertainty instead of
+"0.69–0.69". Hosting case (b) then sat at the 80% bar (cost ratio 0.93, range 0.89–1.04 instead of 0.91–0.98): its
+story is a need-motivated move, but it pre-registered no accepted premium. The case now accepts 10%, consistent with
+its story; the rule itself is unchanged. The quick simulation still finds no wrong outcome.

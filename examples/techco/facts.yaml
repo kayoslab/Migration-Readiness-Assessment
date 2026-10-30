@@ -133,6 +133,7 @@ fte_cost_annual:
   value: 100000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: invoice
 growth_pct_annual:
   value: 5
   source: synthetic scenario
@@ -153,6 +154,7 @@ ops_fte:
   value: 4
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: invoice
 infra_share_pct:
   value: 60
   source: synthetic scenario
@@ -161,26 +163,32 @@ hw_maintenance_annual:
   value: 60000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: invoice
 dc_cost_annual:
   value: 80000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: invoice
 network_transit_annual:
   value: 20000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: invoice
 dr_site_annual:
   value: 40000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: invoice
 licence_cost_annual:
   value: 50000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: invoice
 hw_refresh_capex:
   value: 400000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: invoice
 hw_refresh_due_months:
   value: 30
   source: synthetic scenario
@@ -189,6 +197,7 @@ residual_value:
   value: 120000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: invoice
 rightsized_share_pct:
   value: 55
   source: synthetic scenario
@@ -220,26 +229,32 @@ cloud_peak_cost_annual:
   value: 30000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: calculator_export
 cloud_egress_annual:
   value: 30000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: calculator_export
 cloud_network_internal_annual:
   value: 25000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: calculator_export
 cloud_support_tooling_annual:
   value: 30000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: calculator_export
 cloud_managed_annual:
   value: 20000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: calculator_export
 cloud_dr_annual:
   value: 30000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: calculator_export
 cloud_ops_fte:
   value: 3
   source: synthetic scenario
@@ -285,6 +300,7 @@ hybrid_interconnect_annual:
   value: 30000
   source: synthetic scenario
   attester: Fact-sheet owner
+  grade: calculator_export
 hybrid_overhead_fte:
   value: 0.5
   source: synthetic scenario

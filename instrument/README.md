@@ -46,7 +46,7 @@ items.csv ──(weight 1)──┘        │                         │
 | SEC | Security, risk and compliance |
 | FIN | Finance / controlling |
 
-Items per group: ENG 40 · TEC 35 · OPS 34 · PRD 28 · BUS 20 · FIN 20 · EXE 19 · SEC 17 (≈ 10–15 minutes; to be timed in the pretest).
+Items per group (one deployable, own infrastructure): ENG 40 · OPS 36 · PRD 31 · TEC 28 · BUS 21 · EXE 18 · FIN 17 · SEC 13. Estimated minutes (`mra pretest`): ENG 20 · OPS 17 · PRD 14 · TEC 15 · BUS 9 · FIN 8.5 · EXE 8 · SEC 7, counting each optional open question at a full minute; to be measured in the pretest.
 
 ## `items.csv`
 
@@ -62,6 +62,9 @@ Items per group: ENG 40 · TEC 35 · OPS 34 · PRD 28 · BUS 20 · FIN 20 · EXE
 | `dont_know` / `not_applicable` | "Don't know" offered; label of a "not applicable" option. Both are recorded, never scored |
 | `scored` | Feeds an axis. Context, risk, preference and stakes items never do |
 | `roles` / `core` | Groups asked. Every item referenced by a rule, gate or signal must be core |
+| `role_text` | Wording for particular groups, `EXE\|SEC=wording \|\| FIN=wording`; others see `text`. Same item, same analysis |
+| `row_roles` | Grid rows for particular groups, `1=ENG\|OPS;2=PRD` (1-based); unlisted rows go to every group asked. A group shown fewer rows is scored on the full grid's scale |
+| `show_if` | `offered:<decision>:<outcome>` — the item appears only when that outcome is on offer for the current state |
 | `source` | Origin and purpose ("Perception check for …" = compared against a fact) |
 
 **Design rules** (from the methodology review):

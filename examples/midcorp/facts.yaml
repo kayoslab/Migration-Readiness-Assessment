@@ -339,7 +339,7 @@ regions_required:
   source: synthetic scenario
   attester: Fact-sheet owner
 managed_services_required:
-  value: 1.0
+  value: 1
   source: synthetic scenario
   attester: Fact-sheet owner
 hosting_constraint:
@@ -372,7 +372,7 @@ onprem_hw_ops_people:
   attester: Fact-sheet owner
   second_attester: Second attester
 cloud_oncall_experienced_people:
-  value: 1.0
+  value: 1
   source: synthetic scenario
   attester: Fact-sheet owner
   second_attester: Second attester

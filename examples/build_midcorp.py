@@ -74,8 +74,8 @@ DOCUMENTS = {**BILLING, "part_maintain_fte": {"low": 2, "likely": 2.5, "high": 3
 MIDCORP = Scenario(
     "midcorp", {},
     system="the Policy Administration System",
-    targets={"need.architecture.coupling": 3.1, "need.architecture.business_impact": 2.9,
-             "need.architecture.cognitive_load": 2.8, "capability.architecture.delivery_pipeline": 2.9,
+    targets={"need.architecture.coupling": 3.1, "need.architecture.business_impact": 2.5,
+             "need.architecture.cognitive_load": 2.3, "capability.architecture.delivery_pipeline": 2.9,
              "capability.architecture.data": 2.2, "fit.domain_ownership": 2.6, "fit.distributed_operations": 2.7,
              "need.hosting.elasticity": 2.2, "need.hosting.capacity_lead_time": 3.0, "need.hosting.managed_services": 2.0,
              "capability.hosting.automation": 2.6, "capability.hosting.operations": 3.2,

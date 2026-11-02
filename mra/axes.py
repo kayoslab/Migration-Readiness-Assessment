@@ -19,11 +19,15 @@ from .instrument import DONT_KNOW, TECHNICAL_BLOCKS, Instrument
 _COUNT = re.compile(r"(\d+)(?:-(\d+))?=(\d+(?:\.\d+)?)")
 
 
-def count_band(spec: str, yes: int, answered: int, total_rows: int) -> float:
-    """Score a count grid; "don't know" rows are excluded and the count rescaled to all rows."""
+def count_band(spec: str, yes: int, answered: int, total_rows: int, full_rows: int | None = None) -> float:
+    """Score a count grid; "don't know" rows are excluded and the count rescaled to all rows.
+
+    `total_rows` is the number of rows the respondent was shown; `full_rows` (default: the same) the grid's full
+    length, on which the count scale is defined — a group shown only some rows is rescaled to the full grid."""
+    full_rows = full_rows or total_rows
     if answered == 0 or answered < total_rows / 2:
         return np.nan
-    scaled = round(yes * total_rows / answered)
+    scaled = round(yes * full_rows / answered)
     for lo, hi, score in _COUNT.findall(spec[len("count:"):]):
         if int(lo) <= scaled <= int(hi or lo):
             return float(score)
@@ -104,11 +108,13 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
     grid_ids = [i for i in item_ids if ins.items.at[i, "format"] == "grid"]
     for gid in grid_ids:   # per-respondent grid scores
         spec, sub = ins.scores(gid), ans[(ans["item_id"] == gid) & ans["row"].notna()]
-        total_rows = len(ins.items.at[gid, "rows"].split("|"))
+        full_rows = len(ins.items.at[gid, "rows"].split("|"))
         for rid, g in sub.groupby("respondent_id"):
             answered = int((g["label"] != DONT_KNOW).sum())
             yes = int((g["label"] == "Yes").sum())
-            person_scores.loc[rid, gid] = count_band(spec, yes, answered, total_rows)
+            shown = len(ins.rows_for(gid, g["role"].iloc[0])) if not ins.items.at[gid, "rows"].startswith("@") \
+                else full_rows
+            person_scores.loc[rid, gid] = count_band(spec, yes, answered, shown, full_rows)
     person_scores = person_scores.reindex(columns=item_ids)
 
     people = eng.respondents.set_index("respondent_id") if len(eng.respondents) else pd.DataFrame(columns=["role", "involvement"])

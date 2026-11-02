@@ -78,7 +78,8 @@ evidence:
     - capability.hosting.cloud_skills      # move-to-cloud gate (HC02)
     - capability.architecture.skills       # AC12
     - need.hosting.managed_services        # repatriate condition (HN04)
-  involvement_weights: {"Daily, hands-on": 1.0, "Weekly, as a user or decision-maker": 0.7, "A few times a year": 0.4, "Not at all": 0.0}
+  involvement_weights: {"Daily, hands-on": 1.0, "Weekly, as a user or decision-maker": 0.7,
+                        "My work depends on what it produces, but I rarely use it myself": 0.7, "A few times a year": 0.4, "Not at all": 0.0}
 
 # Anti-gaming discipline for the fact sheet
 fact_discipline:

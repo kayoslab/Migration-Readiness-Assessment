@@ -32,6 +32,33 @@ class Instrument:
     def roles_for(self, item_id: str) -> list[str]:
         return self.items.at[item_id, "roles"].split("|")
 
+    def text_for(self, item_id: str, role: str) -> str:
+        """The item's wording for a group: `role_text` ("EXE|SEC=wording || FIN=wording") overrides the default."""
+        for part in filter(None, self.items.at[item_id, "role_text"].split(" || ")):
+            roles, text = part.split("=", 1)
+            if role in roles.split("|"):
+                return text
+        return self.items.at[item_id, "text"]
+
+    def row_roles(self, item_id: str) -> dict[int, list[str]]:
+        """Grid row (1-based) -> groups shown that row, from `row_roles` ("1=ENG|OPS;2=OPS"); unlisted rows: all."""
+        raw = self.items.at[item_id, "row_roles"]
+        return {int(k): v.split("|") for k, v in (p.split("=", 1) for p in raw.split(";") if p)} if raw else {}
+
+    def rows_for(self, item_id: str, role: str, current: dict[str, str] | None = None) -> list[str]:
+        restricted = self.row_roles(item_id)
+        return [r for i, r in enumerate(self.rows(item_id, current), start=1)
+                if i not in restricted or role in restricted[i]]
+
+    def shown(self, item_id: str, current: dict[str, str] | None) -> bool:
+        """`show_if: offered:<decision>:<outcome>` shows an item only when that outcome is on offer."""
+        cond = self.items.at[item_id, "show_if"]
+        if not cond:
+            return True
+        _, decision, outcome = cond.split(":")
+        state = (current or {}).get(decision)
+        return state is None or outcome in [oid for oid, _ in self.preference_options(decision, state)]
+
     def options(self, item_id: str, current: dict[str, str] | None = None) -> list[str]:
         return self._expand(self.items.at[item_id, "options"], current)
 
@@ -96,13 +123,13 @@ class Instrument:
         """Questions for one stakeholder group, in page order, with the exact header used in exports."""
         rows = []
         for item_id, it in self.items.sort_values("page", kind="stable").iterrows():
-            if role not in it["roles"].split("|"):
+            if role not in it["roles"].split("|") or not self.shown(item_id, current):
                 continue
-            text = it["text"].replace("{system}", system).replace("{consistency_example}", consistency_example)
+            text = self.text_for(item_id, role).replace("{system}", system).replace("{consistency_example}", consistency_example)
             options = [o.replace("{system}", system) for o in self.options(item_id, current)]
             extra = ([DONT_KNOW] if it["dont_know"] == "true" else []) + \
                     ([it["not_applicable"].replace("{system}", system)] if it["not_applicable"] else [])
-            grid_rows = self.rows(item_id, current)
+            grid_rows = self.rows_for(item_id, role, current)
             if it["rows"] and not grid_rows:              # e.g. no build-or-buy candidates in this engagement
                 continue
             base = {"item_id": item_id, "page": int(it["page"]), "format": it["format"], "text": text,
@@ -115,8 +142,16 @@ class Instrument:
         return rows
 
 
+ITEM_OPTIONAL_COLUMNS = ("role_text", "row_roles", "show_if")
+
+
 def _read_csv(path: Path) -> pd.DataFrame:
-    return pd.read_csv(path, dtype=str, keep_default_na=False).set_index("id")
+    df = pd.read_csv(path, dtype=str, keep_default_na=False).set_index("id")
+    if path.name == "items.csv":
+        for col in ITEM_OPTIONAL_COLUMNS:          # item banks copied before these columns existed still load
+            if col not in df.columns:
+                df[col] = ""
+    return df
 
 
 def load_instrument(directory: str | Path = "instrument", rules_path: str | Path | None = None) -> Instrument:
@@ -198,6 +233,26 @@ def validate(ins: Instrument) -> list[str]:
         for ref in [x for x in f"{it['options']}|{it['rows']}".split("|") if x.startswith("@preference:")]:
             if ref.split(":", 1)[1] not in ins.outcomes:
                 errs.append(f"item {item_id}: unknown reference {ref}")
+        for part in filter(None, it["role_text"].split(" || ")):
+            if "=" not in part or (bad := [r for r in part.split("=", 1)[0].split("|") if r not in roles]):
+                errs.append(f"item {item_id}: role_text {part[:30]!r} names groups not asked the item")
+        try:
+            restricted = ins.row_roles(item_id)
+        except ValueError:
+            restricted = None
+            errs.append(f"item {item_id}: row_roles is not of the form 1=ENG|OPS;2=PRD")
+        if restricted:
+            n_rows = len(it["rows"].split("|"))
+            if it["rows"].startswith("@") or any(not 1 <= k <= n_rows for k in restricted):
+                errs.append(f"item {item_id}: row_roles must index literal rows 1..{n_rows}")
+            if bad := sorted({r for v in restricted.values() for r in v if r not in roles}):
+                errs.append(f"item {item_id}: row_roles names groups not asked the item {bad}")
+            if bad := [r for r in roles if not ins.rows_for(item_id, r)]:
+                errs.append(f"item {item_id}: groups {bad} are asked the item but shown no row")
+        if cond := it["show_if"]:
+            parts = cond.split(":")
+            if len(parts) != 3 or parts[0] != "offered" or parts[2] not in ins.outcomes.get(parts[1], {}):
+                errs.append(f"item {item_id}: show_if {cond!r} is not offered:<decision>:<outcome>")
 
     def check(signal: str, where: str):
         if not signal_known(ins, signal, areas):

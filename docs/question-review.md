@@ -253,7 +253,19 @@ Proposed or discussed, not adopted:
    - New facts `onprem_hw_ops_people`, `cloud_oncall_experienced_people` (both required) and `distributed_ops_people`, each with a second attester.
    - `evidence.fact_decides` covers onprem_ops, cloud_skills, architecture skills and managed services.
    - A role plan is now added whenever a named group expects the recommended path to harm its roles.
-2. **Routing and wording** in `items.csv`, including conditional and row-level routing. That needs small extensions to the item format: per-row roles, conditions on CX01/AC06 answers and on the outcomes on offer.
+2. **Routing and wording** in `items.csv`, including conditional and row-level routing. That needs small extensions to the item format: per-row roles, conditions on CX01/AC06 answers and on the outcomes on offer. **Done 2026-11-02:**
+   - The item format gained `role_text`, `row_roles` and `show_if`, all applied in the one form spec that both the forms and the analysis use.
+   - The routing table above is applied to existing items: AN06B (counted, for Business and Executives) and MO02T (tolerance, never scored) split off.
+   - AA04 is removed.
+   - Conditions on a respondent's own answers are not possible in a generated Google Form without branching pages. AC04 and AC12 therefore carry a "not applicable" option instead ("Another team rolls releases back", "I am not a team lead or manager"), and G10 stays with everyone, with "Don't know".
+
+   **Deferred**, because each needs a later step:
+   - HC03 removal and MD07 for Finance wait for their facts (step 4).
+   - AN06 scored only with its fact (step 4).
+   - Business's S01/S02/S08 swap for BP01/BP02 (step 5).
+   - The Executives' AA03 "I commissioned the review" option (needs per-group options; low value).
+
+   MidCorp's need targets were set to 2.5 and 2.3 so that its expected need sits at the threshold, as the example intends. With the redrawn synthetic answers, the old targets landed above it by chance.
 3. **Small-group policy**: pools and weights.
 4. **New facts and both sheets**, with their report use: the decision page, feasibility marks and "required whichever path".
 5. **New survey items.** Then rerun the pretest timing, the calibration simulation and the three examples.

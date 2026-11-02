@@ -156,15 +156,19 @@ def test_blank_engagement_from_init_is_insufficient_not_a_guess(tmp_path):
 def test_insufficient_evidence_names_the_uncertain_inputs(tmp_path):
     from mra.explain import inputs_of
     from mra.sim import architecture_need_family
-    # just below the stay / modular-monolith boundary with small groups: the engine should decline and say why
-    scenario = architecture_need_family(0.40)
+    # around the stay / modular-monolith boundary with small groups: where the engine declines, it must say why
+    # (the band where it declines is narrow, so search across it rather than rely on one sampled point)
     hits = 0
-    for seed in range(4):
-        r = assess(build(scenario, tmp_path / str(seed), INSTRUMENT, seed=seed, group_size=5), draws=DRAWS, seed=seed)
-        arch = r.results["architecture"]
-        if arch.verdict == "insufficient_evidence":
-            hits += 1
-            signals = [u["signal"] for u in arch.uncertain_inputs]
-            assert "need.architecture" in signals
-            assert "teams_per_deployable" in inputs_of("need.architecture", r.engagement.instrument)["facts"]
+    for t in (0.35, 0.40, 0.45):
+        for seed in range(4):
+            r = assess(build(architecture_need_family(t), tmp_path / f"{t}-{seed}", INSTRUMENT, seed=seed, group_size=5),
+                       draws=DRAWS, seed=seed)
+            arch = r.results["architecture"]
+            if arch.verdict == "insufficient_evidence":
+                hits += 1
+                signals = [u["signal"] for u in arch.uncertain_inputs]
+                assert "need.architecture" in signals
+                assert "teams_per_deployable" in inputs_of("need.architecture", r.engagement.instrument)["facts"]
+        if hits:
+            break
     assert hits >= 1

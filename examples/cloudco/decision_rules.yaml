@@ -28,6 +28,9 @@ semantics:
     Axis score = weighted mean of its sub-areas; a sub-area with no fact input has weight 0.5, so survey-only
     perceptions cannot outweigh measured ones. A composite is unresolved when a sub-area backed by a required fact
     has no evidence at all, so opinions never fill a gap left by missing facts. Divergence |fact band − survey score| > divergence_flag_bands is reported.
+    In the sub-areas listed under evidence.fact_decides the fact alone sets the score and the survey items are
+    perception checks only (reported as divergence): these sub-areas feed gates, and the group answering the items
+    would otherwise rate itself into or out of an option.
   grids: >-
     Count-scored grids exclude "Don't know" rows and rescale the count band to the rows answered; a grid with more
     than half its rows "Don't know" is unscored for that respondent.
@@ -52,8 +55,10 @@ semantics:
     that outcome is reported as the interim step. Survey items marked "Corroborates" are an awareness check;
     disagreement between attestation and awareness is reported, never decisive.
   track_record: >-
-    If at least 30% of informed respondents (not "don't know") in any group answer G14 "yes", the stop_criteria
-    gate becomes mandatory for every programme outcome and is shown prominently.
+    If at least 30% of informed respondents (not "don't know") answer G14 "yes" — in any group with at least
+    min_role_n informed respondents, or across all respondents together — the stop_criteria gate becomes mandatory
+    for every programme outcome and is shown prominently. Groups below min_role_n count only in the overall share,
+    so a single person in a small group cannot trigger it on their own, and no group can lower it.
   leaning: >-
     When no outcome reaches `confidence`, the report states "insufficient evidence", plus "leaning <outcome>
     (p = …)" if the most likely outcome has p >= 0.5.
@@ -68,6 +73,11 @@ evidence:
   min_role_n: 5
   strong_evidence_role_n: 15
   role_weights: {}               # default: each group counts equally on the items it is asked
+  fact_decides:                  # the fact alone scores these sub-areas; survey items are perception checks only
+    - capability.hosting.onprem_ops        # repatriate / hybrid gate (HC05 is Operations rating itself)
+    - capability.hosting.cloud_skills      # move-to-cloud gate (HC02)
+    - capability.architecture.skills       # AC12
+    - need.hosting.managed_services        # repatriate condition (HN04)
   involvement_weights: {"Daily, hands-on": 1.0, "Weekly, as a user or decision-maker": 0.7, "A few times a year": 0.4, "Not at all": 0.0}
 
 # Anti-gaming discipline for the fact sheet
@@ -93,7 +103,8 @@ fact_discipline:
   two_estimators_for: [hosting.economics, target_run_cost_increase_pct, arch_effort_person_months, arch_external_cost,
                        arch_duration_months]   # model uses the union of both ranges
   estimator_disagreement_flag: 0.25
-  second_attester_for: [components_distinct_availability, components_distinct_compliance, candidate_scope_in_main_deployable]
+  second_attester_for: [components_distinct_availability, components_distinct_compliance, candidate_scope_in_main_deployable,
+                        onprem_hw_ops_people, cloud_oncall_experienced_people, distributed_ops_people]   # people counts: attested by the technology lead, not the team counted
   cloud_prices_from_region_compliant_with: fact.hosting_constraint
 
 # =========================================================================================== composite axes
@@ -190,7 +201,7 @@ gates:
   funding:          {label: Funding committed for 12 months incl. parallel running, checks: [GV03]}
   capacity:         {label: Protected capacity and an owner for the current system, checks: [GV04, GV05], combine: min, corroborated_by: [G04, G05]}
   baseline:         {label: Baseline measures and outcome targets, checks: [GV06, GV07], combine: min}
-  stop_criteria:    {label: Agreed checkpoints and stop criteria, checks: [GV08], mandatory_if: {signal: item.G14, op: "share_yes_>=", value: 0.5}}
+  stop_criteria:    {label: Agreed checkpoints and stop criteria, checks: [GV08], mandatory_if: {signal: item.G14, op: "share_yes_>=", value: 0.3}}
   change_load:      {label: No more than one other major change on the same teams, checks: [GV12], corroborated_by: [G10]}
   compliance_release: {label: Change control allows independent deployment, checks: [GV09]}
   compliance_hosting: {label: Hosting constraints assessed; exit plan in place, checks: [GV10, GV11], combine: min}

@@ -441,18 +441,25 @@ def _preferences(f: Findings, d: str) -> list[dict]:
     else:
         out = [T(f"Only {len(agree)} of {len(groups)} groups prefer the recommended path, so the evidence needs "
                  "explaining before the decision is announced. ")]
+    plain_dissent = []                                     # dissent without role concern: one sentence for all
     for g in dissent[:2]:
         o, share = tops[g], by[g][tops[g]]
         concern = (st.concern.get(g) or {}).get("self")
         no = f.step(lambda s: g in s["action"] and s["phase"] == "people")
-        then = [T("; engaging them is "), S(no)] if no else []
         if concern is not None and concern >= 0.4:
+            then = [T("; engaging them is "), S(no)] if no else []
             out += [T(f"{g}'s preference for “{f.label(d, o)}” ({_pct(share)}) comes with high role concern "
                       f"({_pct(concern)}, "), *(f.exhibit("people.map") or f.exhibit(f"{d}.stakes")), T(")"), *then,
                     T(". ")]
         else:
-            out += [T(f"{g} mostly prefers “{f.label(d, o)}” ({_pct(share)}), and the conditions for that path are set "
-                      "out under "), SEC(f"options-{d}", "“what you would need to believe”"), *then, T(". ")]
+            plain_dissent.append((g, o, share, no))
+    for i, (g, o, share, no) in enumerate(plain_dissent):
+        lead = (f"{g} mostly prefers" if i == 0 else f"{g}") + f" “{f.label(d, o)}” ({_pct(share)}"
+        out += [T((" and " if i else "") + lead), *([T(", "), S(no)] if no else []), T(")")]
+    if plain_dissent:
+        those = "those paths" if len({o for _, o, _, _ in plain_dissent}) > 1 else "that path"
+        out += [T(f"; the conditions for {those} are set out under "),
+                SEC(f"options-{d}", "“what you would need to believe”"), T(". ")]
     return out
 
 

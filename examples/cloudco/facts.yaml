@@ -129,6 +129,11 @@ target_run_cost_increase_pct:
   grade: estimate
   source: synthetic scenario
   attester: Fact-sheet owner
+distributed_ops_people:
+  value: 2
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  second_attester: Second attester
 fte_cost_annual:
   value: 100000
   source: synthetic scenario
@@ -334,7 +339,7 @@ regions_required:
   source: synthetic scenario
   attester: Fact-sheet owner
 managed_services_required:
-  value: 0
+  value: 1.0
   source: synthetic scenario
   attester: Fact-sheet owner
 hosting_constraint:
@@ -361,6 +366,16 @@ contract_end_months:
   value: 36
   source: synthetic scenario
   attester: Fact-sheet owner
+onprem_hw_ops_people:
+  value: 0.0
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  second_attester: Second attester
+cloud_oncall_experienced_people:
+  value: 3.0
+  source: synthetic scenario
+  attester: Fact-sheet owner
+  second_attester: Second attester
 services_per_team:
   value: 5.7
   source: synthetic scenario

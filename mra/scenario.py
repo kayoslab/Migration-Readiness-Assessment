@@ -42,6 +42,7 @@ HEALTHY_FACTS = {
     "run_cost_annual": {"low": 800000, "likely": 1000000, "high": 1300000, "grade": "invoice"},
     "acceptable_run_cost_increase_pct": 20,
     "target_run_cost_increase_pct": {"low": 15, "likely": 25, "high": 40, "grade": "estimate"},
+    "distributed_ops_people": 2,
 }
 
 # A mid-size own estate (~0.5 M/yr) where a like-for-like cloud setup costs moderately more.
@@ -65,7 +66,7 @@ HOSTING_FACTS = {
     "peak_to_median_load": 1.8, "capacity_lead_time_weeks": 4, "infra_toil_pct": 12, "regions_required": 1,
     "managed_services_required": 0, "hosting_constraint": "any",
     "iac_pct": 60, "infra_bus_factor": 3, "dr_restore_tested_months": 4, "infra_oncall_people": 5,
-    "contract_end_months": 36,
+    "contract_end_months": 36, "onprem_hw_ops_people": 2, "cloud_oncall_experienced_people": 2,
 }
 
 ALL_YES = {f"GV{i:02d}": {"answer": "Yes", "evidence": "Reference document", "attested_by": "Sponsor"} for i in range(1, 14)}
@@ -96,6 +97,17 @@ def _area_key(ins: Instrument, item_id: str) -> list[str]:
         return [f"{it['block']}.{it['area']}"]
     decisions = ["architecture", "hosting"] if it["decision"] == "both" else [it["decision"]]
     return [f"{it['block']}.{d}.{it['area']}" for d in decisions] + [f"{it['block']}.{it['area']}"]
+
+
+def _fact_for_band(ins: Instrument, fid: str, target: float) -> float:
+    """A value of a banded number fact that lands in the band nearest to `target` (used where the fact decides)."""
+    f = ins.facts.loc[fid]
+    cuts = [float(c) for c in f["cuts"].split("|")]
+    band = int(min(5, max(1, np.floor(target + 0.5))))
+    if f["direction"] == "down":
+        band = 6 - band
+    value = max(0.0, cuts[0] - 1) if band == 1 else cuts[band - 2]
+    return int(value) if float(value).is_integer() else value
 
 
 def _answer(ins: Instrument, q: dict, target: float | None, fixed: str | None, rng, item_noise: float = 0.5) -> str:
@@ -131,6 +143,15 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
     root.mkdir(parents=True, exist_ok=True)
     ins = load_instrument(instrument_dir)
     facts = {**HEALTHY_FACTS, **HOSTING_FACTS, **scenario.facts}
+    # where the fact alone decides a sub-area, a scenario's target for it sets the fact (unless given explicitly)
+    for name in (ins.rules.get("evidence", {}).get("fact_decides") or []):
+        if name not in scenario.targets:
+            continue
+        block, decision, area = name.split(".")
+        for fid, f in ins.facts.iterrows():
+            if (f["axis"], f["decision"], f["area"]) == (block, decision, area) and f["kind"] == "number" \
+                    and f["cuts"] and fid not in scenario.facts:
+                facts[fid] = _fact_for_band(ins, fid, scenario.targets[name])
     def as_fact(v):
         if not isinstance(v, dict):
             return Fact(value=v)

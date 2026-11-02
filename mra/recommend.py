@@ -113,6 +113,12 @@ def next_steps(assessment) -> list[dict]:
             if a["notable"]:
                 add("people", a["decision"], people["stake_alignment"]["action"].format(group=a["group"]),
                     people["stake_alignment"]["owner"])
+        for decision, r in assessment.results.items():     # a named group expecting the path to harm its roles
+            v = r.verdict if r.verdict != "insufficient_evidence" else r.leaning
+            for g, row in (st.stakes_by_option.get(decision) or {}).items():
+                if g not in ("Other groups", "All respondents") and v and row.get(v) is not None and row[v] < -0.2:
+                    add("people", decision, people["stake_alignment"]["action"].format(group=g),
+                        people["stake_alignment"]["owner"])
         if st.watermelon:
             add("people", None, people["watermelon"]["action"], people["watermelon"]["owner"])
         if st.leadership_disagreement:

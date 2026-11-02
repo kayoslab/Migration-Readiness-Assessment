@@ -75,6 +75,10 @@ Items per group: ENG 40 · TEC 35 · OPS 34 · PRD 28 · BUS 20 · FIN 20 · EXE
   preferred one, so that stake and preference are independent measurements.
 - Facts beat opinions: technical facts (rollback time, deploy automation, shared tables…) live in the fact sheet;
   the survey keeps perception checks whose divergence from the fact is itself a finding.
+- No group rates itself into or out of an option: where a sub-area feeds a gate (hardware skills, cloud skills,
+  distributed-operations experience, need for managed services), the fact alone sets the score and the survey item
+  is only a perception check (`evidence.fact_decides` in `decision_rules.yaml`). Head counts behind those facts are
+  taken from tickets and rosters and attested by the technology lead, not by the team being counted.
 
 ## `facts.csv`
 

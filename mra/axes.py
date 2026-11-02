@@ -226,6 +226,7 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
             if band is not None:
                 signals[f"band.{fid}"] = band
 
+    fact_decides = set(ev_cfg.get("fact_decides") or [])
     sub_scores: dict[tuple, np.ndarray] = {}
     has_fact: dict[tuple, bool] = {}
     backed_by_required: dict[tuple, bool] = {}
@@ -236,15 +237,15 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
                 if parts["items"] else np.full(B, np.nan)
             bands = [b for b in (fact_band_array(f) for f in parts["facts"]) if b is not None]
             fact = np.nanmean(np.stack(bands), axis=0) if bands else np.full(B, np.nan)
+        block, decision, area = key
+        name = f"{block}.{area}" if block in ("fit", "requirement", "locality") else f"{block}.{decision}.{area}"
         wf = np.where(np.isnan(fact), 0, fw)
-        ws = np.where(np.isnan(survey), 0, sw)
+        ws = np.where(np.isnan(survey) | (name in fact_decides), 0, sw)   # perception checks only: never fill in
         with np.errstate(invalid="ignore", divide="ignore"):
             combined = (np.nan_to_num(fact) * wf + np.nan_to_num(survey) * ws) / (wf + ws)
         sub_scores[key] = combined
         has_fact[key] = bool(bands)
         backed_by_required[key] = any(ins.facts.at[f, "required"] == "true" for f in parts["facts"])
-        block, decision, area = key
-        name = f"{block}.{area}" if block in ("fit", "requirement", "locality") else f"{block}.{decision}.{area}"
         signals[name] = combined
         if bands and not np.isnan(fact[0]) and not np.isnan(survey[0]) and \
                 abs(fact[0] - survey[0]) > ev_cfg.get("divergence_flag_bands", 1.0):
@@ -280,10 +281,16 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
         if need and (fid not in eng.facts or eng.facts[fid].point is None):
             missing.append(fid)
 
-    # track record (G14): ≥ 30% of informed respondents in any group report a failed programme
+    # track record (G14): ≥ threshold of informed respondents report a failed programme, in any group large enough
+    # to report or across everyone; a small group counts only in the overall share
+    threshold = ((rules.get("gates", {}).get("stop_criteria") or {}).get("mandatory_if") or {}).get("value", 0.3)
     g14 = single[(single["item_id"] == "G14") & ~single["dont_know"]]
-    shares = g14.groupby("role")["label"].apply(lambda s: (s == "Yes").mean()) if len(g14) else []
-    flags = {"track_record_concern": bool(len(shares) and (shares >= 0.3).any()), "tco_problems": tco_problems}
+    concern = False
+    if len(g14):
+        yes = g14.assign(yes=g14["label"] == "Yes")
+        by_role = yes.groupby("role")["yes"].agg(["mean", "size"])
+        concern = bool((by_role[by_role["size"] >= min_n]["mean"] >= threshold).any() or yes["yes"].mean() >= threshold)
+    flags = {"track_record_concern": concern, "tco_problems": tco_problems}
 
     return Evidence(signals, categories, eng.current_states(arch_state), divergences,
                     pd.DataFrame(point_rows), missing, flags,

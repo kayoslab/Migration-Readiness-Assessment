@@ -85,8 +85,72 @@ def build(assessment, ctx: dict) -> dict:
                          "status": "On hold" if blocked and dec["verdict"] != "insufficient_evidence" else dec["status_label"],
                          "tone": "neutral" if blocked else dec["tone"], "ask": ask, "not_yet": not_yet, "budget": budget})
     requests += _sourcing_requests(assessment, ctx, people)
-    return {"requests": requests, "scr": _scr(assessment, ctx, decs), "money": _money(assessment, decs) + _sourcing_money(ctx),
-            "conditions": _conditions(ctx, decs), "again": _again(ctx, triggers), **_intent(assessment, decs)}
+    brief = {"requests": requests, "scr": _scr(assessment, ctx, decs), "money": _money(assessment, decs) + _sourcing_money(ctx),
+             "conditions": _conditions(ctx, decs), "again": _again(ctx, triggers), **_intent(assessment, decs)}
+    return _fit(brief, bool(ctx["integrity"]["draft"]))
+
+
+PAGE_BUDGET = 56      # estimated lines, a first guess only: rendered pages between 53 and 58 fit or not
+
+
+def _lines(text: str | None, width: int) -> float:
+    return -(-len(text) // width) if text else 0
+
+
+def _fullness(b: dict, draft: bool) -> float:
+    """Rough line count of the decision page: full-width requests and situation, then the taller of two columns."""
+    full = 0.0
+    for q in b["requests"]:
+        if q["status"] == "No change":
+            full += _lines(q["ask"], 110)
+            continue
+        full += 1.2 + 1.25 * _lines(q["ask"], 80) + _lines(q.get("not_yet"), 110) + _lines(q.get("budget"), 110)
+    full += sum(_lines(b["scr"][k], 85) for k in ("situation", "complication", "resolution"))
+    left = 1 + sum(_lines(x, 48) for x in b["money"]) + \
+        (1 + sum(_lines(x, 48) for x in b["conditions"]) if b["conditions"] else 0)
+    right = 1 + sum(_lines(x, 48) for x in b["again"]) + \
+        (1.5 + sum(_lines(x, 48) for x in b["intent_flags"]) if b.get("intent_flags") else 0)
+    return full + max(left, right) + (1.5 if draft else 0)
+
+
+def _pointer(items: list[str], what: str, where: str) -> list[str]:
+    return [f"{len(items)} {what} — see {where}."] if len(items) > 1 else items
+
+
+def _shorter_not_yet(q: dict) -> None:
+    text = q.get("not_yet") or ""
+    head = text.split(" “")[0].strip()
+    if " is not pursued" in text and head:          # the reopen criteria are listed in full in the plan
+        q["not_yet"] = head.rstrip(". ") + "."
+
+
+# Shortening the decision page, least important first; each step is repeated in full elsewhere in the report.
+COMPACTION = [
+    lambda b: b.update(conditions=_pointer(b["conditions"], "conditions, drafts first", "the Important notice")),
+    lambda b: b.update(intent_flags=_pointer(b.get("intent_flags", []), "points where the evidence meets leadership's "
+                                             "intent", "Preconditions")),
+    lambda b: b.update(again=[g for g in b["again"] if not g.startswith("Month ")]),
+    lambda b: b.update(money=b["money"][:3]),
+    lambda b: [_shorter_not_yet(q) for q in b["requests"]],
+]
+
+
+def compact(full: dict, steps: int) -> dict:
+    import copy
+    b = copy.deepcopy(full)
+    for step in COMPACTION[:steps]:
+        step(b)
+    return b
+
+
+def _fit(b: dict, draft: bool) -> dict:
+    """A first guess at how much to shorten; the report build measures the rendered page and shortens further."""
+    steps = 0
+    while steps < len(COMPACTION) and _fullness(compact(b, steps), draft) > PAGE_BUDGET:
+        steps += 1
+    out = compact(b, steps)
+    out["_full"], out["_steps"] = b, steps
+    return out
 
 
 def _sourcing_requests(assessment, ctx: dict, people: dict) -> list[dict]:
@@ -115,8 +179,26 @@ def _sourcing_requests(assessment, ctx: dict, people: dict) -> list[dict]:
             budget = (f"One-off integration and migration: {p['costs']['integration']}; saves about "
                       f"€{saving / 1e3:,.0f}k a year over five years once switched.")
         out.append({"decision": f"Build or buy · {name}", "path": p["label"], "status": p["status_label"],
-                    "tone": p["tone"], "ask": ask, "not_yet": not_yet, "budget": budget})
-    return out
+                    "tone": p["tone"], "ask": ask, "not_yet": not_yet, "budget": budget, "_merge": (
+                        p["verdict"], status) if p["verdict"] == "insufficient_evidence" or
+                    (p["verdict"] == "keep_building" and status != "excluded") else None})
+    merged = []                                     # parts with the same outcome and no money: one request
+    for r in out:
+        key = r.pop("_merge")
+        same = next((m for m in merged if key and m.get("_key") == key), None)
+        if same:
+            same["_names"].append(r["decision"].split(" · ", 1)[1])
+            continue
+        merged.append({**r, "_key": key, "_names": [r["decision"].split(" · ", 1)[1]]})
+    for m in merged:
+        names = m.pop("_names")
+        key = m.pop("_key")
+        if len(names) > 1:
+            listed = _join(names)
+            m["decision"] = f"Build or buy · {listed}"
+            m["ask"] = (f"Do not decide yet whether to build or buy {listed}; approve the work that settles it."
+                        if key[0] == "insufficient_evidence" else f"Keep building {listed}. No approval is needed.")
+    return merged
 
 
 def _sourcing_money(ctx: dict) -> list[str]:
@@ -229,12 +311,17 @@ def _money(assessment, decs: dict) -> list[str]:
     return out
 
 
+MAX_CONDITIONS, MAX_INTENT_FLAGS = 3, 2     # the decision page stays one page; the full lists are elsewhere
+
+
 def _conditions(ctx: dict, decs: dict) -> list[str]:
     out = []
     integrity = ctx["integrity"]
     if integrity["draft"]:
         out += [f"Draft: {b['title'].lower()}." for b in integrity["blocks"]]
     out += [f"{c['title']}." for c in integrity["caveats"]]
+    if len(out) > MAX_CONDITIONS:                    # drafts first, then the caveats; all are in the notice
+        out = out[:MAX_CONDITIONS - 1] + [f"And {len(out) - MAX_CONDITIONS + 1} more in the Important notice."]
     return out
 
 
@@ -331,4 +418,6 @@ def _intent(assessment, decs: dict) -> dict:
              for d in intent.get("committed_dates") or []]
     if dates:
         out.append(f"Already promised to customers or regulators: {_join([x for x in dates if x])}.")
-    return {"intent": out + flags, "intent_flags": flags}
+    shown = flags if len(flags) <= MAX_INTENT_FLAGS else \
+        flags[:MAX_INTENT_FLAGS - 1] + [f"And {len(flags) - MAX_INTENT_FLAGS + 1} more under Preconditions."]
+    return {"intent": out + flags, "intent_flags": shown}

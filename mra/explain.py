@@ -19,7 +19,7 @@ AREA_WORDS = {
     "automation": "infrastructure automation", "cloud_skills": "cloud operations skills",
     "cost_discipline": "cost transparency", "onprem_ops": "hardware operations skills",
 }
-OPS = {">=": "at least", ">": "above", "<=": "at most", "<": "below", "==": "", "!=": "not"}
+OPS = {">=": "at least", ">": "above", "<=": "at most", "<": "below", "==": "", "!=": "not", "in": "one of"}
 OPTION_WORDS = {"cloud": "moving to the cloud", "hybrid": "a hybrid setup", "repatriate": "moving back from the cloud",
                 "improve_current": "improving the current setup", "stay": "keeping the current setup"}
 STATUS_WORDS = {"go": "Proceed", "prepare_first": "Prepare first", "insufficient": "Insufficient evidence"}

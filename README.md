@@ -240,6 +240,7 @@ mra report engagements/acme/engagement.yaml --llm
 | `mra review <engagement.yaml>` | A language model reads the report as an executive and lists what it leaves open (for the analyst; not run on client engagements) |
 | `mra benchmarks [--update]` | Show the age of the DORA benchmark table, or rebuild it from DORA's published data |
 | `mra simulate [--quick]` | Test the method on synthetic assessments |
+| `mra stress [--n 40] [--pdf 5]` | Build reports for generated organisations and check each one holds together |
 | `mra check-llm` | Verify the AI gateway key and model |
 
 Every build runs board-readiness checks (decision requested, costs in euros, deciding conditions shown, caveats
@@ -272,6 +273,7 @@ pip install -e '.[dev]'
 nbstripout --install          # keeps notebook outputs out of git
 pytest                        # unit tests and the expert walk-through cases
 mra simulate --quick          # reduced simulation, as run in CI
+mra stress --n 20             # generated organisations, as run in CI
 ```
 
 Continuous integration validates the instrument, runs the tests and the reduced simulation on every push. Please open

@@ -436,11 +436,21 @@ def _preferences(f: Findings, d: str) -> list[dict]:
                  f"across respondents “{f.label(d, rival[0])}” is as popular ({_pct(rival[1])} against "
                  f"{_pct(overall.get(v, 0))}), a difference that needs explaining. ")]
     elif len(agree) * 2 > len(groups):
+        no = f.step(lambda s: s["phase"] == "people")
         out = [T(f"{len(agree)} of {len(groups)} groups already prefer the recommended path, so communication can build "
-                 "on agreement. ")]
+                 "on agreement"), *([T("; the remaining engagement starts with "), S(no)] if no else
+                                    [T(" (see "), SEC(f"options-{d}", "options considered"), T(")")]), T(". ")]
     else:
         out = [T(f"Only {len(agree)} of {len(groups)} groups prefer the recommended path, so the evidence needs "
                  "explaining before the decision is announced. ")]
+    named = {rival[0]} if rival and rival[1] >= overall.get(v, 0) else set()   # options already named in full
+
+    def name(o):                                           # a long option name is spelled out once
+        if o in named:
+            return "the same option"
+        named.add(o)
+        return f"“{f.label(d, o)}”"
+
     plain_dissent = []                                     # dissent without role concern: one sentence for all
     for g in dissent[:2]:
         o, share = tops[g], by[g][tops[g]]
@@ -448,18 +458,22 @@ def _preferences(f: Findings, d: str) -> list[dict]:
         no = f.step(lambda s: g in s["action"] and s["phase"] == "people")
         if concern is not None and concern >= 0.4:
             then = [T("; engaging them is "), S(no)] if no else []
-            out += [T(f"{g}'s preference for “{f.label(d, o)}” ({_pct(share)}) comes with high role concern "
+            out += [T(f"{g}'s preference for {name(o)} ({_pct(share)}) comes with high role concern "
                       f"({_pct(concern)}, "), *(f.exhibit("people.map") or f.exhibit(f"{d}.stakes")), T(")"), *then,
                     T(". ")]
         else:
             plain_dissent.append((g, o, share, no))
     for i, (g, o, share, no) in enumerate(plain_dissent):
-        lead = (f"{g} mostly prefers" if i == 0 else f"{g}") + f" “{f.label(d, o)}” ({_pct(share)}"
+        lead = (f"{g} mostly prefers" if i == 0 else f"{g}") + f" {name(o)} ({_pct(share)}"
         out += [T((" and " if i else "") + lead), *([T(", "), S(no)] if no else []), T(")")]
     if plain_dissent:
         those = "those paths" if len({o for _, o, _, _ in plain_dissent}) > 1 else "that path"
         out += [T(f"; the conditions for {those} are set out under "),
                 SEC(f"options-{d}", "“what you would need to believe”"), T(". ")]
+    if not any(seg.get("ref") for seg in out):            # every branch ends somewhere the reader can act
+        no = f.step(lambda s: s["phase"] == "people")
+        out += [T("The engagement plan starts with "), S(no), T(".")] if no else \
+            [T("The case for each path is set out under "), SEC(f"options-{d}", "options considered"), T(".")]
     return out
 
 
@@ -490,6 +504,10 @@ def _stakes(f: Findings, d: str) -> list[dict]:
         f.step(lambda s: "role" in s["action"].lower())
     if no:
         out += [T("The role plan is "), S(no), T(".")]
+    elif not any(seg.get("ref") for seg in out):
+        first = f.step(lambda s: s["phase"] == "people")
+        out += [T(" No role plan is needed; the engagement plan starts with "), S(first), T(".")] if first else \
+            [T(" No role plan is needed (see "), SEC(f"options-{d}", "options considered"), T(").")]
     return out
 
 
@@ -550,8 +568,11 @@ def _divergence(f: Findings) -> list[dict]:
                     T(f"; it may help explain why {_join(fans)} {'favours' if len(fans) == 1 else 'favour'} it. "
                       if fans else ". ")]
             break
+    from .explain import signal_label
     words = top["sub_area"].split(".")[-1].replace("_", " ")
-    no = f.step(lambda s: "Reconcile" in s["action"] and (words in s["action"] or label.split(" (")[0] in s["action"]))
+    named = signal_label(top["sub_area"], f.ins).lower()                 # as the step names it (mra/recommend.py)
+    no = f.step(lambda s: "Reconcile" in s["action"] and (named in s["action"] or words in s["action"]
+                                                          or label.split(" (")[0] in s["action"]))
     if no:
         out += [T("Sharing the measurement is "), S(no), T(".")]
     return out
@@ -573,9 +594,12 @@ def _capability_gap(f: Findings, label: str, value: float) -> list[dict]:
     for d, outcomes in needs.items():
         v = f.target(d)
         if v in outcomes:
-            no = f.step(lambda s: s["decision"] == d and s["phase"] in ("capability", "first_steps"))
-            return [T(f"This gap lies on the recommended {d} path and has to be closed first"),
-                    *([T(" ("), S(no), T(")")] if no else []), T(". ")]
+            no = f.step(lambda s: s["decision"] == d and s["phase"] in ("capability", "first_steps")) or \
+                f.step(lambda s: s["phase"] == "evidence")
+            which = "recommended" if f.a.results[d].verdict != "insufficient_evidence" else "leading"
+            return [T(f"This gap lies on the {which} {d} path and has to be closed first"),
+                    *([T(" ("), S(no), T(")")] if no else [T(" ("), SEC(f"options-{d}", "options considered"), T(")")]),
+                    T(". ")]
     blocked = [(d, o) for d, outcomes in needs.items() for o in outcomes if o != f.target(d)]
     if blocked:
         d, o = blocked[0]
@@ -600,6 +624,8 @@ def _spread(f: Findings, label: str, value: float) -> list[dict]:
         out += [T("; "), S(no), T(" is the place to close the gap")]
     if rid:
         out += [T(" ("), R(rid), T(")")]
+    if not no and not rid:
+        out += [T("; agreeing it is part of the "), SEC("preconditions")]
     return out + [T(".")]
 
 
@@ -613,8 +639,11 @@ def _readiness_weakest(f: Findings) -> list[dict]:
     same = matrix and min(matrix, key=matrix.get) == label
     needs = f.needed_by(sub)
     on_path = [d for d, outcomes in needs.items() if f.target(d) in outcomes]
-    out = [T(f"One question shows the {short} gap plainly: {_pct(top['low'])} of answers are at the low end"),
-           *([T(", confirming "), X("readiness.matrix")] if same and "readiness.matrix" in f.present else []), T(". ")]
+    lead = (f"One question shows the {short} gap plainly: {_pct(top['low'])} of answers are at the low end"
+            if top["low"] >= 0.25 else
+            f"The weakest question concerns {short}, though only {_pct(top['low'])} of answers are at the low end")
+    out = [T(lead), *([T(", confirming "), X("readiness.matrix")] if same and "readiness.matrix" in f.present else []),
+           T(". ")]
     if on_path:
         no = f.step(lambda s: s["decision"] == on_path[0] and s["phase"] in ("capability", "first_steps"))
         out += [T("Closing it is part of the recommended path"), *([T(" ("), S(no), T(")")] if no else []), T(". ")]
@@ -626,6 +655,8 @@ def _readiness_weakest(f: Findings) -> list[dict]:
     if split:
         out += [T(f"Where answers split ({_pct(split[0]['low'])} low, {_pct(split[0]['high'])} high), respondents "
                   "experience the same thing differently; clarify it before planning around it.")]
+    if not any(seg.get("ref") for seg in out):            # e.g. how the change is led: a precondition, not a path
+        out += [T(" It bears on the "), SEC("preconditions"), T(".")]
     return out
 
 

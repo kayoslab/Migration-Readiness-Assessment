@@ -44,6 +44,12 @@ def main(argv: list[str] | None = None) -> int:
     sim.add_argument("--quick", action="store_true", help="reduced grid (as run in CI)")
     sim.add_argument("--out", default=None, help="output folder (default Output/sim)")
 
+    sts = sub.add_parser("stress", help="v3: generated organisations, each report checked for consistency")
+    sts.add_argument("--n", type=int, default=40, help="number of organisations")
+    sts.add_argument("--seed", type=int, default=1)
+    sts.add_argument("--pdf", type=int, default=0, help="render the first N reports and check the decision page")
+    sts.add_argument("--out", default=None, help="output folder (default Output/stress)")
+
     ini = sub.add_parser("init", help="v3: create a blank engagement folder with annotated templates")
     ini.add_argument("folder")
     ini.add_argument("--instrument", default="instrument")
@@ -144,6 +150,15 @@ def main(argv: list[str] | None = None) -> int:
             print(f"# note: {result.unmapped_files} changed files are not covered by the ownership map")
         print(facts_yaml(result, repo))
         return 0
+
+    if args.command == "stress":
+        from .stress import run as stress
+        result = stress(n=args.n, seed=args.seed, pdf=args.pdf, out=args.out)
+        bad = [r for r in result["rows"] if r["problems"]]
+        print(f"{len(result['rows'])} organisations, {len(bad)} with problems")
+        for problem, count in result["counts"].most_common():
+            print(f"  {count:3d}  {problem}")
+        return 1 if bad else 0
 
     if args.command == "simulate":
         from .sim import main as simulate, summary

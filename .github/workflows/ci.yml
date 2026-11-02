@@ -22,3 +22,5 @@ jobs:
         run: pytest -q
       - name: Reduced simulation grid (fails above 5% wrong outcomes)
         run: mra simulate --quick
+      - name: Generated organisations (fails on any inconsistent report)
+        run: mra stress --n 20

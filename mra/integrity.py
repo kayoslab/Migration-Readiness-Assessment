@@ -294,7 +294,8 @@ def _intent_locked(a, cfg) -> list[Issue]:
         return [Issue("intent_locked", cfg.get("missing_severity", "caveat"), "Leadership intent not recorded",
                       "The leadership team has not recorded in advance its time horizon, priorities, stop triggers and "
                       "financing constraints. Without them, the report cannot show whether a path fits what leadership "
-                      "set out to achieve, and the goalposts can move after the results are known.")]
+                      "set out to achieve, and the goalposts can move after the results are known.",
+                      decisions=list(a.results))]
     on = _date(intent.get("signed_on"))
     if not intent.get("signed_by") or not on:
         return [Issue("intent_locked", cfg["severity"], "Leadership intent not signed and dated",

@@ -154,6 +154,7 @@
 
 #anchor("decision")
 = Decision requested
+#context [#metadata(here().page()) <decision-start>]
 
 #if data.integrity.draft [
   #text(weight: "semibold", fill: theme.status.RED)[Draft — not for decision until the conditions below are resolved.]
@@ -204,6 +205,7 @@
   ],
 )
 #set text(size: 9.5pt)
+#context [#metadata(here().page()) <decision-end>]
 
 = Executive summary
 

@@ -106,3 +106,37 @@ boundary, as before (finding 1).
 Six expert cases for the per-part build-or-buy decision (docs/build-or-buy.md) across group sizes 5, 10, 15 and 30
 with five seeds each: 120 runs, every one decided correctly (verdict and status), none returned as insufficient
 evidence except the case designed to be.
+
+## Generated organisations (`mra stress`)
+
+The calibration grid asks whether verdicts are right. `mra stress` asks whether every report holds together for
+organisations nobody designed by hand. Each organisation varies:
+- group sizes, from absent to large, so small groups are pooled or dropped;
+- the hosting state and the shape of the system;
+- signed or unsigned rules;
+- missing or late intent sheets;
+- risks of staying;
+- hosting constraints with and without a citation;
+- build-or-buy parts;
+- mixed governance answers.
+
+Each report context is checked against the board-readiness rubric and against these invariants:
+- no group under five is shown;
+- a risk of staying never ends in "stay as it is", and always comes with a step required on every path;
+- no intent lines appear without an intent sheet;
+- no absorption risk appears without a programme;
+- the savings gate is required when past savings were not achieved or never checked;
+- step numbers are unique;
+- unsigned rules keep the report a draft.
+
+With `--pdf N` the first N reports are rendered, and each decision page must fit on one page.
+
+First run (2026-11-02, 50 organisations): 29 had problems.
+- Two crashes:
+  - an `in` condition had no wording;
+  - the lead-time exhibit failed when every group answering it was too small.
+- "So what" texts that pointed nowhere: the perception-versus-measurement link ranked differently from its step, and some preference, stakes and readiness branches had no link at all.
+- The "intent not recorded" caveat was not placed beside the decisions.
+- Decision pages ran past one page for organisations with several build-or-buy parts.
+
+After the fixes, 60 generated organisations (seeds 5 and 7), all rendered, had no problems, and every decision page fit on one page. The report build now measures the rendered decision page and shortens it step by step: first conditions, then intent flags, calendar dates, money lines and reopen sentences, each of which the report shows in full elsewhere. CI runs `mra stress --n 20`.

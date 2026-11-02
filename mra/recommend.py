@@ -113,7 +113,7 @@ def next_steps(assessment) -> list[dict]:
         add("evidence", None, e["action"].format(facts="; ".join(names)), e["owner"])
 
     div = lib.get("divergence")
-    for d in assessment.evidence.divergences[:3]:
+    for d in sorted(assessment.evidence.divergences, key=lambda x: -abs(x["survey"] - x["fact_band"]))[:3]:   # largest first
         from .explain import signal_label
         area = signal_label(d["sub_area"], ins).lower()
         add("people", None, div["action"].format(area=area, survey=f"{d['survey']:.1f}", fact=f"{d['fact_band']:.1f}"),

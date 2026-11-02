@@ -60,6 +60,11 @@ def _why(decision: str, outcome: str | None, assessment, limit: int = 8) -> list
         if isinstance(value, bool):                    # derived yes/no conditions, e.g. a distinct component
             out.append(f"{signal_label(c['signal'], ins)}: {'yes' if value else 'no'}.")
             continue
+        if isinstance(threshold, (list, tuple)):        # e.g. a failed or missing disaster-recovery test
+            words = [str(t).replace("_", " ") for t in threshold]
+            out.append(f"{signal_label(c['signal'], ins)}: {str(value).replace('_', ' ')} "
+                       f"(one of: {', '.join(words)}).")
+            continue
         out.append(f"{signal_label(c['signal'], ins)}: {_shown(c['signal'], value, ins)} "
                    f"(threshold: {OPS[c['op']] or 'equal to'} {_shown(c['signal'], threshold, ins)}).")
     return out
@@ -103,6 +108,8 @@ def _lead_time_split(eng, ins) -> dict:
     ans = ans.assign(group=ans["respondent_id"].map(for_engagement(eng)))      # small groups pooled (mra/groups.py)
     min_n = ins.rules.get("evidence", {}).get("min_role_n", 5)
     ans = ans[ans["group"].notna() & ans["group"].map(ans["group"].value_counts()).ge(min_n)]   # too few to show
+    if ans.empty:
+        return {}
     out = {g: (sub["bucket"].value_counts(normalize=True)).round(3).to_dict() for g, sub in ans.groupby("group")}
     out["All respondents asked"] = ans["bucket"].value_counts(normalize=True).round(3).to_dict()
     return out
@@ -691,9 +698,21 @@ def build_report(assessment, output: Path, template: Path = TEMPLATE, narrative:
         if problems:
             raise NotFinal("; ".join(problems))
     data = out / "report.json"
-    data.write_text(json.dumps(context, indent=1, ensure_ascii=False, default=str))
-    output.parent.mkdir(parents=True, exist_ok=True)
     fonts = [str(p) for p in [template / "fonts"] if p.exists()]
+    full, steps = context["brief"].pop("_full", None), context["brief"].pop("_steps", 0)
+    from .brief import COMPACTION, compact
+    while True:                                       # the decision page must fit on one page: measure, shorten
+        data.write_text(json.dumps(context, indent=1, ensure_ascii=False, default=str))
+        if full is None or steps >= len(COMPACTION):
+            break
+        pages = [json.loads(typst.query(str(template / "decision.typ"), f"<decision-{m}>", field="value", one=True,
+                                        root=str(root), font_paths=fonts, sys_inputs={"data": _rel(data, root)}))
+                 for m in ("start", "end")]
+        if pages[1] <= pages[0]:
+            break
+        steps += 1
+        context["brief"] = compact(full, steps)
+    output.parent.mkdir(parents=True, exist_ok=True)
     typst.compile(str(template / "decision.typ"), output=str(output), root=str(root), font_paths=fonts,
                   sys_inputs={"data": _rel(data, root)})
     return output

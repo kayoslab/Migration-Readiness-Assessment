@@ -8,7 +8,7 @@ import pytest
 
 from mra.assess import assess
 from mra.scenario import Scenario, build
-from mra.stakes import reportable_groups
+from mra.groups import OTHER, assign
 
 ROOT = Path(__file__).resolve().parents[1]
 INSTRUMENT = ROOT / "instrument"
@@ -95,14 +95,36 @@ def test_fit_profile_lists_requirements_per_outcome(platform_case):
 
 # ---------------------------------------------------------------------------------------- disclosure control
 
-def test_small_groups_pooled_when_safe():
-    shown, pooled, total_ok = reportable_groups(pd.Series({"ENG": 15, "SEC": 3, "FIN": 3}), 5)
-    assert shown == ["ENG"] and pooled == ["SEC", "FIN"] and total_ok
+def _people(sizes, senior=None):
+    roles, seniority = [], []
+    for role, n in sizes.items():
+        for i in range(n):
+            roles.append(role)
+            seniority.append("Head of / director" if i < (senior or {}).get(role, 0) else "Individual contributor")
+    index = [f"r{i}" for i in range(len(roles))]
+    return pd.Series(roles, index=index), pd.Series(seniority, index=index)
 
 
-def test_total_withheld_when_a_small_group_could_be_differenced():
-    shown, pooled, total_ok = reportable_groups(pd.Series({"ENG": 15, "PRD": 8, "SEC": 3}), 5)
-    assert pooled == [] and not total_ok
+def test_small_groups_are_pooled_only_with_groups_in_a_similar_position():
+    roles, seniority = _people({"ENG": 15, "OPS": 3, "SEC": 3, "FIN": 3})
+    groups = assign(roles, seniority, {})
+    assert set(groups[roles == "ENG"]) == {"ENG"}
+    assert set(groups[roles.isin(["SEC", "FIN"])]) == {"Business leadership and control (pooled)"}
+    assert groups[roles == "OPS"].isna().all()            # never with Security; too few on its own
+
+
+def test_small_technology_leadership_joins_senior_engineers_if_engineering_still_stands():
+    roles, seniority = _people({"ENG": 9, "TEC": 3}, senior={"ENG": 2})
+    groups = assign(roles, seniority, {})
+    assert (groups == "Technology leadership (pooled)").sum() == 5 and (groups == "ENG").sum() == 7
+    roles, seniority = _people({"ENG": 6, "TEC": 3}, senior={"ENG": 2})   # engineering would fall below five
+    groups = assign(roles, seniority, {})
+    assert (groups == "ENG").sum() == 6 and groups[roles == "TEC"].isna().all()
+
+
+def test_other_small_delivery_groups_form_other_groups():
+    roles, seniority = _people({"ENG": 15, "PRD": 3, "BUS": 2})
+    assert set(assign(roles, seniority, {})[roles.isin(["PRD", "BUS"])]) == {OTHER}
 
 
 def test_no_cell_below_minimum(tmp_path):

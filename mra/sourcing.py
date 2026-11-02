@@ -41,7 +41,10 @@ def _differentiation(eng, name: str, spec: dict, rng, draws: int, min_n: int) ->
     ans = eng.answers
     ans = ans[(ans["item_id"] == spec["item"]) & (ans["row"] == name) & ~ans["dont_know"].fillna(False).astype(bool)]
     ans = ans.dropna(subset=["score"])
-    groups = {g: sub["score"].to_numpy(float) for g, sub in ans.groupby("role") if g in spec["groups"]}
+    from .groups import for_engagement
+    ans = ans[ans["role"].isin(spec["groups"])]
+    ans = ans.assign(group=ans["respondent_id"].map(for_engagement(eng, min_n)))   # small groups pooled
+    groups = {g: sub["score"].to_numpy(float) for g, sub in ans.groupby("group")}
     counted = {g: v for g, v in groups.items() if len(v) >= min_n}
     if not counted:                                       # too few per group: pool what there is, if enough
         pooled = np.concatenate(list(groups.values())) if groups else np.array([])

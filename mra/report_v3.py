@@ -99,12 +99,10 @@ def _lead_time_split(eng, ins) -> dict:
         return (LEAD_TIME_BUCKETS[0] if label in coord else LEAD_TIME_BUCKETS[1] if label in wait else
                 LEAD_TIME_BUCKETS[3] if label == "No single main cause" else LEAD_TIME_BUCKETS[2])
     ans = ans.assign(bucket=ans["label"].map(bucket))
+    from .groups import for_engagement
+    ans = ans.assign(group=ans["respondent_id"].map(for_engagement(eng)))      # small groups pooled (mra/groups.py)
     min_n = ins.rules.get("evidence", {}).get("min_role_n", 5)
-    sizes = ans["role"].value_counts()
-    small = sizes[sizes < min_n].index
-    ans = ans.assign(group=ans["role"].where(~ans["role"].isin(small), "Other groups"))
-    if (ans["group"] == "Other groups").sum() and (ans["group"] == "Other groups").sum() < min_n:
-        ans = ans[ans["group"] != "Other groups"]                    # too few to show even when pooled
+    ans = ans[ans["group"].notna() & ans["group"].map(ans["group"].value_counts()).ge(min_n)]   # too few to show
     out = {g: (sub["bucket"].value_counts(normalize=True)).round(3).to_dict() for g, sub in ans.groupby("group")}
     out["All respondents asked"] = ans["bucket"].value_counts(normalize=True).round(3).to_dict()
     return out
@@ -364,15 +362,12 @@ def build_context(assessment, out: Path, root: Path) -> dict:
                                          "insight": register(f"{d}.stakes", interpret.stakes(st.stakes_by_option[d], labels),
                                              {g: {labels.get(o, o): v for o, v in row.items()} for g, row in st.stakes_by_option[d].items()})})
     from .integrity import GROUP_NAMES
-    sizes_all = eng.respondents["role"].value_counts()
+    from .groups import describe, for_engagement
     min_group = ins.rules.get("evidence", {}).get("min_role_n", 5)
-    small = [(g, int(n)) for g, n in sizes_all.items() if 0 < n < min_group]
-    if small:
-        listed = [f"{GROUP_NAMES.get(g, g)} ({n})" for g, n in sorted(small, key=lambda x: -x[1])]
-        listed = listed[0] if len(listed) == 1 else ", ".join(listed[:-1]) + " and " + listed[-1]
-        stakes["pooled_note"] = (f"{listed} {'has' if len(small) == 1 else 'have'} fewer than {min_group} respondents. "
-                                 "To protect anonymity, their answers appear together as “Other groups” and are not "
-                                 "shown separately in the stakeholder map.")
+    notes = describe(for_engagement(eng), eng.respondents.set_index("respondent_id")["role"], GROUP_NAMES)
+    if notes:
+        stakes["pooled_note"] = (f"Groups with fewer than {min_group} respondents are combined only with groups in a "
+                                 "similar position, to protect anonymity: " + " ".join(notes))
     from .stakeholders import stakeholder_map
     smap = stakeholder_map(assessment)
     if smap:

@@ -52,17 +52,6 @@ def top_choice(shares: dict) -> tuple[str | None, float, list[str]]:
 
 # ---------------------------------------------------------------------------------------- disclosure control
 
-def reportable_groups(sizes: pd.Series, min_n: int) -> tuple[list[str], list[str], bool]:
-    """(groups shown individually, groups pooled into 'other groups', whether the overall total may be shown)."""
-    shown = [g for g, n in sizes.items() if n >= min_n]
-    small = [g for g, n in sizes.items() if 0 < n < min_n]
-    pooled_n = int(sizes[small].sum()) if small else 0
-    pooled = small if pooled_n >= min_n else []
-    # if small groups can neither be shown nor pooled, the total would reveal them by difference
-    total_ok = not small or pooled_n >= min_n
-    return shown, pooled, total_ok
-
-
 def level(label: str) -> str | None:
     if not label:
         return None
@@ -85,16 +74,14 @@ def analyse(eng, evidence, results: dict) -> StakesReport:
 
     seniority = ans[(ans["item_id"] == "CX01") & ans["row"].isna()].set_index("respondent_id")["label"]
     people = people.assign(level=seniority.reindex(people.index).map(level))
-    sizes = people["role"].value_counts()
-    shown, pooled, total_ok = reportable_groups(sizes, min_n)
-    if set(sizes.index) - set(shown) - set(pooled):
-        rep.suppressed.append("Groups below the minimum size are not reported"
-                              + ("" if total_ok else "; the all-respondent total is withheld to protect them") + ".")
-
-    def group_of(role: str) -> str | None:
-        return role if role in shown else ("Other groups" if role in pooled else None)
-
-    people["group"] = people["role"].map(group_of)
+    from .groups import assign, group_of_role
+    people["group"] = assign(people["role"], seniority, rules, min_n)           # small groups pooled (mra/groups.py)
+    total_ok = people["group"].notna().all()     # otherwise the total would reveal the unreported by difference
+    if not total_ok:
+        rep.suppressed.append("Groups below the minimum size are not reported; the all-respondent total is withheld "
+                              "to protect them.")
+    lead_groups = {r: group_of_role(people["group"], people["role"], r) for r in LEADERSHIP}
+    deliv_groups = {group_of_role(people["group"], people["role"], r) for r in DELIVERY} - {None}
 
     for decision, item, stake_items in (("architecture", "S01", ("S04", "S05")), ("hosting", "S02", ("S04", "S05"))):
         if decision not in results:
@@ -190,22 +177,22 @@ def analyse(eng, evidence, results: dict) -> StakesReport:
                 rep.concern.setdefault(g, {})[key] = round(float((values >= 2).mean()), 2)   # moderately or very
 
     # ---- within-leadership disagreement and the "watermelon" pattern
-    groups_present = set(people["group"].dropna())
-    if all(g in groups_present for g in LEADERSHIP):
+    tec, exe = lead_groups["TEC"], lead_groups["EXE"]           # the groups (or pools) leadership is counted in
+    if tec and exe and tec != exe:
         for decision in rep.preferences:
             d = rep.preferences[decision]["by_group"]
-            if all(g in d for g in LEADERSHIP):
-                keys = set(d["TEC"]) | set(d["EXE"])
-                tvd = 0.5 * sum(abs(d["TEC"].get(k, 0) - d["EXE"].get(k, 0)) for k in keys)
+            if tec in d and exe in d:
+                keys = set(d[tec]) | set(d[exe])
+                tvd = 0.5 * sum(abs(d[tec].get(k, 0) - d[exe].get(k, 0)) for k in keys)
                 if tvd >= 0.4:
                     rep.leadership_disagreement.append({"decision": decision, "distance": round(tvd, 2),
-                                                        "TEC": d["TEC"], "EXE": d["EXE"]})
+                                                        "TEC": d[tec], "EXE": d[exe]})
     ig = evidence.item_groups
     if ig is not None and len(ig):
         for item in ("AA01", "AA02", "AA03", "G16", "G04"):
             sub = ig[(ig["item_id"] == item) & (ig["n"] >= min_n)].dropna(subset=["mean"])
-            lead = sub[sub["role"].isin(LEADERSHIP)]["mean"]
-            deliv = sub[sub["role"].isin(DELIVERY)]["mean"]
+            lead = sub[sub["role"].isin(set(lead_groups.values()) - {None})]["mean"]
+            deliv = sub[sub["role"].isin(deliv_groups - set(lead_groups.values()))]["mean"]
             if len(lead) and len(deliv) and lead.mean() - deliv.mean() >= 1.0:
                 rep.watermelon.append({"item": item, "text": ins.items.at[item, "text"].replace("{system}", eng.system),
                                        "leadership": round(float(lead.mean()), 2), "delivery": round(float(deliv.mean()), 2)})

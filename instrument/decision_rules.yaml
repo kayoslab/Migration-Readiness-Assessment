@@ -72,7 +72,12 @@ evidence:
   bootstrap_iterations: 2000
   min_role_n: 5
   strong_evidence_role_n: 15
-  role_weights: {}               # default: each group counts equally on the items it is asked
+  role_weights: {}               # default: each reporting group counts equally on the items it is asked
+  pools:                         # groups under min_role_n are counted together only with groups whose stakes point the
+    - {name: Technology leadership (pooled), members: [TEC], senior_from: [ENG, OPS]}   # same way (mra/groups.py)
+    - {name: Business leadership and control (pooled), members: [EXE, FIN, SEC]}
+  other_groups: [ENG, PRD, BUS, OPS]   # any other small groups: together as "Other groups"; a pool under min_role_n
+                                       # is not reported and does not count
   fact_decides:                  # the fact alone scores these sub-areas; survey items are perception checks only
     - capability.hosting.onprem_ops        # repatriate / hybrid gate (HC05 is Operations rating itself)
     - capability.hosting.cloud_skills      # move-to-cloud gate (HC02)

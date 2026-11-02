@@ -46,6 +46,16 @@ items.csv ──(weight 1)──┘        │                         │
 | SEC | Security, risk and compliance |
 | FIN | Finance / controlling |
 
+Groups with fewer than five respondents (`evidence.min_role_n`) are combined only with groups whose stakes point the
+same way (`evidence.pools`, [`mra/groups.py`](../mra/groups.py)):
+- TEC with the ENG and OPS respondents who chose "Head of / director" or "Executive" (only if ENG or OPS still has
+  five without them);
+- EXE, FIN and SEC together;
+- other small delivery groups as "Other groups".
+
+SEC is never combined with OPS, and EXE never with TEC. A combination still under five is not reported and does not
+count. Scoring, stakes, build-or-buy and the report all use the same grouping.
+
 Items per group (one deployable, own infrastructure): ENG 40 · OPS 36 · PRD 31 · TEC 28 · BUS 21 · EXE 18 · FIN 17 · SEC 13. Estimated minutes (`mra pretest`): ENG 20 · OPS 17 · PRD 14 · TEC 15 · BUS 9 · FIN 8.5 · EXE 8 · SEC 7, counting each optional open question at a full minute; to be measured in the pretest.
 
 ## `items.csv`

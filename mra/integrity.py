@@ -239,9 +239,11 @@ def _critical_groups(a, cfg) -> list[Issue]:
         listed = parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " and " + parts[-1]
         out.append(Issue(f"critical_groups.{d}", cfg["severity"], f"Perspectives missing from the {d} assessment",
                          f"{listed} {'is' if len(short) == 1 else 'are'} below the minimum group size of {min_n}. "
-                         f"{'Its' if len(short) == 1 else 'Their'} answers are pooled with other small groups and do "
-                         f"not count separately towards the {d} assessment, although the decision depends on "
-                         f"{'this perspective' if len(short) == 1 else 'these perspectives'}.",
+                         f"{'Its' if len(short) == 1 else 'Their'} answers count only together with groups in a similar "
+                         f"position, or not at all if those are too few as well, so the {d} assessment does not hear "
+                         f"{'this perspective' if len(short) == 1 else 'these perspectives'} on "
+                         f"{'its' if len(short) == 1 else 'their'} own, although the decision depends on "
+                         f"{'it' if len(short) == 1 else 'them'}.",
                          decisions=[d], exhibits=["people.map"], groups=[GROUP_NAMES.get(g, g) for g, _ in short]))
     return out
 

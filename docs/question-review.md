@@ -266,6 +266,9 @@ Proposed or discussed, not adopted:
    - The Executives' AA03 "I commissioned the review" option (needs per-group options; low value).
 
    MidCorp's need targets were set to 2.5 and 2.3 so that its expected need sits at the threshold, as the example intends. With the redrawn synthetic answers, the old targets landed above it by chance.
-3. **Small-group policy**: pools and weights.
+3. **Small-group policy**: pools and weights. **Done 2026-11-02:**
+   - One grouping rule (`mra/groups.py`, pre-registered as `evidence.pools`) is used by scoring, the track-record rule, stakes, build or buy, the lead-time exhibit, the stakeholder map (a pool carries its members' highest influence) and the report's note on combined groups.
+   - The proposed weight min(n, 5)/5 is not needed: a group or pool under five never counts, so every group that counts would get weight 1.
+   - Consequence: a small Operations group (fewer than five) is no longer counted through "Other groups" alongside Security or Finance. It counts only with other small delivery groups, or not at all. The hosting gates no longer depend on its survey answers (step 1), but the report hears less from it. Worth confirming in the pilot.
 4. **New facts and both sheets**, with their report use: the decision page, feasibility marks and "required whichever path".
 5. **New survey items.** Then rerun the pretest timing, the calibration simulation and the three examples.

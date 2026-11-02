@@ -118,14 +118,16 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
     person_scores = person_scores.reindex(columns=item_ids)
 
     people = eng.respondents.set_index("respondent_id") if len(eng.respondents) else pd.DataFrame(columns=["role", "involvement"])
+    from .groups import for_engagement
+    people = people.assign(group=for_engagement(eng, min_n)) if len(people) else people.assign(group=None)
     technical = np.array([ins.items.at[i, "block"] in TECHNICAL_BLOCKS for i in item_ids])
-    roles = list(dict.fromkeys(people["role"])) if len(people) else []
+    roles = list(dict.fromkeys(people["group"].dropna())) if len(people) else []      # reporting groups (mra/groups.py)
     rw = np.array([float(role_weights.get(r, 1.0)) for r in roles])
 
     role_item_means = np.full((B, len(roles), len(item_ids)), np.nan)
     point_rows = []
     for ri, role in enumerate(roles):
-        rids = list(people.index[people["role"] == role])
+        rids = list(people.index[people["group"] == role])
         S = person_scores.reindex(index=rids).to_numpy(dtype=float)                       # n x k
         inv = np.array([involvement.get(people.at[r, "involvement"], 1.0) if involvement else 1.0 for r in rids])
         W = np.where(technical[None, :], inv[:, None], 1.0) * ~np.isnan(S)
@@ -293,8 +295,8 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
     g14 = single[(single["item_id"] == "G14") & ~single["dont_know"]]
     concern = False
     if len(g14):
-        yes = g14.assign(yes=g14["label"] == "Yes")
-        by_role = yes.groupby("role")["yes"].agg(["mean", "size"])
+        yes = g14.assign(yes=g14["label"] == "Yes", group=g14["respondent_id"].map(people["group"]))
+        by_role = yes.groupby("group")["yes"].agg(["mean", "size"])
         concern = bool((by_role[by_role["size"] >= min_n]["mean"] >= threshold).any() or yes["yes"].mean() >= threshold)
     flags = {"track_record_concern": concern, "tco_problems": tco_problems}
 

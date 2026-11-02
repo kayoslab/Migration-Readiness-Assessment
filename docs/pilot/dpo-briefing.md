@@ -32,8 +32,11 @@ are set up without sign-in ("collect email addresses" off; "limit to one respons
 
 ## 3. Protections built into the analysis
 
-- **Minimum group size of five.** Groups with fewer respondents are pooled with other small groups or not shown,
-  and figures from which a small group could be calculated by difference are suppressed.
+- **Minimum group size of five.** Groups with fewer respondents are combined only with groups in a similar position
+  (technology leadership with respondents in engineering and operations who describe themselves as head of,
+  director or executive; business leadership with finance and risk; other small delivery groups together), or not
+  shown. A combination with fewer than five is not shown either, and figures from which a small group could be
+  calculated by difference are suppressed. The report states which groups were combined and how many answered.
 - **Group-level reporting only.** Every figure and quotation in the report is attributed to a group, never to a
   person; quotations are chosen by the analyst and checked for identifying details.
 - **Personal stakes are not held against anyone.** The report may show that a group's preferences track how options

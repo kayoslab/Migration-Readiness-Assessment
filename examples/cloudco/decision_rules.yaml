@@ -1,4 +1,4 @@
-# Migration Readiness Assessment — decision rules (v0.2 draft, M0)
+# Migration Readiness Assessment — decision rules (version 0.4; see CHANGELOG.md)
 #
 # PRE-REGISTRATION: copy this file into an engagement, adjust it with stakeholders, record the sign-off, and only
 # then look at results. Every adjustment to a default must cite a source; the report always shows the verdict under
@@ -10,7 +10,7 @@
 # "Insufficient evidence" is NOT a recommendation to keep the current state. The report names the inputs whose
 # uncertainty prevented a verdict, with an owner and a deadline.
 
-version: "0.3-draft"
+version: "0.4"
 signed_off_by: "Leadership team (sample)"
 signed_off_on: 2026-09-20
 

@@ -313,3 +313,4 @@ Proposed or discussed, not adopted:
      - being told a direction before the assessment (BP02) is a stakeholder finding.
    - **Not done:** X2 (ranking is not a Google Forms format; the intent sheet records the sponsor's top three).
    - **Burden** (estimated by `mra pretest`, counting each optional open question at a full minute): ENG 23, OPS 19, TEC 16, PRD 16, BUS 10, EXE 10, FIN 8, SEC 7 minutes. Engineering and Operations are above the 15 minutes promised. The cut is a decision for the pretest.
+   - **Cuts for release 0.4:** HC01 removed (its fact decides); AC04 and S10 no longer go to Engineering. Estimated times are now ENG 22 and OPS 19 minutes; further cuts wait for the pretest's measured times.

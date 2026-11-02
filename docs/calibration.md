@@ -139,4 +139,4 @@ First run (2026-11-02, 50 organisations): 29 had problems.
 - The "intent not recorded" caveat was not placed beside the decisions.
 - Decision pages ran past one page for organisations with several build-or-buy parts.
 
-After the fixes, 60 generated organisations (seeds 5 and 7), all rendered, had no problems, and every decision page fit on one page. The report build now measures the rendered decision page and shortens it step by step: first conditions, then intent flags, calendar dates, money lines and reopen sentences, each of which the report shows in full elsewhere. CI runs `mra stress --n 20`.
+After the fixes, 460 generated organisations had no problems: 60 rendered (seeds 5 and 7), every decision page fitting on one page, and 400 more without rendering (seeds 11–18). The report build now measures the rendered decision page and shortens it step by step: first conditions, then intent flags, calendar dates, money lines and reopen sentences, each of which the report shows in full elsewhere. CI runs `mra stress --n 20`.

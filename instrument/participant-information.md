@@ -20,7 +20,7 @@ capture employee attitudes require works-council consultation.
 >
 > It takes about {15} minutes. Thank you.
 
-*Set the minutes per group from the pretest's measured median (`mra pretest` gives a first estimate: about 23 minutes
+*Set the minutes per group from the pretest's measured median (`mra pretest` gives a first estimate: about 22 minutes
 for Engineering, 19 for Operations, 15–16 for Product and Technology leadership, 7–10 for the other groups).*
 
 ## 2. Participant information

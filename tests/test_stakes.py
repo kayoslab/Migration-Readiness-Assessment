@@ -46,7 +46,7 @@ def head_of_platform(role, index, rng, labels):
 @pytest.fixture(scope="module")
 def platform_case(tmp_path_factory):
     scenario = Scenario("platform", {"architecture": "stay_and_improve"}, targets=LOW_NEED, facts=LOW_NEED_FACTS,
-                        sizes={"TEC": 6, "OPS": 8, "EXE": 6}, respondent_fn=head_of_platform)
+                        sizes={"TEC": 8, "OPS": 8, "EXE": 6}, respondent_fn=head_of_platform)   # 6 is at the edge of detectability
     return assess(build(scenario, tmp_path_factory.mktemp("platform"), INSTRUMENT), draws=DRAWS)
 
 

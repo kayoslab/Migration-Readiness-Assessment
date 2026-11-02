@@ -1,4 +1,4 @@
-# Instrument v3 (draft v0.3 — M0)
+# Instrument (version 0.4)
 
 The v3 instrument decides **which path** fits an organisation, per decision (architecture, hosting), instead of
 scoring readiness for a path chosen in advance. See [`docs/phase-2-plan.md`](../docs/phase-2-plan.md).
@@ -58,7 +58,7 @@ same way (`evidence.pools`, [`mra/groups.py`](../mra/groups.py)):
 SEC is never combined with OPS, and EXE never with TEC. A combination still under five is not reported and does not
 count. Scoring, stakes, build-or-buy and the report all use the same grouping.
 
-Items per group (one deployable, own infrastructure): ENG 49 · OPS 41 · PRD 37 · TEC 31 · BUS 24 · EXE 22 · FIN 16 · SEC 14. Estimated minutes (`mra pretest`): ENG 23 · OPS 19 · TEC 16 · PRD 16 · BUS 10 · EXE 10 · FIN 8 · SEC 7, counting each optional open question at a full minute; above the 15-minute promise for ENG and OPS until the pretest decides what to cut.
+Items per group (one deployable, own infrastructure): ENG 47 · OPS 40 · PRD 37 · TEC 31 · BUS 24 · EXE 22 · FIN 16 · SEC 14. Estimated minutes (`mra pretest`): ENG 22 · OPS 19 · TEC 16 · PRD 16 · BUS 10 · EXE 10 · FIN 8 · SEC 7, counting each optional open question at a full minute; above the 15-minute promise for ENG and OPS until the pretest decides what to cut.
 
 ## `items.csv`
 

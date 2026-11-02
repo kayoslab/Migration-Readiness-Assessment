@@ -19,6 +19,8 @@ responses:
   FIN: Responses/FIN.csv
 facts: facts.yaml
 governance: governance.yaml
+risk: risk.yaml
+intent: intent.yaml
 sourcing:
   candidates:
     billing: Billing and invoicing

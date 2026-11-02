@@ -80,7 +80,9 @@ MIDCORP = Scenario(
              "need.hosting.elasticity": 2.2, "need.hosting.capacity_lead_time": 3.0, "need.hosting.managed_services": 2.0,
              "capability.hosting.automation": 2.6, "capability.hosting.operations": 3.2,
              "capability.hosting.cloud_skills": 2.2},
-    facts={"teams_per_deployable": 5, "cross_team_change_pct": 18, "blast_radius_pct": 14, "shared_tables_pct": 44,
+    facts={"critical_function": "yes", "status_quo_compliance_findings": 2, "dr_test_result": "partial_scope",
+           "past_programme_overrun_pct": 35,
+           "teams_per_deployable": 5, "cross_team_change_pct": 18, "blast_radius_pct": 14, "shared_tables_pct": 44,
            "cross_module_transactions": 12, "provision_days": 15, "domain_map": "none", "module_single_owner_pct": 40,
            "friction_concentration_index": 1.3, "deploys_per_week": 0.25, "lead_time_hours": 900,
            "change_failure_pct": 18, "restore_hours": 30, "deploy_automation": "manual_steps", "rollback_minutes": 45,
@@ -104,6 +106,15 @@ MIDCORP = Scenario(
                 "GV07": {"answer": "No", "evidence": "", "attested_by": "Sponsor"},
                 "GV13": {"answer": "Partly", "evidence": "Export not yet tested", "attested_by": "Risk and compliance"}},
     sizes={"ENG": 12, "PRD": 6, "BUS": 5, "TEC": 5, "EXE": 4, "OPS": 4, "SEC": 2, "FIN": 3},
+    # set by leadership before the survey: capital is frozen, parallel running funded for three months only
+    intent={"signed_by": "Chief Operating Officer", "co_signed_by": "CFO", "signed_on": "2026-09-25",
+            "business_horizon": "hold", "top_outcomes": ["faster_delivery", "regulatory", "lower_run_cost"],
+            "prior_commitment": {"status": "informal"}, "competing_priority": "important",
+            "stop_triggers": [{"trigger": "cost_overrun_pct", "value": 50}, {"trigger": "sponsor_leaves"}],
+            "funded_parallel_running_months": 3,
+            "spending_constraint": {"type": "capital_capped", "evidence": "Board budget memo 2026-07",
+                                    "expires_on": "2027-12-31"},
+            "committed_dates": [{"date": "2027-06-30", "what": "a new broker portal for the regulator's product review"}]},
     respondent_fn=respondents,
 )
 

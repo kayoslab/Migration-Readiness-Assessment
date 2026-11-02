@@ -43,7 +43,15 @@ HEALTHY_FACTS = {
     "acceptable_run_cost_increase_pct": 20,
     "target_run_cost_increase_pct": {"low": 15, "likely": 25, "high": 40, "grade": "estimate"},
     "distributed_ops_people": 2,
+    # risk and compliance sheet (moved to risk.yaml by build): nothing that makes staying unsafe
+    "critical_function": "no", "status_quo_compliance_findings": 0, "dr_test_result": "met", "compensating_controls": "no",
 }
+
+DEFAULT_INTENT = {"signed_by": "Sponsor", "co_signed_by": "Finance", "signed_on": "2026-09-01",
+                  "business_horizon": "hold", "top_outcomes": ["faster_delivery", "fewer_outages", "lower_run_cost"],
+                  "prior_commitment": {"status": "none"}, "competing_priority": "top_three",
+                  "stop_triggers": [{"trigger": "cost_overrun_pct", "value": 30}, {"trigger": "delay_months", "value": 6}],
+                  "funded_parallel_running_months": 6, "spending_constraint": {"type": "none"}}
 
 # A mid-size own estate (~0.5 M/yr) where a like-for-like cloud setup costs moderately more.
 HOSTING_FACTS = {
@@ -69,7 +77,7 @@ HOSTING_FACTS = {
     "contract_end_months": 36, "onprem_hw_ops_people": 2, "cloud_oncall_experienced_people": 2,
 }
 
-ALL_YES = {f"GV{i:02d}": {"answer": "Yes", "evidence": "Reference document", "attested_by": "Sponsor"} for i in range(1, 14)}
+ALL_YES = {f"GV{i:02d}": {"answer": "Yes", "evidence": "Reference document", "attested_by": "Sponsor"} for i in range(1, 15)}
 
 
 @dataclass
@@ -82,6 +90,7 @@ class Scenario:
     governance: dict = field(default_factory=dict)
     sizes: dict[str, int] = field(default_factory=dict)
     sourcing: dict = field(default_factory=dict)          # candidate id -> {name, differentiation, facts}
+    intent: dict = field(default_factory=dict)            # overrides of the leadership intent sheet (DEFAULT_INTENT)
     noise: float = 0.5                  # spread of personal optimism between respondents
     item_noise: float = 0.5             # spread of each single answer around the respondent's view
     system: str = "the Order Platform"
@@ -198,6 +207,10 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
     ins_rules = ins.rules.get("fact_discipline", {}) or {}
     scripted = set(ins_rules.get("scripted_metrics", []))
     second = set(ins_rules.get("second_attester_for", []))
+    # the leadership's thresholds go on the intent sheet, the risk lead's facts on the risk sheet
+    intent = {**DEFAULT_INTENT, **{k: facts.pop(k) for k in ins_rules.get("intent_sheet", []) if facts.get(k) is not None},
+              **scenario.intent}
+    risk = {k: facts.pop(k) for k in ins_rules.get("risk_sheet", []) if k in facts}
     sheet = {}
     for k, v in facts.items():
         if v is None:
@@ -213,12 +226,17 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
             entry.setdefault("grade", DEFAULT_GRADES[k])
         sheet[k] = entry
     (root / "facts.yaml").write_text(yaml.safe_dump(sheet, sort_keys=False))
+    (root / "risk.yaml").write_text(yaml.safe_dump(
+        {"signed_by": "Risk lead", "signed_on": "2026-09-15",
+         "facts": {k: (dict(v) if isinstance(v, dict) else {"value": v}) for k, v in risk.items() if v is not None}},
+        sort_keys=False))
+    (root / "intent.yaml").write_text(yaml.safe_dump(intent, sort_keys=False))
     (root / "governance.yaml").write_text(yaml.safe_dump({**ALL_YES, **scenario.governance}, sort_keys=False))
     config = {"system": scenario.system, "current_hosting": scenario.current_hosting,
               "people": {"sponsor": "Sponsor", "fact_sheet_owner": "Fact-sheet owner"},
               "fact_sheet_frozen_on": "2026-10-01",
               "instrument": str(Path(instrument_dir).resolve()), "responses": files,
-              "facts": "facts.yaml", "governance": "governance.yaml"}
+              "facts": "facts.yaml", "governance": "governance.yaml", "risk": "risk.yaml", "intent": "intent.yaml"}
     if scenario.sourcing:
         (root / "sourcing.yaml").write_text(yaml.safe_dump(
             {cid: {k: (v if isinstance(v, dict) else {"value": v}) for k, v in c["facts"].items()}

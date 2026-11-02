@@ -14,7 +14,10 @@ CHECKLIST = """# Engagement checklist
 1. Name the system in scope and its current hosting in `engagement.yaml`; name the sponsor and the fact-sheet owner
    (they must be different people).
 2. Agree `decision_rules.yaml` with stakeholders and record who signed it off — **before** any results are seen.
-3. Fill in `facts.yaml`. Produce the coupling metrics with `mra coupling <repo> --modules modules.yaml` and paste the
+   Then the sponsor fills in `intent.yaml` (horizon, priorities, stop triggers, financing constraints; money items
+   co-signed by Finance) and signs it before the survey opens.
+3. The risk lead fills in and signs `risk.yaml` (findings, disaster-recovery test, compensating controls, hosting
+   constraints with the regulation or contract clause they rest on). Fill in `facts.yaml`. Produce the coupling metrics with `mra coupling <repo> --modules modules.yaml` and paste the
    output. Give cost inputs as low / likely / high with a source grade; use two independent estimators for them.
    Record `fact_sheet_frozen_on` in `engagement.yaml` once the sheet is complete.
 4. Generate the survey forms (`mra forms engagement.yaml`), send them with the participant pack
@@ -37,7 +40,11 @@ def facts_template(ins) -> str:
              "# Two estimators: {estimates: [{estimator: ..., low: .., likely: .., high: .., grade: ...}, {...}]}",
              "# Categories: {value: <one of the listed options>, source: ...}", ""]
     current = None
+    disc = ins.rules.get("fact_discipline") or {}
+    elsewhere = set(disc.get("risk_sheet", [])) | set(disc.get("intent_sheet", []))     # on their own sheets
     for fid, f in ins.facts[ins.facts["decision"] != "sourcing"].iterrows():   # build-or-buy facts: sourcing.yaml
+        if fid in elsewhere:
+            continue
         heading = f"{f['decision']} · {f['axis']}"
         if heading != current:
             lines += ["", f"# ===== {heading} " + "=" * max(0, 90 - len(heading))]
@@ -74,6 +81,45 @@ def sourcing_template(ins) -> str:
     return "\n".join(lines) + "\n"
 
 
+def risk_template(ins) -> str:
+    disc = ins.rules.get("fact_discipline") or {}
+    cite = disc.get("citation_required", {})
+    lines = ["# Risk and compliance sheet — filled in and signed by one risk lead before the verdict.",
+             "# Same formats as facts.yaml. A value that rules options out needs `citation:` — the external regulation",
+             "# or contract clause, countersigned by legal (an internal policy does not rule an option out).",
+             "signed_by: null", "signed_on: null", "facts:"]
+    for fid in disc.get("risk_sheet", []):
+        f = ins.facts.loc[fid]
+        lines.append(f"  # {f['label']} [{f['unit']}]" + (f" — options: {f['categories'].replace('|', ' | ')}"
+                                                          if f["kind"] == "category" else ""))
+        extra = ", citation: null" if fid in cite else ""
+        lines.append(f"  {fid}: {{value: null, source: null{extra}}}")
+    return "\n".join(lines) + "\n"
+
+
+INTENT_TEMPLATE = """# Leadership intent sheet — set by the sponsor after the decision rules are signed and BEFORE the survey opens.
+# It never changes a verdict: the report shows whether the recommended path fits it. Later changes go under
+# `amendments` with a date and are shown in the report.
+signed_by: null                      # the sponsor
+co_signed_by: null                   # Finance, for the money items
+signed_on: null
+business_horizon: null               # grow | hold | shrink | may_be_sold_or_closed (next five years)
+top_outcomes: []                     # up to three: lower_run_cost, faster_delivery, fewer_outages, regulatory, scale,
+                                     #   less_dependence, free_money
+prior_commitment: {status: none, detail: null}   # none | informal | formal | contractual (announced, budgeted, signed)
+competing_priority: null             # top | top_three | important | low (against next year's other initiatives)
+stop_triggers: []                    # e.g. {trigger: cost_overrun_pct, value: 30}, {trigger: delay_months, value: 6},
+                                     #   {trigger: customer_outage}, {trigger: sponsor_leaves}, {text: ...}
+funded_parallel_running_months: null # months of running old and new side by side the budget covers
+spending_constraint: {type: none, evidence: null, expires_on: null}   # none | capital_capped | operating_capped | both
+budget_lock_on: null                 # date next year's budget is fixed
+committed_dates: []                  # promised to customers or regulators, e.g. {date: 2027-06-30, what: ...}
+acceptable_run_cost_increase_pct: null   # architecture: run-cost increase leadership accepts for the outcome
+accepted_premium_pct: null               # hosting: cost premium leadership accepts for a specific need
+amendments: []                       # {on: date, change: ...}
+"""
+
+
 def governance_template(ins) -> str:
     lines = ["# Preconditions — complete after the verdict, for the recommended path.",
              "# answer: Yes (with an evidence reference) | Partly | No", ""]
@@ -94,7 +140,10 @@ people:
   sponsor: null                               # accountable executive of the change under discussion
   fact_sheet_owner: null                      # must not be the sponsor
 fact_sheet_frozen_on: null                    # date the fact sheet was completed, before results were seen
+survey_opened_on: null                        # the leadership intent sheet must be signed before this date
 facts: facts.yaml
+risk: risk.yaml                               # risk and compliance sheet (risk lead)
+intent: intent.yaml                           # leadership intent sheet (sponsor)
 governance: governance.yaml
 responses:                                     # one form export per group; remove groups you do not survey
 {chr(10).join(f'  {r}: Responses/{r}.csv' for r in ROLES)}
@@ -135,6 +184,8 @@ def init(folder: Path, instrument_dir: Path) -> list[Path]:
         "engagement.yaml": engagement_template(folder.name).replace('"../instrument"', f'"{rel}"'),
         "facts.yaml": facts_template(ins),
         "governance.yaml": governance_template(ins),
+        "risk.yaml": risk_template(ins),
+        "intent.yaml": INTENT_TEMPLATE,
         "sourcing.yaml": sourcing_template(ins),
         "CHECKLIST.md": CHECKLIST,
     }

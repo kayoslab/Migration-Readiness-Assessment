@@ -1,0 +1,20 @@
+signed_by: Chief Executive Officer
+co_signed_by: CFO
+signed_on: '2026-09-25'
+business_horizon: grow
+top_outcomes:
+- faster_delivery
+- lower_run_cost
+- fewer_outages
+prior_commitment:
+  status: none
+competing_priority: top_three
+stop_triggers:
+- trigger: cost_overrun_pct
+  value: 25
+- trigger: customer_outage
+funded_parallel_running_months: 6
+spending_constraint:
+  type: none
+acceptable_run_cost_increase_pct: 20
+accepted_premium_pct: 0

@@ -43,10 +43,27 @@ def gate_status(gate: str, rules: dict, governance: dict, evidence) -> dict:
     return {"label": spec["label"], "status": status, "checks": checks, "corroboration": corroboration}
 
 
+def mandatory_by_fact(rules: dict, evidence) -> list[str]:
+    """Gates made mandatory for every programme outcome by a fact (`mandatory_if` on a `fact.` signal)."""
+    values = evidence.at(0)
+    out = []
+    for gate, spec in rules.get("gates", {}).items():
+        cond = spec.get("mandatory_if") or {}
+        if not str(cond.get("signal", "")).startswith("fact."):
+            continue
+        v = values.get(cond["signal"])
+        if v is not None and ((cond.get("op") == "in" and v in cond["value"]) or (cond.get("op") == "==" and v == cond["value"])):
+            out.append(gate)
+    return out
+
+
 def check_gates(outcome_spec: dict, rules: dict, governance: dict, evidence) -> dict:
     required = list(outcome_spec.get("requires_gates", []))
     if evidence.flags.get("track_record_concern") and required and "stop_criteria" not in required:
         required.append("stop_criteria")
+    for gate in mandatory_by_fact(rules, evidence):        # e.g. savings never checked last time: every programme
+        if required and gate not in required:
+            required.append(gate)
     return {
         "required": {g: gate_status(g, rules, governance, evidence) for g in required},
         "conditions": {g: gate_status(g, rules, governance, evidence) for g in outcome_spec.get("reports_conditions", [])},

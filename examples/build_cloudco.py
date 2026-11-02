@@ -86,6 +86,9 @@ CLOUDCO = Scenario(
                                    "product_coverage_pct": {"value": 90, "grade": "quote"},
                                    "part_shared_tables_pct": 5}}},
     sizes={"ENG": 24, "PRD": 10, "BUS": 8, "TEC": 6, "EXE": 5, "OPS": 8, "SEC": 6, "FIN": 5},
+    intent={"signed_by": "Chief Executive Officer", "co_signed_by": "CFO", "signed_on": "2026-09-25",
+            "business_horizon": "grow", "top_outcomes": ["faster_delivery", "lower_run_cost", "fewer_outages"],
+            "stop_triggers": [{"trigger": "cost_overrun_pct", "value": 25}, {"trigger": "customer_outage"}]},
     respondent_fn=respondents,
 )
 

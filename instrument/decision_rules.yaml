@@ -110,7 +110,16 @@ fact_discipline:
                        arch_duration_months]   # model uses the union of both ranges
   estimator_disagreement_flag: 0.25
   second_attester_for: [components_distinct_availability, components_distinct_compliance, candidate_scope_in_main_deployable,
-                        onprem_hw_ops_people, cloud_oncall_experienced_people, distributed_ops_people]   # people counts: attested by the technology lead, not the team counted
+                        onprem_hw_ops_people, cloud_oncall_experienced_people, distributed_ops_people,   # people counts and
+                        infra_caused_incidents_6m]   # incident causes: attested by the technology lead, not the team counted
+  risk_sheet:                     # supplied on the risk and compliance sheet (risk.yaml), before the verdict, by one risk lead
+    [critical_function, status_quo_compliance_findings, dr_test_result, compensating_controls, security_review_days,
+     hosting_constraint, stack_eol_months, components_distinct_compliance]
+  intent_sheet:                   # leadership choices, not measurements: set on the leadership intent sheet (intent.yaml)
+    [acceptable_run_cost_increase_pct, accepted_premium_pct]
+  citation_required:              # a value that rules options out must cite the external requirement (not internal policy)
+    hosting_constraint: [eu_region, in_country, sovereign_cloud, own_premises_only]
+    product_compliance: ["no"]
   cloud_prices_from_region_compliant_with: fact.hosting_constraint
 
 # =========================================================================================== composite axes
@@ -170,6 +179,13 @@ signals:
     label: Strongest specific hosting need
     description: Strongest specific hosting need (needs are not averaged — one strong need is enough)
     max_of: [need.hosting.elasticity, need.hosting.reach, need.hosting.managed_services, need.hosting.capacity_lead_time]
+  status_quo_risk:
+    label: Staying as it is carries a security or compliance risk
+    description: Open high-severity findings, compensating controls for an unmet requirement, or a failed or missing disaster-recovery test (risk and compliance sheet)
+    any:
+      - {signal: fact.status_quo_compliance_findings, op: ">=", value: 1}
+      - {signal: fact.compensating_controls, op: "==", value: "yes"}
+      - {signal: fact.dr_test_result, op: in, value: [failed, never_tested]}
   unmet_specific_need:
     label: Unmet specific hosting need
     description: A strong specific need exists but the verdict keeps or improves the current setup
@@ -211,6 +227,7 @@ gates:
   change_load:      {label: No more than one other major change on the same teams, checks: [GV12], corroborated_by: [G10]}
   compliance_release: {label: Change control allows independent deployment, checks: [GV09]}
   compliance_hosting: {label: Hosting constraints assessed; exit plan in place, checks: [GV10, GV11], combine: min}
+  savings:          {label: Savings with a budget owner and a year, checks: [GV14], mandatory_if: {signal: fact.past_savings_verified, op: in, value: [not_achieved, never_checked]}}
   exit_plan:        {label: Exit plan for the product (data export tested; contract allows leaving), checks: [GV13]}
 
 # =========================================================================================== build or buy
@@ -333,7 +350,7 @@ decisions:
               - {signal: capability.hosting.onprem_ops, op: ">=", value: 3.0}
               - {signal: fact.target_model, op: "==", value: "managed_dedicated"}
           - {signal: fact.infra_oncall_people, op: ">=", value: 4, reach: 2}
-        requires_gates: [sponsor, funding, capacity, stop_criteria, compliance_hosting]
+        requires_gates: [sponsor, funding, capacity, stop_criteria, compliance_hosting, savings]
 
       - id: hybrid                       # need-motivated, or cost-motivated partial move in either direction
         when:
@@ -350,7 +367,7 @@ decisions:
         requires_capability:
           - {signal: capability.hosting.automation, op: ">=", value: 3.0, reach: 1.5}   # IaC is buildable in months
           - {signal: capability.hosting.onprem_ops, op: ">=", value: 3.0, only_if_current: [cloud]}
-        requires_gates: [sponsor, funding, capacity, stop_criteria, compliance_hosting]
+        requires_gates: [sponsor, funding, capacity, stop_criteria, compliance_hosting, savings]
 
       - id: move_to_cloud
         only_if_current: [own_infrastructure, hybrid]
@@ -369,7 +386,7 @@ decisions:
         requires_capability:
           - {signal: capability.hosting.automation, op: ">=", value: 3.0, reach: 1.5}   # IaC is buildable in months
           - {signal: capability.hosting.cloud_skills, op: ">=", value: 2.5, reach: 1.5}
-        requires_gates: [sponsor, funding, capacity, stop_criteria, compliance_hosting]
+        requires_gates: [sponsor, funding, capacity, stop_criteria, compliance_hosting, savings]
 
       - id: improve_current          # incl. right-sizing and, for cloud-current organisations, cloud optimisation
         when:
@@ -379,6 +396,7 @@ decisions:
             - {signal: fact.infra_bus_factor, op: "<=", value: 1}
             - {signal: fact.infra_toil_pct, op: ">=", value: 20}
             - {signal: tco_ratio.improve_current, op: "<=", value: 0.85}
+            - {signal: status_quo_risk, op: "==", value: true}            # staying as it is is not safe either
         requires_gates: []
         reports_conditions: [capacity]
 

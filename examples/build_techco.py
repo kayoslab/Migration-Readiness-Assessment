@@ -126,6 +126,9 @@ TECHCO = Scenario(
                {"estimator": "Technology lead", "low": 8, "likely": 10, "high": 14, "grade": "estimate"},
                {"estimator": "Principal engineer", "low": 9, "likely": 12, "high": 18, "grade": "estimate"}]},
            "past_programme_overrun_pct": 40},
+    intent={"signed_by": "Chief Operating Officer", "co_signed_by": "CFO", "signed_on": "2026-09-20",
+            "business_horizon": "grow", "top_outcomes": ["faster_delivery", "scale", "lower_run_cost"],
+            "committed_dates": [{"date": "2027-04-30", "what": "Marketplace launch with two retail partners"}]},
     # build or buy: billing is a commodity a product covers, but other parts still write its tables; the pricing and
     # promotions engine is what sets TechCo apart
     sourcing={"billing": {"name": "Billing and invoicing", "differentiation": 1.6,

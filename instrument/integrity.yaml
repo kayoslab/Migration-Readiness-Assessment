@@ -9,6 +9,19 @@ checks:
     severity: block
     # the decision rules must be signed off before the fact sheet was frozen and results were seen
 
+  intent_locked:
+    severity: block                # signed and dated, before the survey opened and the fact sheet was frozen
+    missing_severity: caveat       # no intent sheet at all: the report says what it cannot show
+
+  risk_sheet:
+    severity: caveat               # the risk and compliance sheet is signed and dated by the risk lead
+
+  citations:
+    severity: block                # a value that rules options out cites the external requirement (fact_discipline.citation_required)
+
+  sheets:
+    severity: note                 # leadership thresholds and risk facts are supplied on their own sheets
+
   baseline_unverified:
     severity: caveat
     facts: [lead_time_hours, deploys_per_week, change_failure_pct, restore_hours]

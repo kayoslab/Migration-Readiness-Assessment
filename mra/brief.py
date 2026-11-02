@@ -14,6 +14,8 @@ from .recommend import FIRST_STEP_OWNER
 BLOCK_REASON = {
     "run_cost_reconciliation": "the invoiced run cost is not yet reconciled with what the cost model accounts for",
     "rules_signed_off": "the decision rules were not signed off before the facts were frozen",
+    "citations.hosting_constraint": "the hosting constraint that rules options out does not yet cite the external "
+                                    "requirement behind it",
 }
 
 
@@ -84,7 +86,7 @@ def build(assessment, ctx: dict) -> dict:
                          "tone": "neutral" if blocked else dec["tone"], "ask": ask, "not_yet": not_yet, "budget": budget})
     requests += _sourcing_requests(assessment, ctx, people)
     return {"requests": requests, "scr": _scr(assessment, ctx, decs), "money": _money(assessment, decs) + _sourcing_money(ctx),
-            "conditions": _conditions(ctx, decs), "again": _again(ctx, triggers)}
+            "conditions": _conditions(ctx, decs), "again": _again(ctx, triggers), **_intent(assessment, decs)}
 
 
 def _sourcing_requests(assessment, ctx: dict, people: dict) -> list[dict]:
@@ -246,3 +248,81 @@ def _again(ctx: dict, triggers: dict) -> list[str]:
         out.append(f"Each decision is reopened only under criteria agreed now ({len(reopen)} in the plan), at the "
                    "checkpoint or date set for it.")
     return out
+
+
+HORIZON = {"grow": "the business area is expected to grow", "hold": "the business area is expected to hold steady",
+           "shrink": "the business area is expected to shrink", "may_be_sold_or_closed": "the business area may be sold or closed"}
+OUTCOMES = {"lower_run_cost": "lower running cost", "faster_delivery": "faster delivery", "fewer_outages": "fewer outages",
+            "regulatory": "meeting regulatory demands", "scale": "scale or new markets",
+            "less_dependence": "less dependence on key people or vendors", "free_money": "freeing money for other priorities"}
+TRIGGERS = {"cost_overrun_pct": "cost overrun above {value:g}%", "delay_months": "delay of more than {value:g} months",
+            "customer_outage": "a visible customer-facing outage", "initiative_delayed": "a key business initiative delayed",
+            "sponsor_leaves": "loss of the sponsor"}
+CONSTRAINT = {"capital_capped": "capital spending is capped", "operating_capped": "operating spending is capped",
+              "both": "capital and operating spending are capped"}
+MOVES = ("move_to_cloud", "hybrid", "repatriate")
+
+
+def _intent(assessment, decs: dict) -> dict:
+    """What leadership set before the results (intent.yaml): `intent` lists it all (Preconditions section),
+    `intent_flags` only where the evidence meets it (decision page). Never changes a verdict."""
+    eng = assessment.engagement
+    intent = eng.intent or {}
+    if not intent:
+        return {"intent": [], "intent_flags": []}
+    from .integrity import _date
+    out, flags = [], []
+    on = _date(intent.get("signed_on"))
+    head = [HORIZON[intent["business_horizon"]]] if intent.get("business_horizon") in HORIZON else []
+    tops = [OUTCOMES.get(o, o.replace("_", " ")) for o in intent.get("top_outcomes") or []][:3]
+    if tops:
+        head.append(f"priorities: {_join(tops)}")
+    if head:
+        out.append(f"Set {f'on {on.day} {on:%B %Y} ' if on else ''}by {intent.get('signed_by', 'the sponsor')}: "
+                   + "; ".join(head) + ".")
+    host, arch = decs.get("hosting") or {}, decs.get("architecture") or {}
+    programme = host.get("verdict") in MOVES or arch.get("verdict") not in (None, "insufficient_evidence", "stay_and_improve")
+    if intent.get("business_horizon") in ("shrink", "may_be_sold_or_closed") and programme:
+        flags.append("A programme that pays back over several years may not pay back before the business area changes; "
+                     "weigh the payback against that horizon.")
+    triggers = []
+    for t in intent.get("stop_triggers") or []:
+        words = TRIGGERS.get(t.get("trigger"), t.get("text") or str(t.get("trigger", "")).replace("_", " "))
+        triggers.append(words.format(value=float(t.get("value") or 0)))
+    if triggers:
+        line = f"Stop or pause on: {_join(triggers)}."
+        cost = next((t for t in intent.get("stop_triggers") or [] if t.get("trigger") == "cost_overrun_pct"), None)
+        past = eng.facts.get("past_programme_overrun_pct")
+        out.append(line)
+        if cost and past is not None and past.point is not None and float(cost.get("value") or 0) > float(past.point):
+            flags.append(f"The stop trigger for cost ({float(cost['value']):g}% overrun) is looser than past programmes' "
+                         f"typical overrun ({past.point:g}%): a programme that overran as they did would not trip it.")
+    funded, dual = intent.get("funded_parallel_running_months"), eng.facts.get("dual_run_months")
+    if host.get("verdict") in MOVES and funded is not None and dual is not None and dual.point is not None \
+            and float(dual.point) > float(funded):
+        flags.append(f"Running old and new side by side is estimated at {dual.point:g} months; the funding leadership "
+                     f"set covers {float(funded):g}.")
+    sc = intent.get("spending_constraint") or {}
+    if sc.get("type") in CONSTRAINT:
+        until = _date(sc.get("expires_on"))
+        hit = ""
+        if sc["type"] in ("capital_capped", "both") and host.get("verdict") in ("stay_as_is", "improve_current") and \
+                eng.config.get("current_hosting", "own_infrastructure") != "cloud" and eng.facts.get("hw_refresh_capex"):
+            hit = " The hardware refresh on the recommended hosting path needs capital."
+        if sc["type"] in ("operating_capped", "both") and host.get("verdict") in ("move_to_cloud", "hybrid"):
+            hit = " The recommended hosting path raises operating spending."
+        out.append(f"Financing: {CONSTRAINT[sc['type']]}" + (f" until {until:%B %Y}" if until else "") +
+                   "; shown beside the cost comparison, not folded into it.")
+        if hit:
+            flags.append(f"{CONSTRAINT[sc['type']][0].upper()}{CONSTRAINT[sc['type']][1:]}" +
+                         (f" until {until:%B %Y}" if until else "") + "." + hit)
+    pc = intent.get("prior_commitment") or {}
+    if pc.get("status") in ("formal", "contractual"):
+        flags.append(f"A direction was committed {pc['status'] == 'contractual' and 'by contract' or 'formally'} before "
+                     "this assessment" + (f" ({_lower(pc['detail'].rstrip('.'))})" if pc.get("detail") else "") +
+                     "; the recommendation was reached on the evidence alone.")
+    dates = [f"{d.get('what', 'commitment')} ({_date(d.get('date')):%B %Y})" if _date(d.get("date")) else d.get("what", "")
+             for d in intent.get("committed_dates") or []]
+    if dates:
+        out.append(f"Already promised to customers or regulators: {_join([x for x in dates if x])}.")
+    return {"intent": out + flags, "intent_flags": flags}

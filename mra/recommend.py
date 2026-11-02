@@ -36,6 +36,22 @@ def next_steps(assessment) -> list[dict]:
         steps.append({"phase": phase, "phase_label": phases.get(phase, phase), "decision": decision,
                       "action": action, "owner": owner, "reason": reason})
 
+    # risks of staying as it is: required on every path, keeping the current setup included
+    wp, facts = lib.get("whichever_path", {}), eng.facts
+    def value(fid):
+        f = facts.get(fid)
+        return None if f is None else f.point
+    findings = value("status_quo_compliance_findings")
+    for key, applies in (("dr_test", value("dr_test_result") in ("failed", "never_tested", "partial_scope")),
+                         ("findings", findings is not None and float(findings) >= 1),
+                         ("compensating_controls", value("compensating_controls") == "yes"),
+                         ("current_provider_exit", value("critical_function") == "yes"
+                          and eng.config.get("current_hosting") in ("cloud", "hybrid")
+                          and str((eng.governance.get("GV11") or {}).get("answer", "")).lower() != "yes")):
+        if applies and key in wp:
+            add("whichever_path", None, wp[key]["action"].format(system=eng.system), wp[key]["owner"],
+                "A risk of staying as it is.")
+
     for decision, r in assessment.results.items():
         path = outcome_label(ins, decision, r.verdict if r.verdict != "insufficient_evidence" else r.leaning)
         for gate, info in r.gates.get("required", {}).items():

@@ -1,0 +1,15 @@
+signed_by: Risk lead
+signed_on: '2026-09-15'
+facts:
+  critical_function:
+    value: 'no'
+  status_quo_compliance_findings:
+    value: 0
+  dr_test_result:
+    value: met
+  compensating_controls:
+    value: 'no'
+  hosting_constraint:
+    value: any
+  components_distinct_compliance:
+    value: 0

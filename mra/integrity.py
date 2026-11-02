@@ -285,7 +285,82 @@ def _attestation(a, cfg) -> list[Issue]:
                   facts=unattested)]
 
 
-CHECKS = {"rules_signed_off": _rules_signed_off, "baseline_unverified": _baseline_unverified,
+def _intent_locked(a, cfg) -> list[Issue]:
+    eng = a.engagement
+    intent = eng.intent or {}
+    frozen = _date(eng.config.get("fact_sheet_frozen_on"))
+    opened = _date(eng.config.get("survey_opened_on"))
+    if not intent:
+        return [Issue("intent_locked", cfg.get("missing_severity", "caveat"), "Leadership intent not recorded",
+                      "The leadership team has not recorded in advance its time horizon, priorities, stop triggers and "
+                      "financing constraints. Without them, the report cannot show whether a path fits what leadership "
+                      "set out to achieve, and the goalposts can move after the results are known.")]
+    on = _date(intent.get("signed_on"))
+    if not intent.get("signed_by") or not on:
+        return [Issue("intent_locked", cfg["severity"], "Leadership intent not signed and dated",
+                      "The leadership intent sheet does not record who signed it and when, so it cannot be shown that it "
+                      "was set before the results were seen.")]
+    limit = min(d for d in (frozen, opened) if d) if (frozen or opened) else None
+    if limit and on > limit:
+        return [Issue("intent_locked", cfg["severity"], "Leadership intent set after the evidence was in",
+                      f"The leadership intent sheet was signed on {on:%d %B %Y}, after "
+                      f"{'the survey opened' if opened and limit == opened else 'the fact sheet was frozen'} on "
+                      f"{limit:%d %B %Y}; its priorities and constraints may have been chosen with the evidence in view.")]
+    late = [m for m in intent.get("amendments") or [] if _date(m.get("on")) and _date(m.get("on")) > on]
+    if late:
+        return [Issue("intent_locked", "note", "Leadership intent amended after it was locked",
+                      "; ".join(f"{_date(m['on']):%d %B %Y}: {m.get('change', 'amended')}" for m in late) + ".")]
+    return []
+
+
+def _risk_sheet(a, cfg) -> list[Issue]:
+    eng = a.engagement
+    listed = (eng.instrument.rules.get("fact_discipline") or {}).get("risk_sheet", [])
+    out = []
+    if not eng.risk_sheet or not eng.risk_sheet.get("signed_by") or not _date(eng.risk_sheet.get("signed_on")):
+        out.append(Issue("risk_sheet", cfg["severity"], "Risk and compliance sheet not signed",
+                         "The risk and compliance sheet (whether staying as it is is safe: open findings, the last "
+                         "disaster-recovery test, compensating controls) is missing or not signed and dated by the risk "
+                         "lead, so the risk of staying rests on the fact sheet alone.",
+                         facts=[f for f in listed if f in eng.facts]))
+    return out
+
+
+def _citations(a, cfg) -> list[Issue]:
+    eng = a.engagement
+    need = (eng.instrument.rules.get("fact_discipline") or {}).get("citation_required", {})
+    sources = [("", eng.facts)] + [(f" ({name})", eng.sourcing_facts.get(cid, {}))
+                                   for cid, name in eng.candidates.items()]
+    out = []
+    for where, facts in sources:
+        for fid, values in need.items():
+            f = facts.get(fid)
+            if f is not None and str(f.value) in [str(v) for v in values] and not (f.citation or "").strip():
+                label = eng.instrument.facts.at[fid, "label"] if fid in eng.instrument.facts.index else fid
+                out.append(Issue(f"citations.{fid}", cfg["severity"], "An option is ruled out without a cited requirement",
+                                 f"{label}{where} is recorded as “{str(f.value).replace('_', ' ')}”, which rules options "
+                                 "out, but no external regulation or contract clause is cited. An internal policy can be "
+                                 "changed and does not rule an option out; cite the requirement, countersigned by legal.",
+                                 facts=[fid], decisions=["sourcing"] if where else
+                                 [d for d in [eng.instrument.facts.at[fid, "decision"]] if d in a.results]))
+    return out
+
+
+def _sheets(a, cfg) -> list[Issue]:
+    eng = a.engagement
+    disc = eng.instrument.rules.get("fact_discipline") or {}
+    misplaced = [f for f in disc.get("intent_sheet", []) if f in eng.facts and eng.facts[f].sheet != "intent"] + \
+        [f for f in disc.get("risk_sheet", []) if f in eng.facts and eng.facts[f].sheet not in ("risk",) and eng.risk_sheet]
+    if not misplaced:
+        return []
+    return [Issue("sheets", cfg["severity"], "Values supplied on the wrong sheet",
+                  f"{', '.join(misplaced)} {'is' if len(misplaced) == 1 else 'are'} supplied on the fact sheet but "
+                  "belong on the leadership intent sheet or the risk and compliance sheet, signed by who owns them.",
+                  facts=misplaced)]
+
+
+CHECKS = {"rules_signed_off": _rules_signed_off, "intent_locked": _intent_locked, "risk_sheet": _risk_sheet,
+          "citations": _citations, "sheets": _sheets, "baseline_unverified": _baseline_unverified,
           "run_cost_reconciliation": _run_cost_reconciliation, "urgency_vs_dates": _urgency_vs_dates,
           "critical_groups": _critical_groups, "disputed_claims": _disputed_claims, "attestation": _attestation}
 

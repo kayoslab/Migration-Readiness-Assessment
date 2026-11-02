@@ -26,6 +26,17 @@ engagement.yaml may also name `people: {sponsor: ..., fact_sheet_owner: ...}` an
 
 governance.yaml — one entry per check in governance.csv:
     GV01: {answer: "Yes", evidence: "Board minute 2026-09-12", attested_by: CTO}
+
+risk.yaml (engagement.yaml → risk:) — the risk and compliance sheet, filled before the verdict by one risk lead, in
+the fact-sheet format; its facts are listed in decision_rules.yaml → fact_discipline.risk_sheet. A value that rules
+options out (fact_discipline.citation_required) carries `citation:` naming the external regulation or contract clause.
+    signed_by: Head of Risk and Compliance
+    signed_on: 2026-09-12
+    facts: {critical_function: {value: "yes", source: Register of information}, dr_test_result: {value: met}, ...}
+
+intent.yaml (engagement.yaml → intent:) — the leadership intent sheet, signed by the sponsor (money items co-signed by
+Finance) after the decision rules and before the survey opens; see docs/question-review.md. Its two thresholds
+(acceptable_run_cost_increase_pct, accepted_premium_pct) are read as facts.
 """
 
 from __future__ import annotations
@@ -55,6 +66,8 @@ class Fact:
     second_attester: str | None = None
     scripted: bool = False
     justification: str | None = None
+    citation: str | None = None   # the external requirement behind a value that rules options out
+    sheet: str = "facts"          # where it was supplied: facts | risk | intent
     estimators: list[str] = field(default_factory=list)
     disagreement: float | None = None   # spread of the estimators' likely values relative to their mean
 
@@ -80,6 +93,8 @@ class Engagement:
     problems: list[str] = field(default_factory=list)
 
     sourcing_facts: dict[str, dict[str, Fact]] = field(default_factory=dict)   # candidate id -> facts
+    intent: dict = field(default_factory=dict)       # leadership intent sheet (intent.yaml)
+    risk_sheet: dict = field(default_factory=dict)   # risk and compliance sheet header (signed_by, signed_on)
 
     @property
     def system(self) -> str:
@@ -103,7 +118,8 @@ def load_facts(path: Path | None) -> dict[str, Fact]:
 
 def load_facts_from(raw: dict) -> dict[str, Fact]:
     facts = {}
-    keys = ("value", "low", "likely", "high", "grade", "source", "attester", "second_attester", "justification")
+    keys = ("value", "low", "likely", "high", "grade", "source", "attester", "second_attester", "justification",
+            "citation")
     for fid, spec in raw.items():
         if not isinstance(spec, dict):
             spec = {"value": spec}
@@ -145,6 +161,20 @@ def load_engagement(path: str | Path) -> Engagement:
     ins = load_instrument(instrument_dir, rules_path)
     default_rules = yaml.safe_load((instrument_dir / "decision_rules.yaml").read_text())
     facts = load_facts(root / cfg["facts"]) if cfg.get("facts") else {}
+    risk_sheet, intent = {}, {}
+    if cfg.get("risk") and (root / cfg["risk"]).exists():               # the risk and compliance sheet
+        raw = yaml.safe_load((root / cfg["risk"]).read_text()) or {}
+        risk_sheet = {k: v for k, v in raw.items() if k != "facts"}
+        for fid, fact in load_facts_from(raw.get("facts") or {}).items():
+            fact.sheet = "risk"
+            fact.attester = fact.attester or risk_sheet.get("signed_by")
+            facts[fid] = fact
+    if cfg.get("intent") and (root / cfg["intent"]).exists():           # the leadership intent sheet
+        intent = yaml.safe_load((root / cfg["intent"]).read_text()) or {}
+        for fid in ("acceptable_run_cost_increase_pct", "accepted_premium_pct"):
+            if intent.get(fid) is not None:
+                facts[fid] = Fact(value=intent[fid], source="Leadership intent sheet", attester=intent.get("signed_by"),
+                                  sheet="intent")
     governance = yaml.safe_load((root / cfg["governance"]).read_text()) if cfg.get("governance") and \
         (root / cfg["governance"]).exists() else {}
     problems = [f"fact {f}: not in facts.csv" for f in facts if f not in ins.facts.index]
@@ -195,7 +225,7 @@ def load_engagement(path: str | Path) -> Engagement:
             problems += [f"build or buy ({cand}): fact {f} not in facts.csv"
                          for f in sourcing_facts[cand] if f not in ins.facts.index]
     return Engagement(root, cfg, ins, default_rules, answers, pd.DataFrame(people), facts, governance or {}, problems,
-                      sourcing_facts)
+                      sourcing_facts, intent, risk_sheet)
 
 
 def by_header_text(spec: list[dict], item_id: str) -> str:

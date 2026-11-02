@@ -8,6 +8,8 @@ scoring readiness for a path chosen in advance. See [`docs/phase-2-plan.md`](../
 | `items.csv` | Stakeholder survey (perception, experience, preference, stakes) | All invited groups |
 | `facts.csv` | Fact sheet: metrics, categories and cost inputs | One accountable lead per system (not the sponsor), scripted where possible, second attester otherwise |
 | `governance.csv` | Gate checklist, each answer backed by evidence | Sponsor, Finance, technology lead, risk & compliance — after the verdict, for the leading outcome |
+| `risk.yaml` (per engagement) | Risk and compliance sheet: critical function, open findings, last disaster-recovery test, compensating controls, hosting constraints with the requirement they cite (`fact_discipline.risk_sheet`). A risk of staying makes "improve the current setup" the floor and adds steps required on every path | One risk lead, signed, before the verdict |
+| `intent.yaml` (per engagement) | Leadership intent sheet: horizon, top outcomes, prior commitment, stop triggers, funded parallel running, financing constraint, promised dates, the two leadership thresholds. Never changes a verdict; the report shows where the evidence meets it | Sponsor (money items co-signed by Finance), after the rules are signed and before the survey opens |
 | `decision_rules.yaml` | Semantics, thresholds, hard stops, gates, outcome rules, TCO model — **pre-registered** | Agreed and signed off by stakeholders before results |
 | `outcomes.yaml` | Plain-language outcome definitions and preference labels | – |
 | `recommendations.yaml` | Action library for the report's next steps (by gate, hard stop, capability gap and stakeholder finding) | Replace wording to match an organisation |

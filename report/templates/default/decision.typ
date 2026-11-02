@@ -196,6 +196,11 @@
   [
     #text(weight: "semibold", fill: theme.primary)[When the decision is taken again] \
     #for g in data.brief.again [- #g \ ]
+    #if data.brief.at("intent_flags", default: ()).len() > 0 [
+      #v(2mm)
+      #text(weight: "semibold", fill: theme.primary)[Against what leadership set in advance] \
+      #for g in data.brief.intent_flags [- #g \ ]
+    ]
   ],
 )
 #set text(size: 9.5pt)
@@ -569,6 +574,13 @@ checked for the recommended path after the verdict.
   #if dec.conditions.len() > 0 [
     #text(size: 8.5pt)[Conditions for success (not blocking): #dec.conditions.map(c => c.label + " (" + c.status + ")").join("; ").]
   ]
+]
+
+#if data.brief.at("intent", default: ()).len() > 0 [
+  == Set by leadership in advance
+  Recorded on the leadership intent sheet before the survey opened. It never changes a verdict; it shows whether the
+  recommended path fits what leadership set out to achieve.
+  #for g in data.brief.intent [- #g \ ]
 ]
 
 = Stakeholder perspectives

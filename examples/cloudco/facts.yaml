@@ -33,11 +33,6 @@ components_distinct_availability:
   source: synthetic scenario
   attester: Fact-sheet owner
   second_attester: Second attester
-components_distinct_compliance:
-  value: 0
-  source: synthetic scenario
-  attester: Fact-sheet owner
-  second_attester: Second attester
 friction_concentration_index:
   value: 1.3
   source: synthetic scenario
@@ -116,10 +111,6 @@ run_cost_annual:
   likely: 1450000
   high: 1550000
   grade: invoice
-  source: synthetic scenario
-  attester: Fact-sheet owner
-acceptable_run_cost_increase_pct:
-  value: 20
   source: synthetic scenario
   attester: Fact-sheet owner
 target_run_cost_increase_pct:
@@ -310,10 +301,6 @@ hybrid_overhead_fte:
   value: 0.5
   source: synthetic scenario
   attester: Fact-sheet owner
-accepted_premium_pct:
-  value: 0
-  source: synthetic scenario
-  attester: Fact-sheet owner
 peak_hours_per_year:
   value: 200
   source: synthetic scenario
@@ -340,10 +327,6 @@ regions_required:
   attester: Fact-sheet owner
 managed_services_required:
   value: 1
-  source: synthetic scenario
-  attester: Fact-sheet owner
-hosting_constraint:
-  value: any
   source: synthetic scenario
   attester: Fact-sheet owner
 iac_pct:

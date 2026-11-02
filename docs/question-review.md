@@ -270,5 +270,28 @@ Proposed or discussed, not adopted:
    - One grouping rule (`mra/groups.py`, pre-registered as `evidence.pools`) is used by scoring, the track-record rule, stakes, build or buy, the lead-time exhibit, the stakeholder map (a pool carries its members' highest influence) and the report's note on combined groups.
    - The proposed weight min(n, 5)/5 is not needed: a group or pool under five never counts, so every group that counts would get weight 1.
    - Consequence: a small Operations group (fewer than five) is no longer counted through "Other groups" alongside Security or Finance. It counts only with other small delivery groups, or not at all. The hosting gates no longer depend on its survey answers (step 1), but the report hears less from it. Worth confirming in the pilot.
-4. **New facts and both sheets**, with their report use: the decision page, feasibility marks and "required whichever path".
+4. **New facts and both sheets**, with their report use: the decision page, feasibility marks and "required whichever path". **Done 2026-11-02:**
+   - New facts:
+     - `infra_caused_incidents_6m` (HC04) and `cost_allocation_method` (HC03 is removed).
+     - `team_funding_model` (MD07 no longer goes to Finance).
+     - `roadmap_slip_system_pct` (AN06) and `past_savings_verified`.
+     - The risk-sheet facts `critical_function`, `status_quo_compliance_findings`, `dr_test_result`, `compensating_controls` and `security_review_days`.
+     - Widened labels for `contract_end_months` and `stack_eol_months`.
+   - Both sheets are loaded per engagement (`risk.yaml`, `intent.yaml`) and scaffolded by `mra init`.
+   - Integrity checks:
+     - the intent sheet must be signed and dated before the survey opened and the fact sheet was frozen (block), or else the report says what it cannot show (caveat);
+     - the risk sheet must be signed (caveat);
+     - values that rule options out must cite the external requirement (block);
+     - values on the wrong sheet are noted.
+   - GV14 is the savings gate for repatriate, hybrid and move to cloud. It becomes mandatory for every programme when past savings were not achieved or never checked. GV10 and GV11 are widened.
+   - A risk of staying (`status_quo_risk`) makes "improve the current setup" the floor for hosting.
+   - Steps are now listed that are required whichever path is chosen.
+   - The decision page shows only where the evidence meets leadership's intent; the full sheet is under Preconditions.
+
+   **Not done:**
+   - Scoring AN06 only when its fact exists. It would remove business impact from engagements without the fact and shift calibration; revisit with pilot data.
+   - GV14 for improve-current (it has no gates; adding one would make keeping-and-improving conditional).
+   - "Best fit to stated priorities" as a separate view (only the priorities are shown).
+   - `owned_asset_book_value`.
+   - The change-side facts that pair with new survey items: blackout months, maximum planned outage, data clean-up and hard-to-fill roles. They move to step 5 with their items.
 5. **New survey items.** Then rerun the pretest timing, the calibration simulation and the three examples.

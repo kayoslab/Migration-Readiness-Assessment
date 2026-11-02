@@ -5,6 +5,7 @@
 # owner: the role that typically owns the action; the report asks the organisation to name a person.
 
 phases:
+  whichever_path: Required whichever path is chosen
   before_commitment: Before committing budget or a timeline
   capability: Capabilities to build
   first_steps: First steps on the recommended path
@@ -38,6 +39,24 @@ gates:
     owner: Risk and compliance with the technology lead
   compliance_hosting:
     action: Obtain a written assessment of hosting constraints and a tested exit plan for the chosen provider(s).
+    owner: Risk and compliance
+  savings:
+    action: Give every promised saving a budget owner and the year it leaves the budget, agree where released people go, and name an owner who reviews the cloud bill monthly against the case.
+    owner: Finance with the sponsor
+
+# Risks of staying as it is (risk and compliance sheet): needed on every path, including keeping the current setup
+whichever_path:
+  dr_test:
+    action: Run a full disaster-recovery test of {system} and fix what fails; the current setup needs a proven recovery whatever is decided.
+    owner: Platform lead with risk and compliance
+  findings:
+    action: Close the open high-severity findings on {system} and its hosting, with a date for each, independently of the decision.
+    owner: Risk and compliance with the technology lead
+  compensating_controls:
+    action: Set a date by which {system} meets the requirement that its compensating controls stand in for, on whichever path is chosen.
+    owner: Risk and compliance
+  current_provider_exit:
+    action: Document and test an exit plan for the current hosting provider, which supports a critical or important function.
     owner: Risk and compliance
 
 hard_stops:

@@ -36,7 +36,8 @@ def check(eng) -> list[FactCheck]:
             out.append(FactCheck("problem", None, f"The fact-sheet owner ({owner}) is also the sponsor of the change; "
                                                   "the facts are not independent of the proposal."))
         if sponsor:
-            by_sponsor = [f for f, v in facts.items() if v.attester and v.attester.strip().lower() == sponsor.strip().lower()]
+            by_sponsor = [f for f, v in facts.items() if v.sheet != "intent"     # leadership choices are the sponsor's
+                          and v.attester and v.attester.strip().lower() == sponsor.strip().lower()]
             if by_sponsor:
                 out.append(FactCheck("problem", None, f"{len(by_sponsor)} fact(s) are attested by the sponsor: "
                                                       f"{names(by_sponsor, 6)}."))

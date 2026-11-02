@@ -1,0 +1,24 @@
+signed_by: Chief Operating Officer
+co_signed_by: CFO
+signed_on: '2026-09-20'
+business_horizon: grow
+top_outcomes:
+- faster_delivery
+- scale
+- lower_run_cost
+prior_commitment:
+  status: none
+competing_priority: top_three
+stop_triggers:
+- trigger: cost_overrun_pct
+  value: 30
+- trigger: delay_months
+  value: 6
+funded_parallel_running_months: 6
+spending_constraint:
+  type: none
+acceptable_run_cost_increase_pct: 35
+accepted_premium_pct: 0
+committed_dates:
+- date: '2027-04-30'
+  what: Marketplace launch with two retail partners

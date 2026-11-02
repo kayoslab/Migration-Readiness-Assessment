@@ -1,0 +1,25 @@
+signed_by: Chief Operating Officer
+co_signed_by: CFO
+signed_on: '2026-09-25'
+business_horizon: hold
+top_outcomes:
+- faster_delivery
+- regulatory
+- lower_run_cost
+prior_commitment:
+  status: informal
+competing_priority: important
+stop_triggers:
+- trigger: cost_overrun_pct
+  value: 50
+- trigger: sponsor_leaves
+funded_parallel_running_months: 3
+spending_constraint:
+  type: capital_capped
+  evidence: Board budget memo 2026-07
+  expires_on: '2027-12-31'
+acceptable_run_cost_increase_pct: 20
+accepted_premium_pct: 0
+committed_dates:
+- date: '2027-06-30'
+  what: a new broker portal for the regulator's product review

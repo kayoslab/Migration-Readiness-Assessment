@@ -578,6 +578,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         notice.append("This report was produced from synthetic data for illustration only.")
 
     rules = ins.rules
+    from .reported import build as reported_build
     ctx = {
         "engagement": {
             "organisation": cfg.get("organisation", eng.system), "title": cfg.get("title", "Architecture and Hosting Assessment"),
@@ -601,6 +602,7 @@ def build_context(assessment, out: Path, root: Path) -> dict:
         "evidence": rows,
         "participation": participation,
         "risks": reg,
+        "reported": reported_build(assessment),
         "notice": notice,
         "glossary": glossary + [{"term": "Stakeholder groups", "definition": "; ".join(
             f"{g} — {GROUP_NAMES.get(g, g)}" for g in sizes) + "."}],

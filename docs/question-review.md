@@ -294,4 +294,22 @@ Proposed or discussed, not adopted:
    - "Best fit to stated priorities" as a separate view (only the priorities are shown).
    - `owned_asset_book_value`.
    - The change-side facts that pair with new survey items: blackout months, maximum planned outage, data clean-up and hard-to-fill roles. They move to step 5 with their items.
-5. **New survey items.** Then rerun the pretest timing, the calibration simulation and the three examples.
+5. **New survey items.** Then rerun the pretest timing, the calibration simulation and the three examples. **Done 2026-11-02:**
+   - **New items, scored where the scores already contain the construct:**
+     - HN04O (engineers' observed limits): a perception check, since the fact decides managed services.
+     - HN05B (product teams' infrastructure time).
+     - TT01 (trust in the automated tests).
+   - **Reported, never scored**, in the new blocks `staying` and `changing`:
+     - TT02, OPA, OPC, OPD, BI01, BI02, HR01 and SO04 on the cost of staying;
+     - ABS, CAP01 and SO03 on the cost of changing.
+   - **Context:** PC01, X1, LF01 and SO02.
+   - **Business:** BP01 and BP02 replace S01–S03 and S08.
+   - **Facts:** `hard_to_fill_roles`, `data_quality_remediation_effort`, `business_blackout_months` and `max_planned_outage_hours`.
+   - **New report exhibit, "What the groups report":** the cost of staying, the cost of changing and the context, each group's most frequent answer, and the measured value beside each perception.
+   - **Read against the recommendation:**
+     - a path longer than the business can absorb (ABS against the duration fact) is a risk;
+     - a prior commitment the intent sheet leaves out (PC01) is a caveat;
+     - a system expected to be retired within two years (LF01) is flagged on the decision page;
+     - being told a direction before the assessment (BP02) is a stakeholder finding.
+   - **Not done:** X2 (ranking is not a Google Forms format; the intent sheet records the sponsor's top three).
+   - **Burden** (estimated by `mra pretest`, counting each optional open question at a full minute): ENG 23, OPS 19, TEC 16, PRD 16, BUS 10, EXE 10, FIN 8, SEC 7 minutes. Engineering and Operations are above the 15 minutes promised. The cut is a decision for the pretest.

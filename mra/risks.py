@@ -110,6 +110,24 @@ def register(assessment) -> dict:
                                "Resolve before the report is issued as final; see the next steps.",
                                (issue.decisions or [None])[0], "governance"))
 
+    from .reported import months_absorbable          # a cost of changing, as the business experiences it
+    can = months_absorbable(assessment)
+    if can is not None:
+        for d, r in assessment.results.items():
+            fid = {"architecture": "arch_duration_months", "hosting": "migration_months"}[d] if d in ("architecture", "hosting") else None
+            programme = (d == "architecture" and r.verdict not in ("insufficient_evidence", "stay_and_improve")) or \
+                (d == "hosting" and r.verdict in ("move_to_cloud", "hybrid", "repatriate"))
+            f = eng.facts.get(fid) if fid else None
+            if programme and f is not None and f.point is not None and float(f.point) > can:
+                risks.append(_risk(f"{d.title()}: longer than the business can absorb",
+                                   ("The business groups asked cannot accept slower delivery of new features at all"
+                                    if can == 0 else "The business groups asked can accept slower delivery of new "
+                                    f"features for about {can:g} month{'s' if can != 1 else ''}") +
+                                   f"; “{outcome_label(ins, d, r.verdict)}” is estimated at {f.point:g} months.",
+                                   "high" if float(f.point) > 2 * can else "medium", "high", "Sponsor",
+                                   "Phase the work so that no stretch of slower delivery exceeds what the business can "
+                                   "absorb, or agree the trade-off explicitly with the business owners.", d, "delivery"))
+
     if ev.flags.get("track_record_concern"):
         risks.append(_risk("Programme history: past large technology programmes overran or under-delivered",
                            "At least 30% of informed respondents in a group reported it.", "medium", "high", "Sponsor",

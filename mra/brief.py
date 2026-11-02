@@ -285,6 +285,12 @@ def _intent(assessment, decs: dict) -> dict:
     if intent.get("business_horizon") in ("shrink", "may_be_sold_or_closed") and programme:
         flags.append("A programme that pays back over several years may not pay back before the business area changes; "
                      "weigh the payback against that horizon.")
+    life = eng.answers[(eng.answers["item_id"] == "LF01") & (eng.answers["label"].fillna("") != "")
+                       & ~eng.answers["dont_know"].fillna(False).astype(bool)]["label"]
+    min_n = eng.instrument.rules.get("evidence", {}).get("min_role_n", 5)
+    if programme and len(life) >= min_n and (life == "Less than 2 years").mean() >= 0.5:
+        flags.append("Most of technology and business leadership expect the system to be retired within two years; a "
+                     "programme on it would have to pay back before then.")
     triggers = []
     for t in intent.get("stop_triggers") or []:
         words = TRIGGERS.get(t.get("trigger"), t.get("text") or str(t.get("trigger", "")).replace("_", " "))

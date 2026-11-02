@@ -58,15 +58,15 @@ same way (`evidence.pools`, [`mra/groups.py`](../mra/groups.py)):
 SEC is never combined with OPS, and EXE never with TEC. A combination still under five is not reported and does not
 count. Scoring, stakes, build-or-buy and the report all use the same grouping.
 
-Items per group (one deployable, own infrastructure): ENG 40 · OPS 36 · PRD 31 · TEC 28 · BUS 21 · EXE 18 · FIN 17 · SEC 13. Estimated minutes (`mra pretest`): ENG 20 · OPS 17 · PRD 14 · TEC 15 · BUS 9 · FIN 8.5 · EXE 8 · SEC 7, counting each optional open question at a full minute; to be measured in the pretest.
+Items per group (one deployable, own infrastructure): ENG 49 · OPS 41 · PRD 37 · TEC 31 · BUS 24 · EXE 22 · FIN 16 · SEC 14. Estimated minutes (`mra pretest`): ENG 23 · OPS 19 · TEC 16 · PRD 16 · BUS 10 · EXE 10 · FIN 8 · SEC 7, counting each optional open question at a full minute; above the 15-minute promise for ENG and OPS until the pretest decides what to cut.
 
 ## `items.csv`
 
 | Column | Meaning |
 |---|---|
-| `id` | `CX` context · `AN`/`HN` need · `AL` locality · `AC`/`HC` capability · `MD`/`MO` operating-model fit · `RQ` business requirement · `G` governance awareness · `AA` alignment · `S` preference & stakes |
+| `id` | `CX` context · `AN`/`HN` need · `AL` locality · `AC`/`HC` capability · `MD`/`MO` operating-model fit · `RQ` business requirement · `G` governance awareness · `AA` alignment · `S`/`BP` preference & stakes · `TT`, `OP`, `BI`, `HR`, `CAP`, `ABS` staying and changing · `PC`, `X`, `LF` context · `SO` build or buy |
 | `page` | 1 context · 2 experience · 3 governance & alignment · 4 preference · 5 how options affect you (skippable) · 6 open questions |
-| `block` | `context`, `need`, `locality`, `capability`, `fit`, `requirement`, `governance`, `alignment`, `risk`, `stakes` |
+| `block` | `context`, `need`, `locality`, `capability`, `fit`, `requirement`, `governance`, `alignment`, `risk`, `stakes`, and `staying` / `changing` — reported, never scored: the cost of staying as it is and the cost of changing, shown per group in the report ("What the groups report") beside the related fact |
 | `decision` / `area` | Which decision and sub-area the item feeds |
 | `format` | `choice`, `frequency`, `yesno`, `scenario`, `likert5`, `grid`, `text` |
 | `rows` | Grid rows (pipe-separated); `@preference:<decision>` expands to that decision's options |

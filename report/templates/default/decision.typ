@@ -652,6 +652,25 @@ plan how a decision is communicated and supported.
   ]
 ]
 
+#if data.at("reported", default: none) != none and data.reported.sides.len() > 0 [
+  #anchor("reported")
+  == What the groups report
+  Answers that are reported, never scored: what staying as it is costs, what changing would cost, and the context the
+  business sets. For each group, the answer given most often; where a measured value exists, it is shown beside it.
+  #for side in data.reported.sides [
+    #v(2mm)
+    #block(sticky: true)[#text(weight: "semibold", fill: theme.primary, side.title)]
+    #data-table(
+      columns: (3.2fr, 2.6fr),
+      header: ("Question", "Most frequent answer, by group"),
+      ..side.rows.map(r => (
+        [#r.question#if r.row != none [ — #emph(r.row)]#if r.fact != none [ \ #text(size: 7.5pt, fill: theme.muted)[Measured: #r.fact.label: #r.fact.value]]],
+        r.answers.map(a => [#a.group: #a.answer (#str(int(calc.round(a.share * 100)))%)]).join(linebreak()),
+      )).flatten(),
+    )
+  ]
+]
+
 #anchor("risks")
 = Risks, assumptions and dependencies
 

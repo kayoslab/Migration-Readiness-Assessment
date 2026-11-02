@@ -47,6 +47,8 @@ HEALTHY_FACTS = {
     "critical_function": "no", "status_quo_compliance_findings": 0, "dr_test_result": "met", "compensating_controls": "no",
 }
 
+NEUTRAL_CONTEXT = {"PC01": "No", "BP02": "No", "LF01": "5–10 years", "X1": "Hold steady", "ABS[]": "6–12 months"}
+
 DEFAULT_INTENT = {"signed_by": "Sponsor", "co_signed_by": "Finance", "signed_on": "2026-09-01",
                   "business_horizon": "hold", "top_outcomes": ["faster_delivery", "fewer_outages", "lower_run_cost"],
                   "prior_commitment": {"status": "none"}, "competing_priority": "top_three",
@@ -195,6 +197,8 @@ def build(scenario: Scenario, root: Path, instrument_dir: str | Path, seed: int 
                     fixed = q["options"][0] if role in ("ENG", "OPS", "TEC") else q["options"][1]
                 if q["item_id"] == "G14" and fixed is None:
                     fixed = "No"
+                if fixed is None:                               # context questions: a neutral default, not noise
+                    fixed = NEUTRAL_CONTEXT.get(q["item_id"] if q["row"] is None else f"{q['item_id']}[]")
                 key = q["item_id"] if q["row"] is None else f"{q['item_id']}[{q['row']}]"
                 person[key] = _answer(ins, q, None if target is None else target + offset, fixed, rng,
                                       scenario.item_noise)

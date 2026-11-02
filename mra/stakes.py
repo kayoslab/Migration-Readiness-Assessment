@@ -218,6 +218,13 @@ def analyse(eng, evidence, results: dict) -> StakesReport:
     rep.precommitments = {g: v for g, v in rep.precommitments.items() if len(v) >= min_n}
 
     rep.findings = _findings(rep, ins)
+    told = ans[(ans["item_id"] == "BP02") & ans["row"].isna() & (ans["label"].fillna("") != "")]["label"]
+    if len(told) >= min_n:
+        change, keep = (told == "Yes, towards a change").mean(), (told == "Yes, to keep it as it is").mean()
+        if max(change, keep) >= 0.3:
+            rep.findings.append(f"{max(change, keep):.0%} of respondents asked say they had already been told the system "
+                                f"should {'change' if change >= keep else 'stay as it is'} before this assessment; "
+                                "preferences in their groups may echo that message rather than their own experience.")
     return rep
 
 

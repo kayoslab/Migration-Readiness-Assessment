@@ -313,6 +313,24 @@ def _intent_locked(a, cfg) -> list[Issue]:
     return []
 
 
+def _prior_commitment(a, cfg) -> list[Issue]:
+    eng = a.engagement
+    status = ((eng.intent or {}).get("prior_commitment") or {}).get("status")
+    ans = eng.answers
+    ans = ans[(ans["item_id"] == "PC01") & ~ans["dont_know"].fillna(False).astype(bool) & (ans["label"].fillna("") != "")]
+    min_n = eng.instrument.rules.get("evidence", {}).get("min_role_n", 5)
+    if not eng.intent or status not in (None, "none") or len(ans) < min_n:
+        return []
+    yes = float(ans["label"].str.startswith("Yes").mean())
+    if yes < cfg.get("share", 0.5):
+        return []
+    return [Issue("prior_commitment", cfg["severity"], "A prior commitment the intent sheet does not record",
+                  f"{yes:.0%} of the leadership and finance respondents say a direction for the system was announced, "
+                  "budgeted, contracted or started before this assessment, but the leadership intent sheet records none. "
+                  "Record it on the sheet as an amendment, so the recommendation can be compared with it openly.",
+                  decisions=list(a.results))]
+
+
 def _risk_sheet(a, cfg) -> list[Issue]:
     eng = a.engagement
     listed = (eng.instrument.rules.get("fact_discipline") or {}).get("risk_sheet", [])
@@ -360,6 +378,7 @@ def _sheets(a, cfg) -> list[Issue]:
 
 
 CHECKS = {"rules_signed_off": _rules_signed_off, "intent_locked": _intent_locked, "risk_sheet": _risk_sheet,
+          "prior_commitment": _prior_commitment,
           "citations": _citations, "sheets": _sheets, "baseline_unverified": _baseline_unverified,
           "run_cost_reconciliation": _run_cost_reconciliation, "urgency_vs_dates": _urgency_vs_dates,
           "critical_groups": _critical_groups, "disputed_claims": _disputed_claims, "attestation": _attestation}

@@ -27,7 +27,7 @@ outcome of a pending decision. Colleagues from another department or a friendly 
    The estimates assume 10 s per grid row, 20 s per choice, 45 s per scenario and 60 s per open question. They are
    assumptions; the pretest replaces them with measured times.
 2. Build the forms with `mra forms` in a test account, so participants answer the real form, on their own device.
-3. Allow 60–75 minutes per interview: about 20 minutes answering, the rest for probes.
+3. Allow 60–75 minutes per interview: about 20–25 minutes answering for Engineering and Operations, the rest for probes.
 
 ## During the interview
 

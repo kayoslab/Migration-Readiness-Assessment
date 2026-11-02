@@ -16,6 +16,10 @@ checks:
   risk_sheet:
     severity: caveat               # the risk and compliance sheet is signed and dated by the risk lead
 
+  prior_commitment:
+    severity: caveat               # leadership and finance say a direction was committed; the intent sheet says none
+    share: 0.5
+
   citations:
     severity: block                # a value that rules options out cites the external requirement (fact_discipline.citation_required)
 

@@ -73,7 +73,8 @@ order (rules before facts, facts before results).
 - `mra forms` → one form per group; send the invitation from a neutral sender to **all** members of each group.
 - One reminder after a week. Aim for at least 15 respondents per group; five is the minimum for a group to count.
 - Watch the groups the decisions depend on most (for hosting: Operations, Security, Finance). If one stays below
-  five, plan to hear it directly — the report will ask for that.
+  five, plan to hear it directly — the report lists it under "Voices not heard on their own", says whether it leans
+  a different way from the rest, and asks for that.
 
 ### Week 5 — Verdict and preconditions
 

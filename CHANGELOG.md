@@ -3,6 +3,16 @@
 Versions refer to the instrument and decision rules (`instrument/`), which an engagement signs off. The report
 states the version its recommendation followed.
 
+## Unreleased
+
+- The survey promises about 20 minutes (about 10 for Business, Executives, Finance and Security). No questions are
+  cut to reach a shorter promise.
+- A new report section, "Voices not heard on their own", lists every group with fewer than five respondents, and
+  every group a decision depends on that did not answer. For groups of three or more it says per decision, in words
+  only, whether the group leans a different way from everyone else, by its preferred direction and its view of the
+  need for change. A group that points the other way becomes a stakeholder finding and is named in the caveat on
+  missing perspectives. The participant information and the DPO briefing state this disclosure.
+
 ## 0.4 — 2026-11-02
 
 The version for the pilot. Since the 0.3 draft (design freeze M0), the method has been built, calibrated and

@@ -18,10 +18,11 @@ capture employee attitudes require works-council consultation.
 > or e-mail addresses, and results are only reported for groups of five or more. Every question is optional; skip
 > anything you prefer not to answer. "Don't know" is a useful answer — please use it rather than guess.
 >
-> It takes about {15} minutes. Thank you.
+> It takes about {20} minutes. Thank you.
 
-*Set the minutes per group from the pretest's measured median (`mra pretest` gives a first estimate: about 22 minutes
-for Engineering, 19 for Operations, 15–16 for Product and Technology leadership, 7–10 for the other groups).*
+*Promise about 20 minutes to Engineering, Operations, Product and Technology leadership, and about 10 to the other
+groups. Confirm against the pretest's measured median (`mra pretest` gives a first estimate: about 22 minutes for
+Engineering, 19 for Operations, 16 for Product and Technology leadership, 7–10 for the other groups).*
 
 ## 2. Participant information
 
@@ -33,6 +34,9 @@ of keeping it as it is.
 - Only {named analyst(s)} see individual responses. Line managers and the sponsor never do.
 - Results are reported for groups of at least five people. Smaller breakdowns, including by seniority, are
   suppressed, and so are any figures from which a smaller group could be calculated.
+- So that a small group is not simply overlooked, the report names groups of fewer than five and says in words
+  whether their answers lean a different way from everyone else's — never with figures, and only for groups of
+  three or more.
 - The questions about your preferences and how options might affect you are on a separate page and entirely
   optional. They help the organisation plan support for people affected by any change and, at group level only,
   show whether views differ between people who would be affected in different ways. They are never used to weight
@@ -70,7 +74,7 @@ attributed to groups only.
 The invitation sets the tone for every answer. It should come from the analyst or a neutral party — **not** from
 an advocate of any particular option.
 
-> Subject: Your experience with {system} — 15-minute survey
+> Subject: Your experience with {system} — 20-minute survey
 >
 > {organisation} is reviewing how {system} should develop. No option has been chosen, and keeping the current setup
 > is one of the options. We would value your experience, whatever your view.

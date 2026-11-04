@@ -79,7 +79,7 @@ After each round, list every question with a problem and classify it:
 | **Moderate** | Hesitation, a missing option, or a term needing explanation | Rewrite or add a short clarification |
 | **Minor** | Wording preference, one participant | Note; change only if trivial |
 
-Timing: if a group's median measured time exceeds the time promised on the cover screen (*"about 15 minutes"*), either
+Timing: if a group's median measured time exceeds the time promised on the cover screen (*"about 20 minutes"*), either
 change the promise or shorten that group's survey — remove questions with the weakest contribution first (questions
 that are not used by any decision rule, then those with the most "Don't know" answers). Never cut the "Don't know"
 option to save time.

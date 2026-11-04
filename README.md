@@ -117,7 +117,8 @@ consolidated and whose cloud setup should be optimised rather than left.
   is itself a finding.
 - **Every group counts equally**, whatever its headcount, and groups with fewer than five respondents are never scored
   on their own: they are counted together only with groups in a similar position (technology leadership with senior
-  engineers and operations staff; business leadership with finance and risk), or not at all.
+  engineers and operations staff; business leadership with finance and risk), or not at all. The report names each
+  such group and says, in words only, whether it leans a different way from everyone else.
 - **Uncertainty is part of the answer.** Respondents are resampled and cost estimates sampled from their ranges two
   thousand times; a path is recommended only if it holds in at least 80% of these draws. Otherwise the report says
   the evidence is insufficient — and names the inputs that would settle it. "Insufficient evidence" is never a

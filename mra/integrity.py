@@ -228,6 +228,8 @@ def _critical_groups(a, cfg) -> list[Issue]:
     eng = a.engagement
     sizes = eng.respondents["role"].value_counts() if not eng.respondents.empty else {}
     min_n = eng.instrument.rules.get("evidence", {}).get("min_role_n", 5)
+    from .voices import build as voices_build
+    voices = voices_build(a)["rows"]
     out = []
     for d, groups in cfg["groups"].items():
         if d not in a.results:
@@ -237,13 +239,20 @@ def _critical_groups(a, cfg) -> list[Issue]:
             continue
         parts = [f"{GROUP_NAMES.get(g, g)} ({n}{' respondents' if i == 0 else ''})" for i, (g, n) in enumerate(short)]
         listed = parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " and " + parts[-1]
+        leans = []
+        for row in [r for r in voices if r["role"] in dict(short)]:
+            lean = next((x for x in row["decisions"] if x["decision"] == d and x["level"]), None)
+            if lean:
+                leans.append(f"{row['group']} {lean['text'].replace(': ', ' (', 1)})"
+                             + (", against the recommended path" if lean["against_path"] else ""))
         out.append(Issue(f"critical_groups.{d}", cfg["severity"], f"Perspectives missing from the {d} assessment",
                          f"{listed} {'is' if len(short) == 1 else 'are'} below the minimum group size of {min_n}. "
                          f"{'Its' if len(short) == 1 else 'Their'} answers count only together with groups in a similar "
                          f"position, or not at all if those are too few as well, so the {d} assessment does not hear "
                          f"{'this perspective' if len(short) == 1 else 'these perspectives'} on "
                          f"{'its' if len(short) == 1 else 'their'} own, although the decision depends on "
-                         f"{'it' if len(short) == 1 else 'them'}.",
+                         f"{'it' if len(short) == 1 else 'them'}."
+                         + (f" On its own, {'; '.join(leans)}." if leans else ""),
                          decisions=[d], exhibits=["people.map"], groups=[GROUP_NAMES.get(g, g) for g, _ in short]))
     return out
 

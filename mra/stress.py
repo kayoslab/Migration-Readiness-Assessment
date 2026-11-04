@@ -167,6 +167,12 @@ def invariants(a, ctx: dict) -> list[str]:
             shown |= {x["group"] for x in row["answers"]}
             if any(x["n"] < min_n for x in row["answers"]):
                 out.append("anonymity: a reported answer from fewer than the minimum")
+    unheard = (ctx.get("stakes") or {}).get("unheard") or {}
+    for row in unheard.get("rows", []):
+        if row["described"] and row["n"] < unheard["describe_from_n"]:
+            out.append("anonymity: a group too small to describe is described")
+        if any(ch.isdigit() for d in row["decisions"] for ch in d["text"]):
+            out.append("anonymity: a figure shown for a group not heard on its own")
     small = [g for g in shown - {"All respondents"} if sizes.get(g, 0) < min_n]
     if small:
         out.append(f"anonymity: group shown with fewer than {min_n} people")

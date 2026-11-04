@@ -88,6 +88,24 @@ class Evidence:
         return values
 
 
+def respondent_scores(eng: Engagement) -> pd.DataFrame:
+    """Score per respondent (index) and scored item (columns); NaN where not answered."""
+    ins, ans = eng.instrument, eng.answers
+    item_ids = list(ins.items.index[ins.items["scored"] == "true"])
+    single = ans[ans["row"].isna()]
+    scores = single.pivot_table(index="respondent_id", columns="item_id", values="score", aggfunc="first")
+    for gid in [i for i in item_ids if ins.items.at[i, "format"] == "grid"]:   # per-respondent grid scores
+        spec, sub = ins.scores(gid), ans[(ans["item_id"] == gid) & ans["row"].notna()]
+        full_rows = len(ins.items.at[gid, "rows"].split("|"))
+        for rid, g in sub.groupby("respondent_id"):
+            answered = int((g["label"] != DONT_KNOW).sum())
+            yes = int((g["label"] == "Yes").sum())
+            shown = len(ins.rows_for(gid, g["role"].iloc[0])) if not ins.items.at[gid, "rows"].startswith("@") \
+                else full_rows
+            scores.loc[rid, gid] = count_band(spec, yes, answered, shown, full_rows)
+    return scores.reindex(columns=item_ids)
+
+
 def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) -> Evidence:
     ins, rules = eng.instrument, eng.instrument.rules
     ev_cfg = rules.get("evidence", {})
@@ -100,22 +118,10 @@ def build_evidence(eng: Engagement, draws: int | None = None, seed: int = 42) ->
     signals: dict[str, np.ndarray] = {}
 
     # ------------------------------------------------------------------ survey: respondent x item matrices per role
-    scored = ins.items[(ins.items["scored"] == "true")]
-    item_ids = list(scored.index)
+    person_scores = respondent_scores(eng)
+    item_ids = list(person_scores.columns)
     ans = eng.answers
     single = ans[ans["row"].isna()]
-    person_scores = single.pivot_table(index="respondent_id", columns="item_id", values="score", aggfunc="first")
-    grid_ids = [i for i in item_ids if ins.items.at[i, "format"] == "grid"]
-    for gid in grid_ids:   # per-respondent grid scores
-        spec, sub = ins.scores(gid), ans[(ans["item_id"] == gid) & ans["row"].notna()]
-        full_rows = len(ins.items.at[gid, "rows"].split("|"))
-        for rid, g in sub.groupby("respondent_id"):
-            answered = int((g["label"] != DONT_KNOW).sum())
-            yes = int((g["label"] == "Yes").sum())
-            shown = len(ins.rows_for(gid, g["role"].iloc[0])) if not ins.items.at[gid, "rows"].startswith("@") \
-                else full_rows
-            person_scores.loc[rid, gid] = count_band(spec, yes, answered, shown, full_rows)
-    person_scores = person_scores.reindex(columns=item_ids)
 
     people = eng.respondents.set_index("respondent_id") if len(eng.respondents) else pd.DataFrame(columns=["role", "involvement"])
     from .groups import for_engagement

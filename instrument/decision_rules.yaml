@@ -78,6 +78,10 @@ evidence:
     - {name: Business leadership and control (pooled), members: [EXE, FIN, SEC]}
   other_groups: [ENG, PRD, BUS, OPS]   # any other small groups: together as "Other groups"; a pool under min_role_n
                                        # is not reported and does not count
+  unheard:                       # groups not shown on their own: does each lean a different way from the rest?
+    describe_from_n: 3           # below this, nothing is said about a group's answers (mra/voices.py)
+    direction_bands: [0.2, 0.4]  # gap in the share preferring a change: leans differently / points the other way
+    need_bands: [0.5, 1.0]       # gap in the mean need-for-change rating (points on the five-point scale)
   fact_decides:                  # the fact alone scores these sub-areas; survey items are perception checks only
     - capability.hosting.onprem_ops        # repatriate / hybrid gate (HC05 is Operations rating itself)
     - capability.hosting.cloud_skills      # move-to-cloud gate (HC02)

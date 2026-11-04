@@ -597,6 +597,31 @@ plan how a decision is communicated and supported.
 #text(size: 9pt, fill: theme.muted)[Groups: #data.group_names.pairs().map(((k, v)) => k + " " + v).join(" · ").]
 #if "pooled_note" in data.stakes [#text(size: 9pt, fill: theme.muted, data.stakes.pooled_note)]
 
+#let unheard = data.stakes.at("unheard", default: (rows: ()))
+#if unheard.rows.len() > 0 [
+  #anchor("unheard")
+  == Voices not heard on their own
+  These groups are too small to be shown on their own, so the figures in this report do not show their view. To
+  protect anonymity, the table says only whether each group leans a different way from the other respondents, never
+  by how many points. Groups with fewer than #unheard.describe_from_n respondents are not described at all.
+  #let decs = unheard.rows.find(r => r.decisions.len() > 0)
+  #let names = if decs == none { () } else { decs.decisions.map(d => upper(d.decision.first()) + d.decision.slice(1)) }
+  #data-table(
+    columns: (1.1fr, 0.6fr, 1.6fr) + names.map(_ => 2fr),
+    align: (left, right, left) + names.map(_ => left),
+    header: ("Group", "Respondents", "How it is counted") + names,
+    ..unheard.rows.map(r => (
+      r.group + if r.critical.len() > 0 [ \ #text(size: 7.5pt, fill: theme.muted)[needed for #r.critical.join(" and ")]] else [],
+      str(r.n), r.counted,
+      ..if r.described { r.decisions.map(d => {
+          let t = upper(d.text.first()) + d.text.slice(1)
+          if d.level == 2 [*#t*#if d.against_path [, against the recommended path]] else [#t#if d.against_path [, against the recommended path]]
+        }) }
+        else { names.map(_ => text(fill: theme.muted)[#if r.n == 0 [Not heard] else [Too few to describe]]) },
+    )).flatten(),
+  )
+]
+
 #if data.stakes.findings.len() > 0 [
   #callout(title: "Findings")[
     #for f in data.stakes.findings [- #f \ ]

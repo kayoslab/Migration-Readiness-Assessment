@@ -375,6 +375,9 @@ def build_context(assessment, out: Path, root: Path) -> dict:
     if notes:
         stakes["pooled_note"] = (f"Groups with fewer than {min_group} respondents are combined only with groups in a "
                                  "similar position, to protect anonymity: " + " ".join(notes))
+    from .voices import build as voices_build
+    stakes["unheard"] = voices_build(assessment)
+    stakes["findings"] = stakes["findings"] + stakes["unheard"]["findings"]
     from .stakeholders import stakeholder_map
     smap = stakeholder_map(assessment)
     if smap:

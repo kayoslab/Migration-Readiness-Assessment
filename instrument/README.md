@@ -58,7 +58,13 @@ same way (`evidence.pools`, [`mra/groups.py`](../mra/groups.py)):
 SEC is never combined with OPS, and EXE never with TEC. A combination still under five is not reported and does not
 count. Scoring, stakes, build-or-buy and the report all use the same grouping.
 
-Items per group (one deployable, own infrastructure): ENG 47 · OPS 40 · PRD 37 · TEC 31 · BUS 24 · EXE 22 · FIN 16 · SEC 14. Estimated minutes (`mra pretest`): ENG 22 · OPS 19 · TEC 16 · PRD 16 · BUS 10 · EXE 10 · FIN 8 · SEC 7, counting each optional open question at a full minute; above the 15-minute promise for ENG and OPS until the pretest decides what to cut.
+So that no small group is overlooked, the report lists every group under five, and every group a decision depends on
+that did not answer, under "Voices not heard on their own" ([`mra/voices.py`](../mra/voices.py)). For groups of at
+least three (`evidence.unheard.describe_from_n`) it says per decision, in words only, whether the group leans a
+different way from all other respondents: by the share preferring a change, and by its need-for-change ratings.
+"Points the other way" becomes a finding and is added to the caveat on missing perspectives.
+
+Items per group (one deployable, own infrastructure): ENG 47 · OPS 40 · PRD 37 · TEC 31 · BUS 24 · EXE 22 · FIN 16 · SEC 14. Estimated minutes (`mra pretest`): ENG 22 · OPS 19 · TEC 16 · PRD 16 · BUS 10 · EXE 10 · FIN 8 · SEC 7, counting each optional open question at a full minute. The survey promises about 20 minutes (10 for BUS, EXE, FIN and SEC); no questions are cut to reach a shorter promise.
 
 ## `items.csv`
 

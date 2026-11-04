@@ -37,6 +37,12 @@ are set up without sign-in ("collect email addresses" off; "limit to one respons
   director or executive; business leadership with finance and risk; other small delivery groups together), or not
   shown. A combination with fewer than five is not shown either, and figures from which a small group could be
   calculated by difference are suppressed. The report states which groups were combined and how many answered.
+- **Small groups are named, not shown.** So that a small group's view is not lost in a combination, the report lists
+  every group of fewer than five and says in one of three phrases whether its answers lean a different way from
+  everyone else's ("in line with the rest", "leans differently", "points the other way"), for each decision. No
+  figures are shown, and groups of fewer than three are not described at all. This is a disclosure beyond the
+  five-person rule, stated in the participant information, and the threshold of three is a setting the DPO can
+  raise (`evidence.unheard.describe_from_n`).
 - **Group-level reporting only.** Every figure and quotation in the report is attributed to a group, never to a
   person; quotations are chosen by the analyst and checked for identifying details.
 - **Personal stakes are not held against anyone.** The report may show that a group's preferences track how options
